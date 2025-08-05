@@ -32,6 +32,7 @@ const TaskEvent = require('./task_event')(sequelize);
 const Role = require('./role')(sequelize);
 const Action = require('./action')(sequelize);
 const Permission = require('./permission')(sequelize);
+const ResearchJob = require('./research_job')(sequelize);
 
 // Define associations
 User.hasMany(Area, { foreignKey: 'user_id' });
@@ -57,6 +58,12 @@ Project.hasMany(Note, { foreignKey: 'project_id' });
 
 User.hasMany(InboxItem, { foreignKey: 'user_id' });
 InboxItem.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(ResearchJob, { foreignKey: 'user_id' });
+ResearchJob.belongsTo(User, { foreignKey: 'user_id' });
+
+Task.hasMany(ResearchJob, { foreignKey: 'task_id', as: 'ResearchJobs' });
+ResearchJob.belongsTo(Task, { foreignKey: 'task_id', as: 'Task' });
 
 // TaskEvent associations
 User.hasMany(TaskEvent, { foreignKey: 'user_id', as: 'TaskEvents' });
@@ -147,4 +154,5 @@ module.exports = {
     Role,
     Action,
     Permission,
+    ResearchJob,
 };

@@ -65,6 +65,26 @@ const config = {
 
     credentials,
 
+    openRouter: {
+        endpoint:
+            process.env.OPENROUTER_ENDPOINT ||
+            'https://openrouter.ai/api/v1',
+        apiKey: process.env.OPENROUTER_API_KEY,
+        model: process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo',
+        temperature: parseFloat(process.env.OPENROUTER_TEMPERATURE) || 0.7,
+    },
+
+    smtp: {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT
+            ? parseInt(process.env.SMTP_PORT, 10)
+            : undefined,
+        secure: process.env.SMTP_SECURE === 'true',
+        user: process.env.SMTP_USER,
+        password: process.env.SMTP_PASSWORD,
+        from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+    },
+
     uploadPath:
         process.env.TUDUDI_UPLOAD_PATH || path.join(projectRootPath, 'uploads'),
 };
