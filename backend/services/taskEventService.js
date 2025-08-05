@@ -41,6 +41,13 @@ class TaskEventService {
                 metadata: metadata,
             });
 
+            const mcpService = require('./mcpService');
+            mcpService.send(userId, {
+                id: event.id,
+                type: `task.${eventType}`,
+                payload: event.toJSON(),
+            });
+
             return event;
         } catch (error) {
             console.error('Error logging task event:', error);
