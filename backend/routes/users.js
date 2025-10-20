@@ -69,6 +69,9 @@ router.get('/profile', async (req, res) => {
                 'today_settings',
                 'productivity_assistant_enabled',
                 'next_task_suggestion_enabled',
+                'background_agent_enabled',
+                'openrouter_api_key',
+                'include_user_context',
             ],
         });
 
@@ -118,6 +121,8 @@ router.patch('/profile', async (req, res) => {
             productivity_assistant_enabled,
             next_task_suggestion_enabled,
             pomodoro_enabled,
+            background_agent_enabled,
+            openrouter_api_key,
             currentPassword,
             newPassword,
         } = req.body;
@@ -154,6 +159,10 @@ router.patch('/profile', async (req, res) => {
                 next_task_suggestion_enabled;
         if (pomodoro_enabled !== undefined)
             allowedUpdates.pomodoro_enabled = pomodoro_enabled;
+        if (background_agent_enabled !== undefined)
+            allowedUpdates.background_agent_enabled = background_agent_enabled;
+        if (openrouter_api_key !== undefined)
+            allowedUpdates.openrouter_api_key = openrouter_api_key;
 
         // Validate first_day_of_week if provided
         if (first_day_of_week !== undefined) {
@@ -218,6 +227,8 @@ router.patch('/profile', async (req, res) => {
                 'productivity_assistant_enabled',
                 'next_task_suggestion_enabled',
                 'pomodoro_enabled',
+                'background_agent_enabled',
+                'openrouter_api_key',
             ],
         });
 

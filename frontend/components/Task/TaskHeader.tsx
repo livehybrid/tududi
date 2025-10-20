@@ -9,6 +9,7 @@ import {
     PencilIcon,
     TrashIcon,
     EllipsisVerticalIcon,
+    MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { TagIcon, FolderIcon } from '@heroicons/react/24/solid';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,9 @@ import TaskPriorityIcon from './TaskPriorityIcon';
 import { Project } from '../../entities/Project';
 import { Task, StatusType } from '../../entities/Task';
 import { fetchSubtasks } from '../../utils/tasksService';
+import { createBackgroundAgentJob } from '../../utils/backgroundAgentService';
+import BackgroundAgentModal from '../BackgroundAgent/BackgroundAgentModal';
+import { useToast } from '../Shared/ToastContext';
 
 interface TaskHeaderProps {
     task: Task;
@@ -59,6 +63,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     const dropdownId = useRef(
         `dropdown-${Math.random().toString(36).substr(2, 9)}`
     ).current;
+    const [backgroundAgentJobId, setBackgroundAgentJobId] = useState<number | null>(null);
+    const { showErrorToast, showSuccessToast } = useToast();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -179,6 +185,27 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         }
     };
 
+    const handleBackgroundAgentClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!task.id) return;
+        try {
+            const job = await createBackgroundAgentJob({
+                query: task.name,
+                taskId: task.id,
+            });
+            setBackgroundAgentJobId(job.id);
+            showSuccessToast(
+                t('backgroundAgent.jobStarted', 'Background agent job started')
+            );
+            setIsDropdownOpen(false);
+        } catch (error) {
+            console.error('Failed to create background agent job:', error);
+            showErrorToast(
+                t('backgroundAgent.createError', 'Failed to create background agent job')
+            );
+        }
+    };
+
     // Check if task has metadata (project, tags, due_date, recurrence_type, or recurring_parent_id)
     const hasMetadata =
         (project && !hideProjectName) ||
@@ -188,23 +215,24 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         task.recurring_parent_id;
 
     return (
-        <div
-            className={`${hasMetadata ? 'py-2' : 'py-3'} px-4 cursor-pointer group`}
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onTaskClick(e);
-            }}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
+        <>
+            <div
+                className={`${hasMetadata ? 'py-2' : 'py-3'} px-4 cursor-pointer group`}
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onTaskClick(e as any);
-                }
-            }}
-        >
+                    onTaskClick(e);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onTaskClick(e as any);
+                    }
+                }}
+            >
             {/* Full view (md and larger) */}
             <div className="hidden md:flex flex-col md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center space-x-3 mb-2 md:mb-0">
@@ -532,6 +560,20 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                     }
                                 >
                                     <PlayIcon className="h-3 w-3" />
+                                </button>
+                            )}
+
+                            {/* Background Agent Button */}
+                            {!(
+                                task.status === 'archived' || task.status === 3
+                            ) && (
+                                <button
+                                    type="button"
+                                    onClick={handleBackgroundAgentClick}
+                                    className="flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-purple-100 dark:hover:bg-purple-800 hover:text-purple-600 dark:hover:text-purple-400"
+                                    title={t('tasks.backgroundAgent', 'Background Agent (BETA)')}
+                                >
+                                    <MagnifyingGlassIcon className="h-3 w-3" />
                                 </button>
                             )}
 
@@ -864,6 +906,22 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                                             </button>
                                         )}
 
+                                    {/* Background Agent Button */}
+                                    {!(
+                                        task.status === 'archived' ||
+                                        task.status === 3
+                                    ) && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                handleBackgroundAgentClick(e);
+                                            }}
+                                            className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            {t('tasks.backgroundAgent', 'Background Agent (BETA)')}
+                                        </button>
+                                    )}
+
                                     {/* Edit Button */}
                                     {onEdit && (
                                         <button
@@ -902,6 +960,14 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                 </div>
             </div>
         </div>
+
+        {backgroundAgentJobId && (
+            <BackgroundAgentModal
+                jobId={backgroundAgentJobId}
+                onClose={() => setBackgroundAgentJobId(null)}
+            />
+        )}
+        </>
     );
 };
 

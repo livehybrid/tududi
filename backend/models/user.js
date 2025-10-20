@@ -144,6 +144,20 @@ module.exports = (sequelize) => {
                 allowNull: false,
                 defaultValue: true,
             },
+            background_agent_enabled: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
+            openrouter_api_key: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+            include_user_context: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: true,
+            },
             today_settings: {
                 type: DataTypes.JSON,
                 allowNull: true,

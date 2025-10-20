@@ -1,10 +1,23 @@
 const { getConfig } = require('../config/config');
 const config = getConfig();
 
-async function chatCompletion(prompt) {
-    if (!config.openRouter.apiKey) {
+async function chatCompletion(prompt, apiKey = null, userContext = null) {
+    const keyToUse = apiKey || config.openRouter.apiKey;
+    if (!keyToUse) {
         throw new Error('OpenRouter API key not configured');
     }
+
+    // Build messages array with user context if provided
+    const messages = [];
+    
+    if (userContext) {
+        messages.push({
+            role: 'system',
+            content: `You are a helpful AI assistant. The user has provided the following context about their work and preferences: ${userContext}. Use this context to provide more relevant and personalized responses.`
+        });
+    }
+    
+    messages.push({ role: 'user', content: prompt });
 
     const response = await fetch(
         `${config.openRouter.endpoint}/chat/completions`,
@@ -12,11 +25,11 @@ async function chatCompletion(prompt) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${config.openRouter.apiKey}`,
+                Authorization: `Bearer ${keyToUse}`,
             },
             body: JSON.stringify({
                 model: config.openRouter.model,
-                messages: [{ role: 'user', content: prompt }],
+                messages: messages,
                 temperature: config.openRouter.temperature,
             }),
         }

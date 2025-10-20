@@ -2,8 +2,8 @@ const { DataTypes } = require('sequelize');
 const { generateId } = require('../utils/id-generator');
 
 module.exports = (sequelize) => {
-    const ResearchJob = sequelize.define(
-        'ResearchJob',
+    const BackgroundAgentJob = sequelize.define(
+        'BackgroundAgentJob',
         {
             id: {
                 type: DataTypes.INTEGER,
@@ -67,7 +67,7 @@ module.exports = (sequelize) => {
             },
         },
         {
-            tableName: 'research_jobs',
+            tableName: 'background_agent_jobs',
             indexes: [
                 {
                     fields: ['user_id'],
@@ -79,5 +79,5 @@ module.exports = (sequelize) => {
         }
     );
 
-    return ResearchJob;
-};
+    return BackgroundAgentJob;
+}; 

@@ -28,15 +28,15 @@ module.exports = {
     },
     hot: isDevelopment,
     watchFiles: isDevelopment ? ['frontend/**/*'] : [],
-    port: 8080,
+    port: 8090,
     host: '0.0.0.0',
     historyApiFallback: true,
     proxy: [{
       context: ['/api', '/locales'],
-      target: 'http://localhost:3002',
+      target: 'http://192.168.0.225:3002',
       changeOrigin: true,
       secure: false,
-      cookieDomainRewrite: 'localhost',
+      cookieDomainRewrite: '192.168.0.225',
       headers: {
         'Access-Control-Allow-Origin': '*'
       },
