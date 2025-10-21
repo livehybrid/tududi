@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { uid } = require('../utils/uid');
+const { generateId } = require('../utils/id-generator');
 
 module.exports = (sequelize) => {
     const Task = sequelize.define(
@@ -14,13 +14,19 @@ module.exports = (sequelize) => {
                 type: DataTypes.STRING,
                 allowNull: false,
                 unique: true,
-                defaultValue: uid,
+                defaultValue: () => generateId(),
             },
             uuid: {
                 type: DataTypes.UUID,
                 allowNull: false,
                 unique: true,
                 defaultValue: DataTypes.UUIDV4,
+            },
+            nanoid: {
+                type: DataTypes.STRING(21),
+                allowNull: false,
+                unique: true,
+                defaultValue: () => generateId(),
             },
             name: {
                 type: DataTypes.STRING,

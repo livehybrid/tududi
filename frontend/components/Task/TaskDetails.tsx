@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -12,6 +12,8 @@ import {
     ListBulletIcon,
     XMarkIcon,
     ClockIcon,
+    MagnifyingGlassIcon,
+    PlusIcon,
 } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import TaskModal from './TaskModal';
@@ -25,14 +27,19 @@ import {
     fetchTaskById,
     fetchTaskNextIterations,
     TaskIteration,
+    fetchTaskByNanoid,
+    createTask,
 } from '../../utils/tasksService';
 import { createProject } from '../../utils/projectsService';
+import { createBackgroundAgentJob } from '../../utils/backgroundAgentService';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../Shared/ToastContext';
 import TaskPriorityIcon from './TaskPriorityIcon';
 import LoadingScreen from '../Shared/LoadingScreen';
 import MarkdownRenderer from '../Shared/MarkdownRenderer';
 import TaskTimeline from './TaskTimeline';
+import BackgroundAgentResults from './BackgroundAgentResults';
+import BackgroundAgentModal from '../BackgroundAgent/BackgroundAgentModal';
 import { isTaskOverdue } from '../../utils/dateUtils';
 
 const TaskDetails: React.FC = () => {
@@ -65,6 +72,9 @@ const TaskDetails: React.FC = () => {
     const [loadingIterations, setLoadingIterations] = useState(false);
     const [parentTask, setParentTask] = useState<Task | null>(null);
     const [loadingParent, setLoadingParent] = useState(false);
+    const [backgroundAgentJobId, setBackgroundAgentJobId] = useState<number | null>(null);
+    const [isSubtaskModalOpen, setIsSubtaskModalOpen] = useState(false);
+    const [editingSubtask, setEditingSubtask] = useState<Task | null>(null);
 
     // Load tags early and check for pending modal state on mount
     useEffect(() => {
@@ -390,6 +400,92 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleBackgroundAgentClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!task?.id) return;
+        
+        try {
+            const job = await createBackgroundAgentJob({
+                query: task.name,
+                taskId: task.id,
+            });
+            setBackgroundAgentJobId(job.id);
+            showSuccessToast(
+                t('backgroundAgent.jobStarted', 'Background agent job started')
+            );
+        } catch (error) {
+            console.error('Failed to create background agent job:', error);
+            showErrorToast(
+                t('backgroundAgent.createError', 'Failed to create background agent job')
+            );
+        }
+    };
+
+    const handleSubtaskBackgroundAgentClick = async (subtask: Task) => {
+        if (!subtask?.id || !task?.id) return;
+        
+        try {
+            const job = await createBackgroundAgentJob({
+                query: `Subtask: ${subtask.name}\n\nParent task: ${task.name}`,
+                taskId: task.id, // Use parent task ID so results appear in parent task
+            });
+            setBackgroundAgentJobId(job.id);
+            showSuccessToast(
+                t('backgroundAgent.jobStarted', 'Background agent job started')
+            );
+        } catch (error) {
+            console.error('Failed to create background agent job:', error);
+            showErrorToast(
+                t('backgroundAgent.createError', 'Failed to create background agent job')
+            );
+        }
+    };
+
+    const handleCreateSubtask = async (subtaskData: any) => {
+        if (!task?.id) return;
+        
+        try {
+            const newSubtask = await createTask({
+                ...subtaskData,
+                parent_task_id: task.id,
+                project_id: task.project_id,
+                user_id: task.user_id,
+            });
+            
+            // Refresh task data to include new subtask
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+            
+            setIsSubtaskModalOpen(false);
+            showSuccessToast(t('task.subtaskCreated', 'Subtask created successfully'));
+        } catch (error) {
+            console.error('Failed to create subtask:', error);
+            showErrorToast(t('task.subtaskCreateError', 'Failed to create subtask'));
+        }
+    };
+
+    const handleSubtaskClick = useCallback(
+        (e: React.MouseEvent, subtask: Task) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+
+            // Open subtask editing modal instead of main task modal
+            setEditingSubtask(subtask);
+            setIsSubtaskModalOpen(true);
+        },
+        []
+    );
     if (loading) {
         return <LoadingScreen />;
     }
@@ -574,6 +670,13 @@ const TaskDetails: React.FC = () => {
                     </div>
                     <div className="flex space-x-1">
                         <button
+                            onClick={handleBackgroundAgentClick}
+                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 rounded-full transition-colors duration-200"
+                            title={t('tasks.backgroundAgent', 'Background Agent (BETA)')}
+                        >
+                            <MagnifyingGlassIcon className="h-5 w-5" />
+                        </button>
+                        <button
                             onClick={handleEdit}
                             className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors duration-200"
                         >
@@ -660,11 +763,25 @@ const TaskDetails: React.FC = () => {
                                 )}
                             </div>
 
+                            {/* Background Agent Results Section */}
+                            {task?.id && (
+                                <BackgroundAgentResults taskId={task.id} />
+                            )}
+
                             {/* Subtasks Section - Always Visible */}
                             <div>
-                                <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    {t('task.subtasks', 'Subtasks')}
-                                </h4>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                        {t('task.subtasks', 'Subtasks')}
+                                    </h4>
+                                    <button
+                                        onClick={() => setIsSubtaskModalOpen(true)}
+                                        className="p-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors duration-200"
+                                        title={t('task.addSubtask', 'Add subtask')}
+                                    >
+                                        <PlusIcon className="h-5 w-5" />
+                                    </button>
+                                </div>
                                 {subtasks.length > 0 ? (
                                     <div className="space-y-1">
                                         {subtasks.map((subtask: Task) => (
@@ -673,7 +790,8 @@ const TaskDetails: React.FC = () => {
                                                 className="group"
                                             >
                                                 <div
-                                                    className={`rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 transition-all duration-200 ${
+                                                    onClick={(e) => handleSubtaskClick(e, subtask)}
+                                                    className={`rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 cursor-pointer transition-all duration-200 ${
                                                         subtask.status ===
                                                             'in_progress' ||
                                                         subtask.status === 1
@@ -779,6 +897,19 @@ const TaskDetails: React.FC = () => {
                                                         >
                                                             {subtask.name}
                                                         </span>
+                                                        <div className="flex items-center space-x-1">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleSubtaskBackgroundAgentClick(subtask);
+                                                                }}
+                                                                className="p-1 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 rounded-full transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                                                                title={t('tasks.backgroundAgent', 'Background Agent (BETA)')}
+                                                            >
+                                                                <MagnifyingGlassIcon className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1064,6 +1195,42 @@ const TaskDetails: React.FC = () => {
                             setIsConfirmDialogOpen(false);
                             setTaskToDelete(null);
                         }}
+                    />
+                )}
+
+                {/* Background Agent Modal */}
+                {backgroundAgentJobId && (
+                    <BackgroundAgentModal
+                        jobId={backgroundAgentJobId}
+                        onClose={() => setBackgroundAgentJobId(null)}
+                    />
+                )}
+
+                {/* Subtask Creation/Editing Modal */}
+                {isSubtaskModalOpen && task && (
+                    <TaskModal
+                        isOpen={isSubtaskModalOpen}
+                        task={editingSubtask || {
+                            id: 0,
+                            name: '',
+                            status: 'not_started',
+                            priority: 'medium',
+                            project_id: task.project_id,
+                            parent_task_id: task.id,
+                            user_id: task.user_id,
+                            nanoid: '',
+                            created_at: '',
+                            updated_at: '',
+                        }}
+                        onClose={() => {
+                            setIsSubtaskModalOpen(false);
+                            setEditingSubtask(null);
+                        }}
+                        onSave={editingSubtask ? handleTaskUpdate : handleCreateSubtask}
+                        projects={projects}
+                        onCreateProject={handleCreateProject}
+                        showToast={false}
+                        isSubtask={true}
                     />
                 )}
             </div>

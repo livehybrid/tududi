@@ -1,6 +1,8 @@
 const cron = require('node-cron');
 const { User } = require('../models');
 const TaskSummaryService = require('./taskSummaryService');
+const RecurringTaskService = require('./recurringTaskService');
+const ResearchJobService = require('./researchJobService');
 const { setConfig, getConfig } = require('../config/config');
 const config = getConfig();
 
@@ -35,6 +37,7 @@ const getCronExpression = (frequency) => {
         '8h': '0 */8 * * *',
         '12h': '0 */12 * * *',
         recurring_tasks: '0 6 * * *', // Daily at 6 AM for recurring task generation
+        research_jobs: '*/5 * * * *',
     };
     return expressions[frequency];
 };
@@ -43,6 +46,8 @@ const getCronExpression = (frequency) => {
 const createJobHandler = (frequency) => async () => {
     if (frequency === 'recurring_tasks') {
         await processRecurringTasks();
+    } else if (frequency === 'research_jobs') {
+        await ResearchJobService.processPendingJobs();
     } else {
         await processSummariesForFrequency(frequency);
     }
@@ -60,6 +65,7 @@ const createJobEntries = () => {
         '8h',
         '12h',
         'recurring_tasks',
+        'research_jobs',
     ];
 
     return frequencies.map((frequency) => {

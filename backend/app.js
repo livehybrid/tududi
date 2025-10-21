@@ -10,6 +10,7 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const { sequelize } = require('./models');
 const { initializeTelegramPolling } = require('./services/telegramInitializer');
 const taskScheduler = require('./services/taskScheduler');
+const backgroundJobProcessor = require('./services/backgroundJobProcessor');
 const { setConfig, getConfig } = require('./config/config');
 const config = getConfig();
 
@@ -117,6 +118,7 @@ app.use('/api', requireAuth, require('./routes/url'));
 app.use('/api', requireAuth, require('./routes/telegram'));
 app.use('/api', requireAuth, require('./routes/quotes'));
 app.use('/api', requireAuth, require('./routes/task-events'));
+app.use('/api', requireAuth, require('./routes/background-agent-jobs'));
 
 // SPA fallback
 app.get('*', (req, res) => {
@@ -160,6 +162,9 @@ async function startServer() {
 
         // Initialize task scheduler
         await taskScheduler.initialize();
+
+        // Start background job processor
+        backgroundJobProcessor.start();
 
         const server = app.listen(config.port, config.host, () => {
             console.log(`Server running on port ${config.port}`);

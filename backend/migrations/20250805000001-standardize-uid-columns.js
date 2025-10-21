@@ -1,6 +1,6 @@
 'use strict';
 
-const { uid } = require('../utils/uid');
+const { generateId } = require('../utils/id-generator');
 const { safeAddColumns, safeAddIndex } = require('../utils/migration-utils');
 
 /** @type {import('sequelize-cli').Migration} */
@@ -42,7 +42,7 @@ module.exports = {
 
                 // Generate uid for each record
                 for (const record of records) {
-                    const uniqueId = uid();
+                    const uniqueId = generateId();
                     await queryInterface.sequelize.query(
                         `UPDATE ${table.name} SET uid = ? WHERE id = ?`,
                         {

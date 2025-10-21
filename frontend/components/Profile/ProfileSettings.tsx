@@ -23,8 +23,10 @@ import {
     CheckIcon,
     SunIcon,
     MoonIcon,
+    MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import TelegramIcon from '../Icons/TelegramIcon';
+import BackgroundAgentJobsList from '../BackgroundAgent/BackgroundAgentJobsList';
 import { useToast } from '../Shared/ToastContext';
 import { dispatchTelegramStatusChange } from '../../contexts/TelegramStatusContext';
 import LanguageDropdown from '../Shared/LanguageDropdown';
@@ -62,6 +64,9 @@ interface Profile {
     productivity_assistant_enabled: boolean;
     next_task_suggestion_enabled: boolean;
     pomodoro_enabled: boolean;
+    background_agent_enabled: boolean;
+    openrouter_api_key: string | null;
+    include_user_context: boolean;
 }
 
 interface TelegramBotInfo {
@@ -129,6 +134,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         productivity_assistant_enabled: true,
         next_task_suggestion_enabled: true,
         pomodoro_enabled: true,
+        background_agent_enabled: false,
+        openrouter_api_key: '',
+        include_user_context: true,
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
@@ -311,6 +319,11 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         data.pomodoro_enabled !== undefined
                             ? data.pomodoro_enabled
                             : true,
+                    background_agent_enabled:
+                        data.background_agent_enabled !== undefined
+                            ? data.background_agent_enabled
+                            : false,
+                    openrouter_api_key: data.openrouter_api_key || '',
                 });
 
                 // Note: Task summary status checking functionality removed for now
@@ -714,6 +727,16 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         : prev.pomodoro_enabled !== undefined
                           ? prev.pomodoro_enabled
                           : true,
+                background_agent_enabled:
+                    updatedProfile.background_agent_enabled !== undefined
+                        ? updatedProfile.background_agent_enabled
+                        : prev.background_agent_enabled !== undefined
+                          ? prev.background_agent_enabled
+                          : false,
+                openrouter_api_key:
+                    updatedProfile.openrouter_api_key !== undefined
+                        ? updatedProfile.openrouter_api_key
+                        : prev.openrouter_api_key || '',
             }));
 
             // Apply appearance change after save
@@ -1899,6 +1922,141 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                 : 'translate-x-0'
                                         }`}
                                     ></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Background Agent Subsection */}
+                        <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mt-4">
+                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3 flex items-center">
+                                <MagnifyingGlassIcon className="w-5 h-5 mr-2 text-purple-500" />
+                                <span className="flex items-center">
+                                    {t(
+                                        'profile.backgroundAgent',
+                                        'Background Agent'
+                                    )}
+                                    <span className="ml-2 px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full">
+                                        BETA
+                                    </span>
+                                </span>
+                            </h4>
+
+                            <div className="mb-4 text-sm text-gray-600 dark:text-gray-300 flex items-start">
+                                <InformationCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 text-blue-500" />
+                                <p>
+                                    {t(
+                                        'profile.backgroundAgentDescription',
+                                        'Run AI-powered research and analysis on your tasks in the background. Requires an OpenRouter API key.'
+                                    )}
+                                </p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        {t(
+                                            'profile.enableBackgroundAgent',
+                                            'Enable Background Agent'
+                                        )}
+                                    </label>
+                                    <div
+                                        className={`relative inline-block w-12 h-6 transition-colors duration-200 ease-in-out rounded-full cursor-pointer ${
+                                            formData.background_agent_enabled
+                                                ? 'bg-purple-500'
+                                                : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
+                                        onClick={() => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                background_agent_enabled:
+                                                    !prev.background_agent_enabled,
+                                            }));
+                                        }}
+                                    >
+                                        <span
+                                            className={`absolute left-0 top-0 bottom-0 m-1 w-4 h-4 transition-transform duration-200 ease-in-out transform bg-white rounded-full ${
+                                                formData.background_agent_enabled
+                                                    ? 'translate-x-6'
+                                                    : 'translate-x-0'
+                                            }`}
+                                        ></span>
+                                    </div>
+                                </div>
+
+                                {formData.background_agent_enabled && (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                {t(
+                                                    'profile.openRouterApiKey',
+                                                    'OpenRouter API Key'
+                                                )}
+                                            </label>
+                                            <input
+                                                type="password"
+                                                name="openrouter_api_key"
+                                                value={formData.openrouter_api_key || ''}
+                                                onChange={handleChange}
+                                                placeholder={t(
+                                                    'profile.openRouterApiKeyPlaceholder',
+                                                    'Enter your OpenRouter API key'
+                                                )}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                                            />
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {t(
+                                                    'profile.openRouterApiKeyHelp',
+                                                    'Get your API key from https://openrouter.ai'
+                                                )}
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    {t(
+                                                        'profile.includeUserContext',
+                                                        'Include User Context'
+                                                    )}
+                                                </label>
+                                                <div
+                                                    className={`relative inline-block w-12 h-6 transition-colors duration-200 ease-in-out rounded-full cursor-pointer ${
+                                                        formData.include_user_context !== false
+                                                            ? 'bg-purple-500'
+                                                            : 'bg-gray-300 dark:bg-gray-600'
+                                                    }`}
+                                                    onClick={() => {
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            include_user_context: !prev.include_user_context,
+                                                        }));
+                                                    }}
+                                                >
+                                                    <span
+                                                        className={`absolute left-0 top-0 bottom-0 m-1 w-4 h-4 transition-transform duration-200 ease-in-out transform bg-white rounded-full ${
+                                                            formData.include_user_context !== false
+                                                                ? 'translate-x-6'
+                                                                : 'translate-x-0'
+                                                        }`}
+                                                    ></span>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {t(
+                                                    'profile.includeUserContextHelp',
+                                                    'Send your preferences and settings to provide more personalized AI responses'
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Recent Background Agent Jobs */}
+                                <div className="mt-4">
+                                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {t('profile.recentBackgroundAgentJobs', 'Recent Background Agent Jobs')}
+                                    </h4>
+                                    <BackgroundAgentJobsList />
                                 </div>
                             </div>
                         </div>

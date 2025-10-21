@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { uid } = require('../utils/uid');
+const { generateId } = require('../utils/id-generator');
 
 module.exports = (sequelize) => {
     const Note = sequelize.define(
@@ -14,7 +14,7 @@ module.exports = (sequelize) => {
                 type: DataTypes.STRING,
                 allowNull: false,
                 unique: true,
-                defaultValue: uid,
+                defaultValue: () => generateId(),
             },
             title: {
                 type: DataTypes.STRING,
