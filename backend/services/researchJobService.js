@@ -17,6 +17,23 @@ class ResearchJobService {
         return await ResearchJob.findByPk(id);
     }
 
+    static async getJobsByUser(userId) {
+        return await ResearchJob.findAll({
+            where: { user_id: userId },
+            order: [['created_at', 'DESC']],
+        });
+    }
+
+    static async getJobsByUserAndTask(userId, taskId) {
+        return await ResearchJob.findAll({
+            where: { 
+                user_id: userId,
+                task_id: taskId 
+            },
+            order: [['created_at', 'DESC']],
+        });
+    }
+
     static async processPendingJobs(limit = 5) {
         const jobs = await ResearchJob.findAll({
             where: { status: 'pending' },

@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const BackgroundAgentService = require('../services/backgroundAgentService');
+const { Task } = require('../models');
+const permissionsService = require('../services/permissionsService');
 
 router.post('/background-agent-jobs', async (req, res) => {
     try {
@@ -8,6 +10,24 @@ router.post('/background-agent-jobs', async (req, res) => {
         if (!query) {
             return res.status(400).json({ error: 'Query is required' });
         }
+
+        // If taskId is provided, verify user has access to the task
+        if (taskId) {
+            const task = await Task.findByPk(taskId, { attributes: ['uid'] });
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found' });
+            }
+            
+            const access = await permissionsService.getAccess(
+                req.currentUser.id,
+                'task',
+                task.uid
+            );
+            if (access === 'none') {
+                return res.status(403).json({ error: 'Forbidden' });
+            }
+        }
+
         const job = await BackgroundAgentService.createJob({
             userId: req.currentUser.id,
             taskId,
@@ -25,6 +45,21 @@ router.get('/background-agent-jobs', async (req, res) => {
     try {
         const { taskId } = req.query;
         if (taskId) {
+            // Verify user has access to the task before showing jobs
+            const task = await Task.findByPk(taskId, { attributes: ['uid'] });
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found' });
+            }
+            
+            const access = await permissionsService.getAccess(
+                req.currentUser.id,
+                'task',
+                task.uid
+            );
+            if (access === 'none') {
+                return res.status(403).json({ error: 'Forbidden' });
+            }
+
             const jobs = await BackgroundAgentService.getJobsByUserAndTask(req.currentUser.id, taskId);
             res.json({ jobs });
         } else {
@@ -40,9 +75,30 @@ router.get('/background-agent-jobs', async (req, res) => {
 router.get('/background-agent-jobs/:id', async (req, res) => {
     try {
         const job = await BackgroundAgentService.getJob(req.params.id);
-        if (!job || job.user_id !== req.currentUser.id) {
+        if (!job) {
             return res.status(404).json({ error: 'Job not found' });
         }
+
+        // Check if user owns the job or has access to the associated task
+        if (job.user_id !== req.currentUser.id) {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        // If job is associated with a task, verify user has access to that task
+        if (job.task_id) {
+            const task = await Task.findByPk(job.task_id, { attributes: ['uid'] });
+            if (task) {
+                const access = await permissionsService.getAccess(
+                    req.currentUser.id,
+                    'task',
+                    task.uid
+                );
+                if (access === 'none') {
+                    return res.status(403).json({ error: 'Forbidden' });
+                }
+            }
+        }
+
         res.json({ job });
     } catch (error) {
         console.error('Error fetching background agent job:', error);
