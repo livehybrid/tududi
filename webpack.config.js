@@ -33,10 +33,10 @@ module.exports = {
     historyApiFallback: true,
     proxy: [{
       context: ['/api', '/locales'],
-      target: 'http://192.168.0.225:3002',
+      target: 'http://127.0.0.1:3002',
       changeOrigin: true,
       secure: false,
-      cookieDomainRewrite: '192.168.0.225',
+      cookieDomainRewrite: '127.0.0.1',
       headers: {
         'Access-Control-Allow-Origin': '*'
       },
