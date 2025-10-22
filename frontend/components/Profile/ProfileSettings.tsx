@@ -19,6 +19,7 @@ import {
     CommandLineIcon,
 } from '@heroicons/react/24/outline';
 import TelegramIcon from '../Shared/Icons/TelegramIcon';
+import MicrosoftTodoImport from '../MicrosoftTodoImport';
 import { useToast } from '../Shared/ToastContext';
 import { dispatchTelegramStatusChange } from '../../contexts/TelegramStatusContext';
 import ConfirmDialog from '../Shared/ConfirmDialog';
@@ -88,6 +89,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             'ai',
             'notifications',
             'keyboard-shortcuts',
+            'integrations',
         ];
         return section && validTabs.includes(section) ? section : 'general';
     }, [location.search]);
@@ -1145,8 +1147,16 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             name: t('profile.tabs.keyboardShortcuts', 'Shortcuts'),
             icon: <CommandLineIcon className="w-5 h-5" />,
         },
+        {
+            id: 'integrations',
+            name: t('profile.tabs.integrations', 'Integrations'),
+            icon: (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+            ),
+        },
     ];
-
     return (
         <>
             <div
@@ -1335,6 +1345,31 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                         }))
                                     }
                                 />
+
+                                {/* Integrations Tab */}
+                                {activeTab === 'integrations' && (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                                                {t('profile.externalServices', 'External Services')}
+                                            </h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                                                {t('profile.integrationsDescription', 'Connect Tududi with external services to import and sync your tasks.')}
+                                            </p>
+                                            
+                                            {/* Microsoft ToDo Integration */}
+                                            <MicrosoftTodoImport 
+                                                onImportComplete={(importedCount) => {
+                                                    if (importedCount > 0) {
+                                                        showSuccessToast(
+                                                            t('microsoft_todo.import_success', `Successfully imported ${importedCount} tasks from Microsoft ToDo!`)
+                                                        );
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="flex justify-end dark:border-gray-700">
                                     <button

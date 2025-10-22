@@ -42,7 +42,7 @@ module.exports = {
         historyApiFallback: true,
         proxy: [
             {
-                context: ['/api', '/locales'],
+                context: ['/api', '/locales', '/auth'],
                 target: backendUrl,
                 changeOrigin: true,
                 secure: false,
@@ -64,6 +64,19 @@ module.exports = {
                 throw new Error('webpack-dev-server is not defined');
             }
 
+            // Log all API requests
+            devServer.app.use('/api/*', (req, res, next) => {
+                console.log(`[WEBPACK PROXY] API request: ${req.method} ${req.path}`);
+                next();
+            });
+
+            // Log all auth requests
+            devServer.app.use('/auth/*', (req, res, next) => {
+                console.log(`[WEBPACK PROXY] Auth request: ${req.method} ${req.originalUrl}`);
+                next();
+            });
+
+            // Log translation file requests
             devServer.app.get('/locales/*', (req, res, next) => {
                 console.log('Translation file requested:', req.path);
                 next();

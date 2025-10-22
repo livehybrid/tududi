@@ -1373,5 +1373,50 @@
       "title": "Note:",
       "message": "Email and Push notifications are coming soon. In-app and Telegram notifications are currently available."
     }
+  },
+  "microsoft_todo": {
+    "title": "Microsoft ToDo Integration",
+    "description": "Import and sync tasks with Microsoft ToDo",
+    "connected": "Connected",
+    "not_connected": "Not Connected",
+    "connection_failed": "Failed to connect to Microsoft ToDo. Please try again.",
+    "connect_title": "Connect to Microsoft ToDo",
+    "connect_description": "Connect your Microsoft account to import and sync tasks between Tududi and Microsoft ToDo.",
+    "connect_button": "Connect to Microsoft ToDo",
+    "connecting": "Connecting...",
+    "import_button": "Import Tasks",
+    "importing": "Importing...",
+    "export_button": "Export Tasks",
+    "exporting": "Exporting...",
+    "sync_button": "Two-way Sync",
+    "syncing": "Syncing...",
+    "disconnect_button": "Disconnect",
+    "import_success": "Successfully imported {{count}} tasks from Microsoft ToDo!",
+    "export_success": "Successfully exported {{count}} tasks to Microsoft ToDo!",
+    "sync_success": "Sync completed: {{imported}} imported, {{exported}} exported!",
+    "import_failed": "Failed to import tasks from Microsoft ToDo.",
+    "export_failed": "Failed to export tasks to Microsoft ToDo.",
+    "sync_failed": "Failed to sync with Microsoft ToDo.",
+    "disconnected": "Disconnected from Microsoft ToDo.",
+    "disconnect_failed": "Failed to disconnect from Microsoft ToDo.",
+    "last_sync": "Last Sync Results",
+    "imported": "Imported",
+    "exported": "Exported",
+    "lists": "Lists",
+    "last_sync_time": "Last sync:",
+    "auth_error": "Microsoft authentication failed. Please try again.",
+    "no_auth_code": "No authorization code received. Please try again.",
+    "please_wait": "Please wait while we complete the connection.",
+    "redirecting": "Redirecting you back to your profile...",
+    "try_again": "Please try connecting again from your profile settings.",
+    "back_to_profile": "Back to Profile"
+  },
+  "profile": {
+    "tabs": {
+      "integrations": "Integrations"
+    },
+    "integrations": "Integrations",
+    "externalServices": "External Services",
+    "integrationsDescription": "Connect Tududi with external services to import and sync your tasks."
   }
 }

@@ -166,6 +166,10 @@ if (API_VERSION && API_BASE_PATH !== '/api') {
 healthPaths.forEach(registerHealthCheck);
 
 // Routes
+// Microsoft ToDo auth routes (public, no auth required)
+app.use('/auth', require('./routes/microsoft-auth'));
+app.use('/api/microsoft-todo', require('./routes/microsoft-todo-public'));
+
 const registerApiRoutes = (basePath) => {
     app.use(basePath, require('./routes/auth'));
     app.use(basePath, require('./routes/feature-flags'));
@@ -190,6 +194,7 @@ const registerApiRoutes = (basePath) => {
     app.use(`${basePath}/notifications`, require('./routes/notifications'));
     app.use(basePath, require('./routes/tasks/events'));
     app.use(basePath, require('./routes/background-agent-jobs'));
+    app.use(`${basePath}/microsoft-todo`, require('./routes/microsoft-todo'));
 };
 
 // Register routes at both /api and /api/v1 (if versioned) to maintain backwards compatibility

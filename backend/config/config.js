@@ -23,6 +23,13 @@ const credentials = {
             process.env.GOOGLE_REDIRECT_URI ||
             'http://localhost:3002/api/calendar/oauth/callback',
     },
+    microsoft: {
+        clientId: process.env.MICROSOFT_CLIENT_ID,
+        clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+        redirectUri:
+            process.env.MICROSOFT_REDIRECT_URI ||
+            'http://localhost:3002/auth/microsoft/callback',
+    },
 };
 
 const defaultHost = environment === 'test' ? '127.0.0.1' : '0.0.0.0';
@@ -59,8 +66,10 @@ const config = {
           )
         : [
               'http://localhost:8080',
+              'http://localhost:8090',
               'http://localhost:9292',
               'http://127.0.0.1:8080',
+              'http://127.0.0.1:8090',
               'http://127.0.0.1:9292',
           ],
 
@@ -76,7 +85,7 @@ const config = {
 
     environment,
 
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8080',
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8090',
 
     backendUrl: process.env.BACKEND_URL || 'http://localhost:3002',
 

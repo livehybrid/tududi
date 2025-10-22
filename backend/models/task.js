@@ -189,6 +189,11 @@ module.exports = (sequelize) => {
                 type: DataTypes.DATE,
                 allowNull: true,
             },
+            external_id: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                comment: 'External ID for Microsoft Todo sync',
+            },
         },
         {
             tableName: 'tasks',

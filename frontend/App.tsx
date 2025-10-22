@@ -19,6 +19,7 @@ import ProfileSettings from './components/Profile/ProfileSettings';
 import About from './components/About';
 import BackupRestore from './components/Backup/BackupRestore';
 import Layout from './Layout';
+import MicrosoftAuthCallback from './components/MicrosoftAuthCallback';
 import { User } from './entities/User';
 import TasksToday from './components/Task/TasksToday';
 import TaskDetails from './components/Task/TaskDetails';
@@ -301,6 +302,7 @@ const App: React.FC = () => {
                     <>
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/auth/microsoft/callback" element={<MicrosoftAuthCallback />} />
                         <Route
                             path="/"
                             element={<Navigate to="/login" replace />}

@@ -538,7 +538,7 @@ router.post('/project', async (req, res) => {
         }
 
         // Generate UID explicitly to avoid Sequelize caching issues
-        const projectUid = uid();
+        const projectUid = await uid();
 
         const projectData = {
             uid: projectUid,
