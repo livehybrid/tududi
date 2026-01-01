@@ -16,15 +16,20 @@ async function safeAddColumns(queryInterface, tableName, columns) {
 
         for (const column of columns) {
             if (!(column.name in tableInfo)) {
+                console.log(`Adding column ${column.name} to table ${tableName}`);
                 await queryInterface.addColumn(
                     tableName,
                     column.name,
                     column.definition
                 );
+                console.log(`Successfully added column ${column.name} to table ${tableName}`);
+            } else {
+                console.log(`Column ${column.name} already exists in table ${tableName}, skipping`);
             }
         }
     } catch (error) {
         console.log(`Migration error for table ${tableName}:`, error.message);
+        console.log(`Full error:`, error);
         throw error;
     }
 }

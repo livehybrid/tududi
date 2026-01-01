@@ -1391,7 +1391,7 @@
     "sync_button": "Two-way Sync",
     "syncing": "Syncing...",
     "disconnect_button": "Disconnect",
-    "import_success": "Successfully imported {{count}} tasks from Microsoft ToDo!",
+    "import_success": "Successfully imported {{count}} tasks from {{lists}} lists!",
     "export_success": "Successfully exported {{count}} tasks to Microsoft ToDo!",
     "sync_success": "Sync completed: {{imported}} imported, {{exported}} exported!",
     "import_failed": "Failed to import tasks from Microsoft ToDo.",
@@ -1409,9 +1409,7 @@
     "please_wait": "Please wait while we complete the connection.",
     "redirecting": "Redirecting you back to your profile...",
     "try_again": "Please try connecting again from your profile settings.",
-    "back_to_profile": "Back to Profile"
-  },
-  "profile": {
+    "back_to_profile": "Back to Profile",
     "tabs": {
       "integrations": "Integrations"
     },

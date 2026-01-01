@@ -1,4 +1,5 @@
-const { Task, Project, User } = require('../models');
+const { Task, Project, User, TaskEvent } = require('../models');
+const { Op } = require('sequelize');
 const { logError, logInfo } = require('./logService');
 
 class MicrosoftTodoService {
@@ -151,6 +152,24 @@ class MicrosoftTodoService {
      * Map Microsoft ToDo task to Tududi task format
      */
     mapMicrosoftTaskToTududi(microsoftTask, projectId, userId) {
+        // Debug: Log all available Microsoft task fields
+        logInfo(`[DEBUG] Microsoft Task Fields for "${microsoftTask.title}":`, {
+            id: microsoftTask.id,
+            title: microsoftTask.title,
+            body: microsoftTask.body,
+            status: microsoftTask.status,
+            importance: microsoftTask.importance,
+            dueDateTime: microsoftTask.dueDateTime,
+            createdDateTime: microsoftTask.createdDateTime,
+            lastModifiedDateTime: microsoftTask.lastModifiedDateTime,
+            completedDateTime: microsoftTask.completedDateTime,
+            reminderDateTime: microsoftTask.reminderDateTime,
+            categories: microsoftTask.categories,
+            hasAttachments: microsoftTask.hasAttachments,
+            isReminderOn: microsoftTask.isReminderOn,
+            allFields: Object.keys(microsoftTask)
+        });
+
         // Map status
         let status = 0; // not_started
         if (microsoftTask.status === 'completed') status = 2; // done
@@ -161,9 +180,17 @@ class MicrosoftTodoService {
         if (microsoftTask.importance === 'high') priority = 2; // high
         else if (microsoftTask.importance === 'low') priority = 0; // low
 
-        return {
+        // Extract description from body content
+        let description = null;
+        if (microsoftTask.body?.content) {
+            // Remove HTML tags if present
+            description = microsoftTask.body.content.replace(/<[^>]*>/g, '').trim();
+        }
+
+        const mappedTask = {
             name: microsoftTask.title,
-            description: microsoftTask.body?.content || null,
+            description: description,
+            note: description, // Also map to note field for Tududi compatibility
             due_date: microsoftTask.dueDateTime?.dateTime ? new Date(microsoftTask.dueDateTime.dateTime) : null,
             priority: priority,
             status: status,
@@ -171,14 +198,43 @@ class MicrosoftTodoService {
             user_id: userId,
             external_id: microsoftTask.id,
             external_source: 'microsoft_todo',
-            external_last_modified: microsoftTask.lastModifiedDateTime
+            external_last_modified: microsoftTask.lastModifiedDateTime,
+            // Map completion date if completed
+            completed_at: microsoftTask.completedDateTime?.dateTime ? new Date(microsoftTask.completedDateTime.dateTime) : null,
+            // Map today flag if due today
+            today: microsoftTask.dueDateTime?.dateTime ? 
+                new Date(microsoftTask.dueDateTime.dateTime).toDateString() === new Date().toDateString() : false
         };
+
+        logInfo(`[DEBUG] Mapped Tududi Task:`, mappedTask);
+        return mappedTask;
     }
 
     /**
      * Map Tududi task to Microsoft ToDo task format
      */
     mapTududiTaskToMicrosoft(tududiTask) {
+        // Debug: Log all available Tududi task fields
+        logInfo(`[DEBUG] Tududi Task Fields for "${tududiTask.name}":`, {
+            id: tududiTask.id,
+            uid: tududiTask.uid,
+            name: tududiTask.name,
+            description: tududiTask.description,
+            note: tududiTask.note,
+            status: tududiTask.status,
+            priority: tududiTask.priority,
+            due_date: tududiTask.due_date,
+            completed_at: tududiTask.completed_at,
+            today: tududiTask.today,
+            project_id: tududiTask.project_id,
+            external_id: tududiTask.external_id,
+            external_source: tududiTask.external_source,
+            external_last_modified: tududiTask.external_last_modified,
+            created_at: (tududiTask.created_at && tududiTask.created_at !== 'Invalid Date') ? tududiTask.created_at.toISOString() : 'NULL',
+            updated_at: (tududiTask.updated_at && tududiTask.updated_at !== 'Invalid Date') ? tududiTask.updated_at.toISOString() : 'NULL',
+            allFields: Object.keys(tududiTask)
+        });
+
         // Map status
         let status = 'notStarted';
         if (tududiTask.status === 2) status = 'completed'; // done
@@ -189,25 +245,47 @@ class MicrosoftTodoService {
         if (tududiTask.priority === 2) importance = 'high';
         else if (tududiTask.priority === 0) importance = 'low';
 
-        return {
+        // Use description or note field for content
+        const content = tududiTask.description || tududiTask.note || '';
+
+        // Build Microsoft task object
+        const microsoftTask = {
             title: tududiTask.name,
             body: {
-                content: tududiTask.description || '',
+                content: content,
                 contentType: 'text'
             },
             importance: importance,
-            status: status,
-            dueDateTime: tududiTask.due_date ? {
+            status: status
+        };
+
+        // Add due date if available
+        if (tududiTask.due_date) {
+            microsoftTask.dueDateTime = {
                 dateTime: tududiTask.due_date.toISOString(),
                 timeZone: 'UTC'
-            } : undefined
-        };
+            };
+        }
+
+        // Note: Tududi doesn't have reminder_date or tags fields in the current model
+        // These would need to be added to the Task model if we want to support them
+
+        // Add completion date if completed
+        if (tududiTask.status === 2 && tududiTask.completed_at) {
+            microsoftTask.completedDateTime = {
+                dateTime: tududiTask.completed_at.toISOString(),
+                timeZone: 'UTC'
+            };
+        }
+
+        logInfo(`[DEBUG] Mapped Microsoft Task:`, microsoftTask);
+        return microsoftTask;
     }
 
     /**
      * Import tasks from Microsoft ToDo to Tududi
      */
-    async importTasksFromMicrosoft(userId, accessToken) {
+    async importTasksFromMicrosoft(userId, accessToken, forceUpdate = false) {
         try {
             logInfo(`Starting Microsoft ToDo import for user ${userId}`);
 
@@ -251,7 +329,8 @@ class MicrosoftTodoService {
                 const tasks = await this.getTasksFromList(accessToken, list.id);
                 logInfo(`Found ${tasks.length} tasks in list: ${list.displayName}`);
 
-                const tasksToImport = [];
+                const tasksToCreate = [];
+                const tasksToUpdate = [];
 
                 for (const microsoftTask of tasks) {
                     // Check if task already exists
@@ -259,32 +338,166 @@ class MicrosoftTodoService {
                         where: {
                             user_id: userId,
                             external_id: microsoftTask.id
-                        }
+                        },
+                        attributes: [
+                            'id', 'uid', 'name', 'description', 'note', 'due_date', 'priority', 'status', 
+                            'completed_at', 'external_id', 'external_source', 'external_last_modified',
+                            'created_at', 'updated_at'  // Explicitly include timestamp fields
+                        ]
                     });
 
                     if (existingTask) {
-                        // Check if task needs updating
-                        const msUpdated = new Date(microsoftTask.lastModifiedDateTime);
-                        const localUpdated = new Date(existingTask.updatedAt);
+                        // Map Microsoft task to Tududi format first
+                        const updatedTaskData = this.mapMicrosoftTaskToTududi(microsoftTask, projectId, userId);
                         
-                        if (msUpdated <= localUpdated) {
-                            logInfo(`Skipping task ${microsoftTask.id} - no updates needed`);
-                            continue;
+                        // Check if task needs updating by comparing content, not just timestamps
+                        const hasContentChanges = (
+                            existingTask.name !== updatedTaskData.name ||
+                            existingTask.description !== updatedTaskData.description ||
+                            existingTask.note !== updatedTaskData.note ||
+                            existingTask.due_date?.getTime() !== updatedTaskData.due_date?.getTime() ||
+                            existingTask.priority !== updatedTaskData.priority ||
+                            existingTask.status !== updatedTaskData.status ||
+                            existingTask.completed_at?.getTime() !== updatedTaskData.completed_at?.getTime()
+                        );
+                        
+                        // Also check timestamp comparison for debugging
+                        const msUpdated = new Date(microsoftTask.lastModifiedDateTime);
+                        // Use updated_at if available, otherwise fall back to external_last_modified
+                        const localUpdated = (existingTask.updated_at && existingTask.updated_at !== 'Invalid Date') ? 
+                            new Date(existingTask.updated_at) : 
+                            (existingTask.external_last_modified ? new Date(existingTask.external_last_modified) : null);
+                        const isMsNewer = localUpdated ? msUpdated > localUpdated : true; // If no local timestamp, assume MS is newer
+                        
+                        logInfo(`[DEBUG] Task "${microsoftTask.title}" update check:`, {
+                            hasContentChanges,
+                            isMsNewer,
+                            msUpdated: msUpdated.toISOString(),
+                            localUpdated: localUpdated ? localUpdated.toISOString() : 'NULL',
+                            localCreatedAt: (existingTask.created_at && existingTask.created_at !== 'Invalid Date') ? existingTask.created_at.toISOString() : 'NULL',
+                            localUpdatedAt: (existingTask.updated_at && existingTask.updated_at !== 'Invalid Date') ? existingTask.updated_at.toISOString() : 'NULL',
+                            localExternalLastModified: existingTask.external_last_modified ? existingTask.external_last_modified.toISOString() : 'NULL',
+                            timestampSource: (existingTask.updated_at && existingTask.updated_at !== 'Invalid Date') ? 'updated_at' : (existingTask.external_last_modified ? 'external_last_modified' : 'none'),
+                            existingName: existingTask.name,
+                            newName: updatedTaskData.name,
+                            existingDescription: existingTask.description,
+                            newDescription: updatedTaskData.description,
+                            existingNote: existingTask.note,
+                            newNote: updatedTaskData.note,
+                            allExistingTaskFields: Object.keys(existingTask)
+                        });
+                        
+                        if (hasContentChanges || isMsNewer || forceUpdate) {
+                            // Update local task - either content changed, Microsoft is newer, or force update
+                            logInfo(`[DEBUG] Updating task "${microsoftTask.title}" - Content changes: ${hasContentChanges}, MS newer: ${isMsNewer}, Force update: ${forceUpdate}`);
+                            
+                            // Track changes for timeline events
+                            const changes = [];
+                            if (existingTask.name !== updatedTaskData.name) {
+                                changes.push({ field: 'name', old: existingTask.name, new: updatedTaskData.name });
+                            }
+                            if (existingTask.description !== updatedTaskData.description) {
+                                changes.push({ field: 'description', old: existingTask.description, new: updatedTaskData.description });
+                            }
+                            if (existingTask.note !== updatedTaskData.note) {
+                                changes.push({ field: 'note', old: existingTask.note, new: updatedTaskData.note });
+                            }
+                            if (existingTask.due_date?.getTime() !== updatedTaskData.due_date?.getTime()) {
+                                changes.push({ field: 'due_date', old: existingTask.due_date, new: updatedTaskData.due_date });
+                            }
+                            if (existingTask.priority !== updatedTaskData.priority) {
+                                changes.push({ field: 'priority', old: existingTask.priority, new: updatedTaskData.priority });
+                            }
+                            if (existingTask.status !== updatedTaskData.status) {
+                                changes.push({ field: 'status', old: existingTask.status, new: updatedTaskData.status });
+                            }
+                            if (existingTask.completed_at?.getTime() !== updatedTaskData.completed_at?.getTime()) {
+                                changes.push({ field: 'completed_at', old: existingTask.completed_at, new: updatedTaskData.completed_at });
+                            }
+                            
+                            await existingTask.update({
+                                name: updatedTaskData.name,
+                                description: updatedTaskData.description,
+                                note: updatedTaskData.note,
+                                due_date: updatedTaskData.due_date,
+                                priority: updatedTaskData.priority,
+                                status: updatedTaskData.status,
+                                completed_at: updatedTaskData.completed_at,
+                                today: updatedTaskData.today,
+                                external_last_modified: microsoftTask.lastModifiedDateTime
+                            });
+                            
+                            // Create timeline events for changes
+                            for (const change of changes) {
+                                await TaskEvent.createFieldChangeEvent(
+                                    existingTask.id,
+                                    userId,
+                                    change.field,
+                                    change.old,
+                                    change.new,
+                                    {
+                                        source: 'microsoft_todo',
+                                        action: 'import_update',
+                                        external_id: microsoftTask.id,
+                                        list_name: list.displayName
+                                    }
+                                );
+                            }
+                            
+                            tasksToUpdate.push(microsoftTask.id);
+                            logInfo(`Updated existing task from Microsoft: ${microsoftTask.title}`);
+                        } else {
+                            // No content changes and Microsoft is not newer
+                            if (localUpdated && localUpdated > msUpdated) {
+                                // Local is newer - mark for export to Microsoft
+                                logInfo(`Local task is newer, will update Microsoft: ${existingTask.name}`);
+                                tasksToUpdate.push(microsoftTask.id);
+                            } else {
+                                logInfo(`Skipping task ${microsoftTask.title} - no updates needed (timestamps equal and no content changes)`);
+                            }
                         }
+                    } else {
+                        // Create new task
+                        const tududiTask = this.mapMicrosoftTaskToTududi(microsoftTask, projectId, userId);
+                        tasksToCreate.push(tududiTask);
                     }
-
-                    // Map and prepare task for import
-                    const tududiTask = this.mapMicrosoftTaskToTududi(microsoftTask, projectId, userId);
-                    tasksToImport.push(tududiTask);
                 }
 
-                // Import tasks
-                if (tasksToImport.length > 0) {
-                    await Task.bulkCreate(tasksToImport, {
-                        updateOnDuplicate: ['name', 'description', 'due_date', 'priority', 'status', 'external_last_modified']
-                    });
-                    totalImported += tasksToImport.length;
-                    logInfo(`Imported ${tasksToImport.length} tasks from list: ${list.displayName}`);
+                // Create new tasks
+                if (tasksToCreate.length > 0) {
+                    const createdTasks = await Task.bulkCreate(tasksToCreate);
+                    totalImported += tasksToCreate.length;
+                    logInfo(`Created ${tasksToCreate.length} new tasks from list: ${list.displayName}`);
+                    
+                    // Create timeline events for new tasks
+                    for (let i = 0; i < createdTasks.length; i++) {
+                        const task = createdTasks[i];
+                        const taskData = tasksToCreate[i];
+                        await TaskEvent.createTaskCreatedEvent(
+                            task.id,
+                            userId,
+                            {
+                                name: taskData.name,
+                                description: taskData.description,
+                                due_date: taskData.due_date,
+                                priority: taskData.priority,
+                                status: taskData.status,
+                                project_id: taskData.project_id
+                            },
+                            {
+                                source: 'microsoft_todo',
+                                action: 'import',
+                                external_id: taskData.external_id,
+                                list_name: list.displayName
+                            }
+                        );
+                    }
+                }
+
+                // Count updated tasks
+                if (tasksToUpdate.length > 0) {
+                    totalImported += tasksToUpdate.length;
+                    logInfo(`Updated ${tasksToUpdate.length} existing tasks from list: ${list.displayName}`);
                 }
             }
 
@@ -308,11 +521,14 @@ class MicrosoftTodoService {
             const tasks = await Task.findAll({
                 where: {
                     user_id: userId,
-                    external_source: 'microsoft_todo'
+                    [Op.or]: [
+                        { external_source: 'microsoft_todo' },
+                        { external_id: { [Op.ne]: null } }
+                    ]
                 },
                 include: [{
                     model: Project,
-                    as: 'project',
+                    as: 'Project',
                     attributes: ['name']
                 }]
             });
@@ -333,6 +549,18 @@ class MicrosoftTodoService {
 
             for (const task of tasks) {
                 try {
+                    // Check if task needs to be updated in Microsoft
+                    if (task.external_id && task.external_last_modified) {
+                        const localUpdated = new Date(task.updated_at);
+                        const externalUpdated = new Date(task.external_last_modified);
+                        
+                        // Skip if local task is not newer than external
+                        if (localUpdated <= externalUpdated) {
+                            logInfo(`Skipping task ${task.name} - no local updates since last sync`);
+                            continue;
+                        }
+                    }
+                    
                     // Determine target list
                     let targetListId = null;
                     let targetListName = 'Tasks'; // Default list name
@@ -405,6 +633,21 @@ class MicrosoftTodoService {
                             external_last_modified: createdTask.lastModifiedDateTime
                         });
 
+                        // Create timeline event for export
+                        await TaskEvent.createFieldChangeEvent(
+                            task.id,
+                            userId,
+                            'external_id',
+                            task.external_id,
+                            createdTask.id,
+                            {
+                                source: 'microsoft_todo',
+                                action: 'export',
+                                external_id: createdTask.id,
+                                list_name: targetListName
+                            }
+                        );
+
                         exportedCount++;
                         logInfo(`Exported task: ${task.name} to list: ${targetListName}`);
                     } else {
@@ -420,6 +663,42 @@ class MicrosoftTodoService {
 
         } catch (error) {
             logError('Microsoft ToDo export failed', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Refresh Microsoft access token
+     */
+    async refreshAccessToken(refreshToken) {
+        try {
+            const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    client_id: this.clientId,
+                    client_secret: this.clientSecret,
+                    refresh_token: refreshToken,
+                    grant_type: 'refresh_token',
+                    scope: this.scope
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Token refresh failed: ${response.statusText}`);
+            }
+
+            const tokenData = await response.json();
+            
+            return {
+                access_token: tokenData.access_token,
+                refresh_token: tokenData.refresh_token || refreshToken,
+                expires_at: new Date(Date.now() + (tokenData.expires_in * 1000))
+            };
+        } catch (error) {
+            logError('Failed to refresh Microsoft access token', error);
             throw error;
         }
     }

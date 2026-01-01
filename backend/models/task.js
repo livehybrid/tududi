@@ -194,9 +194,20 @@ module.exports = (sequelize) => {
                 allowNull: true,
                 comment: 'External ID for Microsoft Todo sync',
             },
+            external_source: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                comment: 'External source for Microsoft Todo sync',
+            },
+            external_last_modified: {
+                type: DataTypes.DATE,
+                allowNull: true,
+                comment: 'Last modified date from external source',
+            },
         },
         {
             tableName: 'tasks',
+            timestamps: true,  // Enable createdAt and updatedAt fields
             indexes: [
                 {
                     fields: ['user_id'],

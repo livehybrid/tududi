@@ -15,6 +15,7 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
     const [isExporting, setIsExporting] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [lastSync, setLastSync] = useState<Date | null>(null);
+    const [forceUpdate, setForceUpdate] = useState(false);
     const [importStats, setImportStats] = useState<{
         imported: number;
         exported: number;
@@ -29,7 +30,7 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
     const checkConnectionStatus = async () => {
         try {
             console.log('[MicrosoftTodoImport] Checking connection status...');
-            const response = await fetch('/api/microsoft-todo/status');
+            const response = await fetch('/auth/microsoft/status');
             console.log('[MicrosoftTodoImport] Status response:', response.status, response.statusText);
             const data = await response.json();
             console.log('[MicrosoftTodoImport] Status data:', data);
@@ -110,6 +111,10 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
         try {
             const response = await fetch('/api/microsoft-todo/import', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ forceUpdate }),
             });
 
             const data = await response.json();
@@ -122,7 +127,10 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
                 });
                 setLastSync(new Date());
                 showSuccessToast(
-                    t('microsoft_todo.import_success', `Successfully imported ${data.imported} tasks from ${data.lists} lists!`)
+                    t('microsoft_todo.import_success', `Successfully imported {{count}} tasks from {{lists}} lists!`, { 
+                        count: data.imported, 
+                        lists: data.lists 
+                    })
                 );
                 onImportComplete?.(data.imported);
             } else {
@@ -149,7 +157,9 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
                 setImportStats(prev => prev ? { ...prev, exported: data.exported } : { imported: 0, exported: data.exported, lists: 0 });
                 setLastSync(new Date());
                 showSuccessToast(
-                    t('microsoft_todo.export_success', `Successfully exported ${data.exported} tasks to Microsoft ToDo!`)
+                    t('microsoft_todo.export_success', `Successfully exported {{count}} tasks to Microsoft ToDo!`, { 
+                        count: data.exported 
+                    })
                 );
             } else {
                 throw new Error(data.error || 'Export failed');
@@ -167,6 +177,10 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
         try {
             const response = await fetch('/api/microsoft-todo/sync', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ forceUpdate }),
             });
 
             const data = await response.json();
@@ -179,7 +193,10 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
                 });
                 setLastSync(new Date());
                 showSuccessToast(
-                    t('microsoft_todo.sync_success', `Sync completed: ${data.imported} imported, ${data.exported} exported!`)
+                    t('microsoft_todo.sync_success', `Sync completed: {{imported}} imported, {{exported}} exported!`, { 
+                        imported: data.imported, 
+                        exported: data.exported 
+                    })
                 );
                 onImportComplete?.(data.imported);
             } else {
@@ -323,6 +340,20 @@ const MicrosoftTodoImport: React.FC<MicrosoftTodoImportProps> = ({ onImportCompl
                             {t('microsoft_todo.last_sync_time', 'Last sync:')} {lastSync.toLocaleString()}
                         </div>
                     )}
+
+                    {/* Force Update Option */}
+                    <div className="flex items-center space-x-2 mb-4">
+                        <input
+                            type="checkbox"
+                            id="forceUpdate"
+                            checked={forceUpdate}
+                            onChange={(e) => setForceUpdate(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor="forceUpdate" className="text-sm text-gray-700 dark:text-gray-300">
+                            {t('microsoft_todo.force_update', 'Force update all tasks (ignores timestamps)')}
+                        </label>
+                    </div>
 
                     {/* Action Buttons */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

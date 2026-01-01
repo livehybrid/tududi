@@ -16,6 +16,14 @@ async function initializeTelegramPolling() {
                     [require('sequelize').Op.ne]: null,
                 },
             },
+            attributes: [
+                'id',
+                'telegram_bot_token',
+                'microsoft_todo_connected',
+                'microsoft_todo_access_token',
+                'microsoft_todo_refresh_token',
+                'microsoft_todo_expires_at'
+            ]
         });
 
         if (usersWithTelegram.length > 0) {

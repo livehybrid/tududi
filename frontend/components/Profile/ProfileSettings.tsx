@@ -1324,6 +1324,28 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                     formatFrequency={formatFrequency}
                                 />
 
+                                {/* Integrations Tab */}
+                                {activeTab === 'integrations' && (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                                                {t('profile.externalServices', 'External Services')}
+                                            </h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                                                {t('profile.integrationsDescription', 'Connect Tududi with external services to import and sync your tasks.')}
+                                            </p>
+                                            
+                                            {/* Microsoft ToDo Integration */}
+                                            <MicrosoftTodoImport 
+                                                onImportComplete={(importedCount) => {
+                                                    // Toast is already shown by MicrosoftTodoImport component
+                                                    // No need to show duplicate toast here
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
                                 <AiTab
                                     isActive={activeTab === 'ai'}
                                     formData={formData}

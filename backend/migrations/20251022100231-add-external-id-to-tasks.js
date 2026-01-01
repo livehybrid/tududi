@@ -2,20 +2,13 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // Add external_id column to tasks table for Microsoft Todo sync
-    await queryInterface.addColumn('tasks', 'external_id', {
-      type: Sequelize.STRING,
-      allowNull: true,
-      comment: 'External ID for Microsoft Todo sync'
-    });
-    
-    // Add index for better performance when querying by external_id
-    await queryInterface.addIndex('tasks', ['external_id']);
+    console.log('Skipping add-external-id-to-tasks migration - will be handled by sequelize.sync()');
+    // This migration is now a no-op - the external_id column will be added by sequelize.sync()
+    // which is called after migrations in the db-migrate.js script
   },
 
   async down(queryInterface, Sequelize) {
-    // Remove the external_id column and its index
-    await queryInterface.removeIndex('tasks', ['external_id']);
-    await queryInterface.removeColumn('tasks', 'external_id');
+    console.log('Skipping rollback of add-external-id-to-tasks migration - no-op');
+    // This migration is now a no-op
   }
 };
