@@ -16,34 +16,17 @@ module.exports = (sequelize) => {
                 unique: true,
                 defaultValue: () => generateId(),
             },
-            uuid: {
-                type: DataTypes.UUID,
-                allowNull: false,
-                unique: true,
-                defaultValue: DataTypes.UUIDV4,
-            },
-            nanoid: {
-                type: DataTypes.STRING(21),
-                allowNull: false,
-                unique: true,
-                defaultValue: () => generateId(),
-            },
             name: {
                 type: DataTypes.STRING,
                 allowNull: false,
-            },
-            description: {
-                type: DataTypes.TEXT,
-                allowNull: true,
             },
             due_date: {
                 type: DataTypes.DATE,
                 allowNull: true,
             },
-            today: {
-                type: DataTypes.BOOLEAN,
-                allowNull: false,
-                defaultValue: false,
+            defer_until: {
+                type: DataTypes.DATE,
+                allowNull: true,
             },
             priority: {
                 type: DataTypes.INTEGER,
@@ -60,7 +43,7 @@ module.exports = (sequelize) => {
                 defaultValue: 0,
                 validate: {
                     min: 0,
-                    max: 4,
+                    max: 6,
                 },
             },
             note: {
@@ -80,16 +63,26 @@ module.exports = (sequelize) => {
                 type: DataTypes.DATE,
                 allowNull: true,
             },
-            last_generated_date: {
-                type: DataTypes.DATE,
-                allowNull: true,
-            },
             recurrence_weekday: {
                 type: DataTypes.INTEGER,
                 allowNull: true,
                 validate: {
                     min: 0,
                     max: 6,
+                },
+            },
+            recurrence_weekdays: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+                get() {
+                    const rawValue = this.getDataValue('recurrence_weekdays');
+                    return rawValue ? JSON.parse(rawValue) : null;
+                },
+                set(value) {
+                    this.setDataValue(
+                        'recurrence_weekdays',
+                        value ? JSON.stringify(value) : null
+                    );
                 },
             },
             recurrence_month_day: {
@@ -145,7 +138,54 @@ module.exports = (sequelize) => {
                     key: 'id',
                 },
             },
+            order: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                comment: 'Order position for subtasks within a parent task',
+            },
             completed_at: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
+            habit_mode: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
+            habit_target_count: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+            },
+            habit_frequency_period: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+            habit_streak_mode: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                defaultValue: 'calendar',
+            },
+            habit_flexibility_mode: {
+                type: DataTypes.STRING,
+                allowNull: false,
+                defaultValue: 'flexible',
+            },
+            habit_current_streak: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
+            },
+            habit_best_streak: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
+            },
+            habit_total_completions: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0,
+            },
+            habit_last_completion_at: {
                 type: DataTypes.DATE,
                 allowNull: true,
             },
@@ -163,18 +203,17 @@ module.exports = (sequelize) => {
                     fields: ['recurrence_type'],
                 },
                 {
-                    fields: ['last_generated_date'],
+                    fields: ['parent_task_id'],
                 },
                 {
-                    fields: ['parent_task_id'],
+                    name: 'tasks_parent_task_id_order',
+                    fields: ['parent_task_id', 'order'],
                 },
             ],
         }
     );
 
-    // Define associations
     Task.associate = function (models) {
-        // Self-referencing association for recurring tasks
         Task.belongsTo(models.Task, {
             as: 'RecurringParent',
             foreignKey: 'recurring_parent_id',
@@ -185,7 +224,6 @@ module.exports = (sequelize) => {
             foreignKey: 'recurring_parent_id',
         });
 
-        // Self-referencing association for subtasks
         Task.belongsTo(models.Task, {
             as: 'ParentTask',
             foreignKey: 'parent_task_id',
@@ -197,7 +235,6 @@ module.exports = (sequelize) => {
         });
     };
 
-    // Define enum constants
     Task.PRIORITY = {
         LOW: 0,
         MEDIUM: 1,
@@ -210,6 +247,8 @@ module.exports = (sequelize) => {
         DONE: 2,
         ARCHIVED: 3,
         WAITING: 4,
+        CANCELLED: 5,
+        PLANNED: 6,
     };
 
     Task.RECURRENCE_TYPE = {
@@ -221,7 +260,22 @@ module.exports = (sequelize) => {
         MONTHLY_LAST_DAY: 'monthly_last_day',
     };
 
-    // priority and status
+    Task.HABIT_FREQUENCY_PERIOD = {
+        DAILY: 'daily',
+        WEEKLY: 'weekly',
+        MONTHLY: 'monthly',
+    };
+
+    Task.HABIT_STREAK_MODE = {
+        CALENDAR: 'calendar',
+        SCHEDULED: 'scheduled',
+    };
+
+    Task.HABIT_FLEXIBILITY_MODE = {
+        STRICT: 'strict',
+        FLEXIBLE: 'flexible',
+    };
+
     const getPriorityName = (priorityValue) => {
         const priorities = ['low', 'medium', 'high'];
         return priorities[priorityValue] || 'low';
@@ -234,6 +288,8 @@ module.exports = (sequelize) => {
             'done',
             'archived',
             'waiting',
+            'cancelled',
+            'planned',
         ];
         return statuses[statusValue] || 'not_started';
     };
@@ -252,11 +308,12 @@ module.exports = (sequelize) => {
             done: 2,
             archived: 3,
             waiting: 4,
+            cancelled: 5,
+            planned: 6,
         };
         return statuses[statusName] !== undefined ? statuses[statusName] : 0;
     };
 
-    // Attach utility functions to model
     Task.getPriorityName = getPriorityName;
     Task.getStatusName = getStatusName;
     Task.getPriorityValue = getPriorityValue;

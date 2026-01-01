@@ -6,8 +6,8 @@ certs/
 .DS_Store
 .cursor
 AGENTS.md
+CLAUDE.md
 CLAUDE.local.md
-AGENTS.md
 
 .byebug_history
 node_modules
@@ -21,6 +21,13 @@ backend/coverage/
 
 # User uploaded files
 backend/uploads/
+uploads/
+
+# Backup files
+backend/backups/
+
+# Docker volumes
+tududi_db/
 
 # Log files
 *.log
@@ -44,3 +51,10 @@ public/assets/
 # Playwright test results
 test-results/
 .last-run.json
+
+# Test files
+backend/tests/test-files/
+
+# Temporary files
+tmp/
+*.bak

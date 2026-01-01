@@ -31,39 +31,41 @@ describe('Tasks Permissions', () => {
         expect(res.body.error).toBe('Forbidden');
     });
 
-    it("GET /api/task?uid=... should return 403 for other user's task", async () => {
+    it("GET /api/task/:uid should return 403 for other user's task", async () => {
         const otherTask = await Task.create({
             name: 'Other Task',
             user_id: otherUser.id,
         });
 
-        const res = await agent.get(`/api/task?uid=${otherTask.uid}`);
+        const res = await agent.get(`/api/task/${otherTask.uid}`);
         expect(res.status).toBe(403);
         expect(res.body.error).toBe('Forbidden');
     });
 
-    it("PATCH /api/task/:id/toggle_completion should return 403 for other user's task", async () => {
+    it("PATCH /api/task/:id (status) should return 403 for other user's task", async () => {
         const otherTask = await Task.create({
             name: 'Other Task',
             user_id: otherUser.id,
+            status: 0,
         });
 
         const res = await agent
-            .patch(`/api/task/${otherTask.id}/toggle_completion`)
-            .send({});
+            .patch(`/api/task/${otherTask.uid}`)
+            .send({ status: 2 });
         expect(res.status).toBe(403);
         expect(res.body.error).toBe('Forbidden');
     });
 
-    it("PATCH /api/task/:id/toggle-today should return 403 for other user's task", async () => {
+    it("PATCH /api/task/:id (today) should return 403 for other user's task", async () => {
         const otherTask = await Task.create({
             name: 'Other Task',
             user_id: otherUser.id,
+            today: false,
         });
 
         const res = await agent
-            .patch(`/api/task/${otherTask.id}/toggle-today`)
-            .send({});
+            .patch(`/api/task/${otherTask.uid}`)
+            .send({ today: true });
         expect(res.status).toBe(403);
         expect(res.body.error).toBe('Forbidden');
     });
@@ -89,7 +91,7 @@ describe('Tasks Permissions', () => {
         });
 
         const res = await agent
-            .patch(`/api/task/${myTask.id}`)
+            .patch(`/api/task/${myTask.uid}`)
             .send({ project_id: otherProject.id });
         expect(res.status).toBe(403);
         expect(res.body.error).toBe('Forbidden');

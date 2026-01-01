@@ -18,7 +18,13 @@
     "status": "Status",
     "saving": "Lagrer...",
     "settings": "Innstillinger",
-    "none": "Ingen"
+    "none": "Ingen",
+    "discardChanges": "Forkaste endringer?",
+    "discardChangesMessage": "Du har usikrede endringer. Er du sikker på at du vil forkaste dem?",
+    "no": "Nei, fortsett å redigere",
+    "yesDiscard": "Ja, forkast",
+    "uploading": "Laster opp...",
+    "refresh": "Oppdater"
   },
   "sidebar": {
     "dashboard": "Dashbord",
@@ -34,6 +40,7 @@
     "addTagAriaLabel": "Legg til merkelapp",
     "addTagTitle": "Legg til merkelapp",
     "today": "I dag",
+    "total": "Total",
     "upcoming": "Kommende",
     "nextActions": "Neste handlinger",
     "inbox": "Innboks",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Legg til prosjekt",
     "addNoteAriaLabel": "Legg til notat",
     "addNoteTitle": "Legg til notat",
-    "createNew": "Opprett ny"
+    "createNew": "Opprett ny",
+    "views": "Visninger",
+    "unpinView": "Fjern feste fra visning",
+    "pinView": "Fest visning"
   },
   "navigation": {
     "home": "Hjem",
@@ -54,7 +64,8 @@
     "profileSettings": "Profilinnstillinger",
     "settings": "Innstillinger",
     "about": "Om",
-    "logout": "Logg ut"
+    "logout": "Logg ut",
+    "backupRestore": "Sikkerhetskopiering og gjenoppretting"
   },
   "settings": {
     "todayPageSettings": "Innstillinger for Dagens Side",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Oppgaver",
     "today": "I dag",
+    "total": "Total",
     "backlog": "Backlog",
     "inProgress": "Pågår",
     "dueToday": "Forfall i dag",
@@ -115,7 +127,33 @@
     "showSubtasks": "Vis undertasker",
     "hideSubtasks": "Skjul undertasker",
     "edit": "Rediger oppgave",
-    "delete": "Slett oppgave"
+    "delete": "Slett oppgave",
+    "sortTasks": "Sorter oppgaver",
+    "sortBy": "Sorter etter",
+    "direction": "Retning",
+    "ascending": "Stigende",
+    "descending": "Fallende",
+    "groupBy": "Grupper etter",
+    "groupByProject": "Prosjekt",
+    "grouping": {
+      "none": "Ingen"
+    },
+    "show": "Vis",
+    "all": "Alle",
+    "completedOnly": "Kun fullførte",
+    "notCompleted": "Ikke fullført",
+    "noProject": "Ingen prosjekt",
+    "unknownProject": "Ukjent prosjekt",
+    "tasks": "oppgaver",
+    "showingItems": "Viser {{current}} av {{total}} oppgaver",
+    "overdue": "Forsinket",
+    "planned": "Planlagt",
+    "open": "Åpne",
+    "completed": "Fullført",
+    "noCompletedTasksToday": "Ingen fullførte oppgaver i dag.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Ikke startet",
+    "done": "Ferdig"
   },
   "timeline": {
     "activityTimeline": "Aktivitetslinje",
@@ -128,6 +166,7 @@
       "statusChanged": "Status endret",
       "priorityChanged": "Prioritet endret",
       "dueDateChanged": "Forfallsdato endret",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Navn oppdatert",
       "descriptionUpdated": "Beskrivelse oppdatert",
       "noteUpdated": "Notat oppdatert",
@@ -138,11 +177,19 @@
       "status": "Status",
       "priority": "Prioritet",
       "dueDate": "Forfallsdato",
+      "deferUntil": "Defer until",
       "none": "Ingen",
       "recurrenceEndDateChanged": "Endringsdato for gjentakelse endret",
       "recurrenceEndDate": "Endringsdato for gjentakelse",
       "recurrence_type_changed": "Gjentakelsestype endret",
-      "recurrence_interval_changed": "Gjentakelsesintervall endret"
+      "recurrence_interval_changed": "Gjentakelsesintervall endret",
+      "completionBasedChanged": "Fullføring-basert gjentakelse endret",
+      "projectIdChanged": "Tildelt et prosjekt",
+      "recurrenceType": "Gjentakelsestype",
+      "recurrenceTypeChanged": "Gjentakelsestype endret",
+      "recurrence_weekday_changed": "Endret ukedag for gjentakelse",
+      "recurrence_month_day_changed": "Endret månedlig dag for gjentakelse",
+      "recurrence_week_of_month_changed": "Endret uke i måneden for gjentakelse"
     },
     "justNow": "Akkurat nå",
     "minutesAgo": "{{minutes}}m siden",
@@ -272,7 +319,8 @@
       "security": "Sikkerhet",
       "productivity": "Produktivitet",
       "telegram": "Telegram",
-      "ai": "AI-funksjoner"
+      "ai": "AI-funksjoner",
+      "notifications": "Varslingsinnstillinger"
     },
     "security": "Sikkerhetsinnstillinger",
     "changePassword": "Endre passord",
@@ -290,11 +338,26 @@
     "passwordChangeSuccess": "Passordet ble endret med suksess!",
     "changingPassword": "Endrer passord...",
     "accountSettings": "Konto & Innstillinger",
-    "aiProductivityFeatures": "AI & Produktivitetsfunksjoner",
     "botSetup": "Botoppsett",
     "passwordChangeNote": "Endringer i passordet vil bli lagret når du klikker på \"Lagre endringer\" nederst i skjemaet.",
     "passwordChangeOptional": "La passordfeltene stå tomme for å oppdatere andre innstillinger uten å endre passordet ditt.",
-    "firstDayOfWeek": "Første dag i uken"
+    "firstDayOfWeek": "Første dag i uken",
+    "name": "Navn",
+    "surname": "Etternavn",
+    "enterName": "Skriv inn navnet ditt",
+    "enterSurname": "Skriv inn etternavnet ditt",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Velg hvordan du vil bli varslet om viktige hendelser.",
+    "aiFeatures": "AI-funksjoner"
   },
   "productivity": {
     "stalledProjects": "Stagnerte prosjekter",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Oppgaver som ikke er oppdatert på {{days}} dager",
     "stuckProjects": "Fastlåste prosjekter",
     "stuckProjectsDesc": "Prosjekter som ikke er oppdatert nylig",
-    "issuesFound": "Fant {{count}} produktivitetsproblem(er) som trenger oppmerksomhet",
     "reviewItems": "Klikk for å gjennomgå og forbedre arbeidsflyten din",
-    "suggestion": "Klikk på et hvilket som helst element ovenfor for å åpne det og gjøre forbedringer."
+    "suggestion": "Klikk på et hvilket som helst element ovenfor for å åpne det og gjøre forbedringer.",
+    "issuesFound_one": "1 produktivitetsproblem trenger oppmerksomhet",
+    "issuesFound_other": "{{count}} produktivitetsproblemer trenger oppmerksomhet"
   },
   "nextTask": {
     "suggestion": "Siden det ikke er noe i gang, hva med å starte med",
@@ -365,6 +429,7 @@
     "title": "Tittel",
     "description": "Beskrivelse",
     "dueDate": "Forfallsdato",
+    "deferUntil": "Defer until",
     "priority": "Prioritet",
     "status": "Status",
     "assignedTo": "Tildelt Til",
@@ -382,6 +447,7 @@
         "status": "Status",
         "priority": "Prioritet",
         "dueDate": "Forfallsdato",
+        "deferUntil": "Utsett til",
         "note": "Merk",
         "recurrenceType": "Gjenta",
         "recurrenceInterval": "Hver",
@@ -389,7 +455,8 @@
         "monthDay": "Dag i måneden",
         "weekOfMonth": "Uke i måneden",
         "recurrenceEndDate": "Sluttdato (valgfritt)",
-        "completionBased": "Gjenta etter fullføring"
+        "completionBased": "Gjenta etter fullføring",
+        "repeatOn": "Gjenta på"
       },
       "projectSearchPlaceholder": "Søk eller opprett et prosjekt...",
       "noMatchingProjects": "Ingen matchende prosjekter",
@@ -410,7 +477,9 @@
         "short": "Prøv å være mer spesifikk om hva som må gjøres",
         "noVerb": "Hvilken spesifikk handling må du ta? Prøv å starte med et verb.",
         "vague": "Prøv å starte med et handlingsverb som \"Ring\", \"Skriv\", \"Planlegg\" eller \"Undersøk\""
-      }
+      },
+      "selectAtLeastOneDay": "Vennligst velg minst én dag",
+      "deferUntilPlaceholder": "Velg dato og klokkeslett for utsettelse"
     },
     "noteTitle": "Notattittel",
     "noteContent": "Notatinnhold",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Lav",
     "medium": "Moderat",
-    "high": "Høy"
+    "high": "Høy",
+    "none": "Ingen"
   },
   "status": {
     "notStarted": "Ikke Startet",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Prosjektnavn",
     "projectImage": "Prosjektbilde",
-    "uploadImageHint": "Last opp et bilde for prosjektet ditt (maks 5MB)",
+    "uploadImageHint": "Last opp et bilde for prosjektet ditt (maks 10MB)",
     "browseImage": "Bla gjennom bilde",
     "noNotes": "Ingen notater for dette prosjektet.",
     "deleteProject": "Slett prosjekt",
-    "createSuccess": "Prosjekt opprettet med suksess!"
+    "createSuccess": "Prosjekt opprettet med suksess!",
+    "createdAndAssigned": "Prosjekt opprettet og tildelt",
+    "createError": "Kunne ikke opprette prosjekt",
+    "viewProject": "Gå til prosjekt",
+    "editProject": "Rediger prosjekt",
+    "editBanner": "Rediger prosjektbanner",
+    "currentBanner": "Nåværende banner",
+    "choosePreset": "Velg et forhåndsinnstilt banner:",
+    "orUploadOwn": "Eller last opp ditt eget:"
   },
   "errors": {
     "required": "Dette feltet er påkrevd",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Merkelappenavn er påkrevd.",
     "failedToSaveTag": "Kunne ikke lagre merkelapp.",
     "projectNameRequired": "Projektnavn er påkrevd.",
-    "projectSaveFailed": "Kunne ikke lagre prosjekt."
+    "projectSaveFailed": "Kunne ikke lagre prosjekt.",
+    "projectImageTooLarge": "Bildet er for stort. Vennligst velg en fil under 10MB.",
+    "projectImageUpload": "Kunne ikke laste opp bildet. Vennligst prøv en mindre fil eller et annet format.",
+    "bannerSaveFailed": "Kunne ikke lagre banner"
   },
   "inbox": {
     "title": "Innboks",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "I DAG",
+    "total": "Total",
     "tomorrow": "I MORGEN",
-    "yesterday": "I GÅR"
+    "yesterday": "I GÅR",
+    "nextWeek": "neste uke",
+    "nextMonth": "neste måned"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Du ser på oppgaver for et spesifikt prosjekt. Bruk dette området for å administrere og følge med på oppgaver knyttet til dette prosjektet."
     },
     "today": "Dette er oppgavene som forfaller i dag eller oppgaver du har planlagt for umiddelbar oppmerksomhet. Bruk denne visningen for å fokusere på hva som må fullføres i dag. Merk oppgaver som fullført, oppdater statusen deres, eller juster forfallsdatoene hvis nødvendig.",
+    "total": "Total",
     "inbox": "Innboksen er der alle ukategoriserte oppgaver befinner seg. Oppgaver som ikke har blitt tildelt et prosjekt eller gitt en forfallsdato vil vises her. Dette er ditt \"hjernedump\"-område hvor du raskt kan notere oppgaver og organisere dem senere.",
     "next": "Denne visningen viser alle oppgavene som kan utføres i nær fremtid. Disse oppgavene er klare til å bli jobbet med neste gang og har ikke langsiktige frister. Det er et godt sted å fokusere når du ønsker å gjøre raske fremskritt med oppgavene.",
     "upcoming": "Denne visningen fremhever oppgaver som er planlagt for den kommende uken. Den hjelper deg med å forberede deg og holde deg foran fristene ved å gi deg en oversikt over arbeidet du må ta tak i i nær fremtid. Oppgaver med forfallsdato innen de neste 7 dagene vil vises her.",
@@ -584,7 +669,8 @@
     "taskCreated": "Oppgave opprettet!",
     "taskUpdated": "Oppgave oppdatert!",
     "taskDeleted": "Oppgave slettet!",
-    "noteDeleted": "Notatet ble slettet med suksess!"
+    "noteDeleted": "Notatet ble slettet med suksess!",
+    "bannerUpdated": "Banner oppdatert med suksess!"
   },
   "note": {
     "title": "Tittel",
@@ -602,6 +688,7 @@
       "status": "Status",
       "priority": "Prioritet",
       "dueDate": "Forfallsdato",
+      "deferUntil": "Defer until",
       "note": "Notat"
     },
     "create": "Opprett",
@@ -637,7 +724,88 @@
     "subtasks": "Undertasker",
     "noSubtasks": "Ingen undertasker ennå",
     "recentActivity": "Nylig aktivitet",
-    "noActivityYet": "Ingen aktivitet ennå"
+    "noActivityYet": "Ingen aktivitet ennå",
+    "project": "Prosjekt",
+    "tags": "Merker",
+    "priority": "Prioritet",
+    "dueDate": "Forfallsdato",
+    "deferUntil": "Utsett til",
+    "recurringSetup": "Gjentakende oppsett",
+    "thisTask": "Denne oppgaven",
+    "is": "er",
+    "and": "og",
+    "dueOn": "forfalt",
+    "inProject": "fra prosjekt",
+    "lowPriority": "lav prioritet",
+    "mediumPriority": "moderat prioritet",
+    "highPriority": "høy prioritet",
+    "inDays": "om {{count}} dager",
+    "daysAgo": "{{count}} dager siden",
+    "tagsUpdated": "Merker oppdatert med suksess",
+    "tagsUpdateError": "Kunne ikke oppdatere tagger",
+    "recurrenceUpdated": "Gjentakelse oppdatert",
+    "recurrenceUpdateError": "Kunne ikke oppdatere gjentakelse",
+    "dueDateUpdated": "Forfallsdato oppdatert",
+    "dueDateUpdateError": "Kunne ikke oppdatere forfallsdato",
+    "titleUpdated": "Oppgave tittel oppdatert",
+    "titleUpdateError": "Kunne ikke oppdatere oppgave tittel",
+    "contentUpdated": "Oppgaveinnhold oppdatert",
+    "contentUpdateError": "Kunne ikke oppdatere oppgaveinnhold",
+    "subtasksUpdated": "Undertasker oppdatert",
+    "subtasksUpdateError": "Kunne ikke oppdatere undertasker",
+    "projectUpdated": "Prosjekt oppdatert",
+    "projectUpdateError": "Kunne ikke oppdatere prosjekt",
+    "projectCleared": "Prosjektet er ryddet",
+    "projectClearError": "Kunne ikke rydde prosjekt",
+    "priorityUpdated": "Prioritet oppdatert",
+    "priorityUpdateError": "Kunne ikke oppdatere prioritet",
+    "status": {
+      "notStarted": "ikke startet",
+      "inProgress": "pågår",
+      "done": "fullført",
+      "archived": "arkivert",
+      "unknown": "pågående",
+      "waiting": "Venter",
+      "setAsDone": "Sett som fullført"
+    },
+    "noSubtasksClickToAdd": "Ingen deloppgaver ennå, klikk for å legge til",
+    "noProject": "Ingen prosjekt - Klikk for å tildele",
+    "noTags": "Ingen etiketter",
+    "noDueDate": "Ingen forfallsdato",
+    "notRecurring": "Denne oppgaven er ikke gjentakende ennå.",
+    "clickToEditTitle": "Klikk for å redigere tittel",
+    "clickToEditContent": "Klikk for å redigere innhold",
+    "clickToAddContent": "Klikk for å legge til innhold",
+    "clickToEditSubtasks": "Klikk for å redigere deloppgaver",
+    "clickToAddOrEditSubtasks": "Klikk for å legge til eller redigere deloppgaver",
+    "contentPlaceholder": "Legg til innhold her... (Markdown støttet)",
+    "contentEditHint": "Trykk Cmd/Ctrl+Enter for å lagre, Esc for å avbryte",
+    "noContentPreview": "Ingen innhold å forhåndsvise. Bytt til Rediger modus for å legge til innhold.",
+    "deleteConfirmTitle": "Slett oppgave",
+    "deleteConfirmMessage": "Er du sikker på at du vil slette denne oppgaven? Denne handlingen kan ikke angres.",
+    "noMoreIterations": "Ingen flere iterasjoner planlagt",
+    "nextOccurrences": "Neste forekomster",
+    "nextOccurrencesAfterThis": "Neste forekomster etter dette",
+    "instanceOf": "Dette er en instans av en gjentakende oppgave",
+    "parentTask": "Foreldrepågave",
+    "includingToday": "inkludert i dag",
+    "has": "har",
+    "fromProject": "fra prosjektet",
+    "noDeferUntil": "Ingen utsettelse til",
+    "deferUntilUpdated": "Utsettelse oppdatert vellykket",
+    "deferUntilUpdateError": "Kunne ikke oppdatere utsettelse",
+    "showOverdueWarning": "Vis advarsel for forfalt",
+    "dueDateInPastWarning": "Advarsel: Du setter en forfallsdato i fortiden",
+    "overview": "Oversikt",
+    "schedule": "Plan",
+    "attachments": "Vedlegg",
+    "attachmentsComingSoon": "Vedleggsfunksjonen kommer snart",
+    "activity": "Aktivitet",
+    "lastUpdatedAt": "Sist oppdatert kl",
+    "statusUpdated": "Status oppdatert med suksess",
+    "statusUpdateError": "Feil ved oppdatering av status",
+    "updatedAt": "Oppdatert kl",
+    "upcoming": "kommende"
   },
   "projects": {
     "loading": "Laster prosjekter...",
@@ -654,7 +822,8 @@
       "active": "Aktiv",
       "inactive": "Inaktiv",
       "all": "Alle",
-      "allAreas": "Alle områder"
+      "allAreas": "Alle områder",
+      "notCompleted": "Ikke fullført"
     },
     "selectState": "Velg tilstand",
     "state": "Prosjektstatus",
@@ -668,8 +837,33 @@
       "planned_desc": "Avgrenset og klar til å starte",
       "in_progress_desc": "Aktivt arbeid pågår",
       "blocked_desc": "Midlertidig pauset eller fastlåst",
-      "completed_desc": "Ferdig og gjort"
-    }
+      "completed_desc": "Ferdig og gjort",
+      "active": "Pågår",
+      "active_desc": "Aktivt arbeid pågår"
+    },
+    "showMetrics": "Vis målinger",
+    "hideMetrics": "Skjul målinger",
+    "progress": "Fremdrift",
+    "taskMomentum": "Oppgavemomentum",
+    "activeTasks": "Aktive oppgaver",
+    "dueSchedule": "Forfallsoversikt",
+    "next14Days": "Neste 14 dager",
+    "noUpcomingDue": "Ingen frister de neste 14 dagene.",
+    "peakDay": "Topp",
+    "none": "Ingen",
+    "next3days": "Neste 3 dager",
+    "nextWeek": "Neste 7 dager",
+    "recentCompletion": "Nylig fullføring",
+    "last7And30": "Siste 7 og 30 dager",
+    "weeklyPace": "Ukentlig tempo",
+    "prevWeekCompleted": "{{count}} forrige uke",
+    "vsPrevWeek": "vs forrige uke",
+    "monthlyCompletion": "30-dagers fullføringer",
+    "last30Days": "Siste 30 dager",
+    "nextUp": "Neste beste handling",
+    "focusTask": "Mest innflytelsesrike oppgave",
+    "focusHint": "Flytter denne oppgaven til pågående og i dag",
+    "noNextAction": "Alt klart - ingen utestående oppgaver."
   },
   "projectItem": {
     "edit": "Rediger",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Veksle nedtrekksmeny",
     "projectInitials": "Prosjektinitialer",
     "share": "Del",
-    "sharedProject": "Delt med teamet"
+    "sharedProject": "Delt med teamet",
+    "noDueDate": "Ingen frist",
+    "dueToday": "Forfaller i dag",
+    "dueIn": "Forfaller om {{count}} {{unit}}",
+    "overdue": "Forfalt for {{count}} {{unit}} siden",
+    "day": "dag",
+    "days": "dager",
+    "sharedUser": "Delt bruker",
+    "moreSharedUsers": "+{{count}} flere brukere"
   },
   "areas": {
     "title": "Områder",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Du redigerer innstillingene for gjentakelse av den overordnede oppgaven. Endringer vil påvirke alle fremtidige instanser av denne gjentakende oppgaven."
   },
   "weekdays": {
-    "sunday": "Søndag",
-    "monday": "Mandag",
-    "tuesday": "Tirsdag",
-    "wednesday": "Onsdag",
-    "thursday": "Torsdag",
-    "friday": "Fredag",
-    "saturday": "Lørdag"
+    "sunday": "Søn",
+    "monday": "Man",
+    "tuesday": "Tir",
+    "wednesday": "Ons",
+    "thursday": "Tor",
+    "friday": "Fre",
+    "saturday": "Lør"
   },
   "pomodoro": {
     "play": "Spill",
@@ -769,6 +971,7 @@
     "week": "Uke",
     "day": "Dag",
     "today": "I dag",
+    "total": "Total",
     "addEvent": "Legg til hendelse",
     "weekView": "Ukevisning",
     "dayView": "Dagsvisning",
@@ -792,6 +995,7 @@
     "title": "Tittel",
     "status": "Status",
     "dueDate": "Forfallsdato",
+    "deferUntil": "Defer until",
     "priority": "Prioritet",
     "project": "Prosjekt",
     "area": "Område",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Ingen brukere tilgjengelige for å dele med",
     "shared": "Delt",
     "sharedWithTeam": "Delt med teamet"
+  },
+  "views": {
+    "title": "Smarte Visninger",
+    "loading": "Laster visninger...",
+    "searchPlaceholder": "Søk etter visninger...",
+    "noViewsFound": "Ingen visninger funnet. Opprett en visning ved å utføre et søk og klikke \"Lagre som Smart Visning\".",
+    "deleteView": "Slett Visning",
+    "confirmDelete": "Er du sikker på at du vil slette visningen \"{{viewName}}\"?",
+    "pinView": "Fest visning",
+    "unpinView": "Fjern feste fra visning",
+    "searchCriteria": "Søke Kriterier",
+    "entityTypes": "Enhetstyper",
+    "searchText": "Søk Tekst",
+    "priority": "Prioritet",
+    "dueDate": "Forfallsdato",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Ingen spesifikke kriterier satt",
+    "priorityLabel": "Prioritet:",
+    "dueLabel": "Forfall:",
+    "tags": "Tags",
+    "recurring": "Gjentakende"
+  },
+  "search": {
+    "placeholder": "Søk etter oppgaver, prosjekter, notater...",
+    "searchingFor": "Du søker etter",
+    "allItems": "alle elementer",
+    "containingText": ", som inneholder teksten",
+    "withPriority": ", med",
+    "priority": "prioritet",
+    "due": ", forfall",
+    "taggedWith": ", merket med",
+    "and": "og",
+    "criteria": "Søker kriterier",
+    "metadataFilters": "Metadata Filtre",
+    "priorityFilter": "Prioritet",
+    "dueFilter": "Forfall",
+    "tagsFilter": "Tags",
+    "saveAsSmartView": "Lagre som Smart Visning",
+    "viewName": "Visningsnavn",
+    "viewNameRequired": "Visningsnavn er påkrevd",
+    "viewNamePlaceholder": "Skriv inn visningsnavn",
+    "failedToSave": "Kunne ikke lagre visning. Vennligst prøv igjen.",
+    "cancel": "Avbryt",
+    "saving": "Lagrer...",
+    "saveView": "Lagre visning",
+    "startTyping": "Begynn å skrive for å søke eller velg filtre ovenfor",
+    "noResults": "Ingen resultater funnet",
+    "entityTypes": {
+      "task": "oppgave",
+      "project": "prosjekt",
+      "area": "område",
+      "note": "notat"
+    },
+    "thatAre": ", som er",
+    "extras": "Ekstra",
+    "recurringFilter": {
+      "label": "Gjentakende",
+      "recurring": "gjentakende maler",
+      "nonRecurring": "ikke-gjentakende",
+      "instances": "gjentakende instanser"
+    },
+    "deferUntilFilter": "Utsett til",
+    "deferUntil": ", utsett til",
+    "extrasFilter": {
+      "isRecurring": "er Gjentakende",
+      "isOverdue": "er Forfalt",
+      "hasContent": "har Innhold",
+      "isDeferred": "er Utsatt",
+      "hasTags": "har Tagger",
+      "isAssignedToProject": "er Tildelt Prosjekt"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Legg til en underoppgave..."
+  },
+  "backup": {
+    "title": "Sikkerhetskopiering og gjenoppretting",
+    "description": "Lag sikkerhetskopier eller gjenopprett fra tidligere sikkerhetskopier. Dine siste 5 sikkerhetskopier lagres automatisk.",
+    "createBackup": "Lag sikkerhetskopi",
+    "importFromFile": "Importer fra fil",
+    "createNewBackup": "Lag ny sikkerhetskopi",
+    "createDescription": "Lag en ny sikkerhetskopi av alle dataene dine. Sikkerhetskopier lagres på serveren, og du kan gjenopprette dem senere.",
+    "createBackupNow": "Lag sikkerhetskopi nå",
+    "creating": "Lager sikkerhetskopi...",
+    "exportSuccess": "Sikkerhetskopi opprettet med suksess!",
+    "exportError": "Feil ved oppretting av sikkerhetskopi",
+    "savedBackups": "Lagrede sikkerhetskopier",
+    "noBackups": "Ingen sikkerhetskopier funnet. Lag din første sikkerhetskopi ovenfor.",
+    "createdAt": "Opprettet",
+    "version": "Versjon",
+    "currentVersion": "Nåværende versjon",
+    "size": "Størrelse",
+    "contents": "Innhold",
+    "actions": "Handlinger",
+    "restore": "Gjenopprett",
+    "download": "Last ned",
+    "downloadSuccess": "Sikkerhetskopiering lastet ned med suksess!",
+    "downloadError": "Feil ved nedlasting av sikkerhetskopi",
+    "confirmRestore": "Gjenopprett sikkerhetskopi",
+    "confirmRestoreMessage": "Er du sikker på at du vil gjenopprette denne sikkerhetskopien? Dette vil slå sammen de sikkerhetskopierte dataene med dine nåværende data.",
+    "restoreSuccess": "Sikkerhetskopi gjenopprettet med suksess! Opprettet: {{tasks}} oppgaver, {{projects}} prosjekter, {{notes}} notater",
+    "restoreError": "Feil ved gjenoppretting av sikkerhetskopi",
+    "confirmDelete": "Slett sikkerhetskopi",
+    "confirmDeleteMessage": "Er du sikker på at du vil slette denne sikkerhetskopien? Denne handlingen kan ikke angres.",
+    "deleteSuccess": "Sikkerhetskopi slettet med suksess!",
+    "deleteError": "Feil ved sletting av sikkerhetskopi",
+    "importTitle": "Importer fra fil",
+    "importDescription": "Last opp en sikkerhetskopifil for å gjenopprette dataene dine. Dine eksisterende data vil bli bevart, og nye elementer fra sikkerhetskopien vil bli lagt til.",
+    "importNote": "Viktig:",
+    "importNoteDescription": "Import vil slå sammen data med dine eksisterende elementer. Duplikate elementer (samme UID) vil bli utelatt.",
+    "selectFile": "Velg sikkerhetskopifil",
+    "clickToUpload": "Klikk for å bla gjennom filer",
+    "restoreBackup": "Gjenopprett sikkerhetskopi",
+    "importing": "Importer...",
+    "importSuccess": "Sikkerhetskopi importert med suksess! Opprettet: {{tasks}} oppgaver, {{projects}} prosjekter, {{notes}} notater",
+    "importError": "Feil ved import av sikkerhetskopi",
+    "backupContents": "Innhold i sikkerhetskopi:",
+    "validationError": "Den valgte filen er ikke en gyldig sikkerhetskopi",
+    "validationErrors": "Valideringsfeil:",
+    "versionIncompatible": "Versjon inkompatibel",
+    "backupVersion": "Sikkerhetskopiversjon",
+    "restoreButton": "Gjenopprett"
+  },
+  "notifications": {
+    "table": {
+      "type": "Varslingstype"
+    },
+    "channels": {
+      "inApp": "I appen",
+      "email": "E-post",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Forfalte oppgaver",
+      "overdueTasks": "Overforfalte oppgaver",
+      "deferUntil": "Utsett til",
+      "dueProjects": "Forfalte prosjekter",
+      "overdueProjects": "Overforfalte prosjekter"
+    },
+    "descriptions": {
+      "dueTasks": "Oppgaver som forfaller innen 24 timer",
+      "overdueTasks": "Oppgaver som har overskredet forfallsdato",
+      "deferUntil": "Oppgaver som nå er tilgjengelige for arbeid",
+      "dueProjects": "Prosjekter som forfaller innen 24 timer",
+      "overdueProjects": "Prosjekter som har overskredet forfallsdato"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram ikke konfigurert:",
+        "message": "For å motta Telegram-varsler, vennligst konfigurer Telegram-boten din i Telegram-fanen."
+      }
+    },
+    "test": {
+      "title": "Testvarsler",
+      "description": "Send en testvarsling for å se hvordan den vises i appen og på aktiverte kanaler (Telegram, osv.)",
+      "send": "Send test",
+      "sending": "Sender..."
+    },
+    "info": {
+      "title": "Merk:",
+      "message": "E-post og Push-varsler kommer snart. Varsler i appen og Telegram er for øyeblikket tilgjengelige."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Ikke startet",
+    "not_started_desc": "Registrert, men ikke startet ennå",
+    "planned": "Planlagt",
+    "planned_desc": "Avgrenset og klar til å starte",
+    "in_progress": "Pågår",
+    "in_progress_desc": "Aktivt arbeid pågår",
+    "waiting": "Venter",
+    "waiting_desc": "Venter på ekstern input",
+    "done": "Fullført",
+    "done_desc": "Ferdig og avsluttet",
+    "cancelled": "Avbrutt",
+    "cancelled_desc": "Vil ikke bli fullført"
   }
 }

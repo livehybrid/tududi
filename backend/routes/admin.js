@@ -1,6 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { Role, User } = require('../models');
+const {
+    Role,
+    User,
+    Area,
+    Project,
+    Task,
+    Tag,
+    Note,
+    InboxItem,
+    TaskEvent,
+    Action,
+    Permission,
+    View,
+    ApiToken,
+    Notification,
+    RecurringCompletion,
+} = require('../models');
 const { isAdmin } = require('../services/rolesService');
 const { logError } = require('../services/logService');
 
@@ -128,10 +144,17 @@ router.post('/admin/users', requireAdmin, async (req, res) => {
         // Optionally assign admin role if requested and allowed
         const makeAdmin = role === 'admin';
         if (makeAdmin) {
-            await Role.findOrCreate({
+            // Find or create role, and ensure is_admin is true
+            const [userRole, roleCreated] = await Role.findOrCreate({
                 where: { user_id: user.id },
                 defaults: { user_id: user.id, is_admin: true },
             });
+
+            // Update to admin if role exists but is not admin
+            if (!roleCreated && !userRole.is_admin) {
+                userRole.is_admin = true;
+                await userRole.save();
+            }
         }
         res.status(201).json({
             id: user.id,
@@ -227,36 +250,110 @@ router.put('/admin/users/:id', requireAdmin, async (req, res) => {
 
 // DELETE /api/admin/users/:id - delete a user, prevent self-delete
 router.delete('/admin/users/:id', requireAdmin, async (req, res) => {
+    const { sequelize } = require('../models');
+    const transaction = await sequelize.transaction();
+
     try {
         const id = parseInt(req.params.id, 10);
         const requesterId = req.currentUser?.id || req.session?.userId;
-        if (!Number.isFinite(id))
+        if (!Number.isFinite(id)) {
+            await transaction.rollback();
             return res.status(400).json({ error: 'Invalid user id' });
-        if (id === requesterId)
+        }
+        if (id === requesterId) {
+            await transaction.rollback();
             return res
                 .status(400)
                 .json({ error: 'Cannot delete your own account' });
+        }
 
-        const user = await User.findByPk(id);
-        if (!user) return res.status(404).json({ error: 'User not found' });
+        const user = await User.findByPk(id, { transaction });
+        if (!user) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'User not found' });
+        }
 
         // Prevent deleting the last remaining admin
-        const targetRole = await Role.findOne({ where: { user_id: id } });
+        const targetRole = await Role.findOne({
+            where: { user_id: id },
+            transaction,
+        });
         if (targetRole?.is_admin) {
-            const adminCount = await Role.count({ where: { is_admin: true } });
+            const adminCount = await Role.count({
+                where: { is_admin: true },
+                transaction,
+            });
             if (adminCount <= 1) {
+                await transaction.rollback();
                 return res
                     .status(400)
                     .json({ error: 'Cannot delete the last remaining admin' });
             }
         }
 
-        await user.destroy();
+        await TaskEvent.destroy({ where: { user_id: id }, transaction });
+
+        const userTasks = await Task.findAll({
+            where: { user_id: id },
+            attributes: ['id'],
+            transaction,
+        });
+        const taskIds = userTasks.map((t) => t.id);
+        if (taskIds.length > 0) {
+            await RecurringCompletion.destroy({
+                where: { task_id: taskIds },
+                transaction,
+            });
+        }
+
+        await Task.destroy({ where: { user_id: id }, transaction });
+        await Note.destroy({ where: { user_id: id }, transaction });
+        await Project.destroy({ where: { user_id: id }, transaction });
+        await Area.destroy({ where: { user_id: id }, transaction });
+        await Tag.destroy({ where: { user_id: id }, transaction });
+        await InboxItem.destroy({ where: { user_id: id }, transaction });
+        await View.destroy({ where: { user_id: id }, transaction });
+        await Notification.destroy({ where: { user_id: id }, transaction });
+        await ApiToken.destroy({ where: { user_id: id }, transaction });
+        await Permission.destroy({ where: { user_id: id }, transaction });
+        await Permission.destroy({
+            where: { granted_by_user_id: id },
+            transaction,
+        });
+        await Action.destroy({ where: { actor_user_id: id }, transaction });
+        await Action.destroy({ where: { target_user_id: id }, transaction });
+        await Role.destroy({ where: { user_id: id }, transaction });
+        await user.destroy({ transaction });
+
+        await transaction.commit();
         res.status(204).send();
     } catch (err) {
+        await transaction.rollback();
         logError('Error deleting user:', err);
         res.status(400).json({
             error: 'There was a problem deleting the user.',
         });
+    }
+});
+
+// POST /api/admin/toggle-registration - toggle registration setting
+router.post('/admin/toggle-registration', requireAdmin, async (req, res) => {
+    try {
+        const { enabled } = req.body;
+        if (typeof enabled !== 'boolean') {
+            return res
+                .status(400)
+                .json({ error: 'enabled must be a boolean value' });
+        }
+
+        const {
+            setRegistrationEnabled,
+        } = require('../services/registrationService');
+        await setRegistrationEnabled(enabled);
+
+        res.json({ enabled });
+    } catch (err) {
+        logError('Error toggling registration:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });

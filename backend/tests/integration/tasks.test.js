@@ -58,7 +58,7 @@ describe('Tasks Routes', () => {
             console.error = jest.fn();
 
             const taskData = {
-                description: 'Test Description',
+                note: 'Test Note',
             };
 
             const response = await agent.post('/api/task').send(taskData);
@@ -76,16 +76,14 @@ describe('Tasks Routes', () => {
         beforeEach(async () => {
             task1 = await Task.create({
                 name: 'Task 1',
-                description: 'Description 1',
                 user_id: user.id,
-                today: true,
+                status: Task.STATUS.IN_PROGRESS, // Active status shows in today view
             });
 
             task2 = await Task.create({
                 name: 'Task 2',
-                description: 'Description 2',
                 user_id: user.id,
-                today: false,
+                status: Task.STATUS.NOT_STARTED, // Not active, won't show in today view
             });
         });
 
@@ -99,13 +97,13 @@ describe('Tasks Routes', () => {
             expect(response.body.tasks.map((t) => t.id)).toContain(task2.id);
         });
 
-        it('should filter today tasks (returns all user tasks)', async () => {
+        it('should filter today tasks (returns tasks with active status)', async () => {
             const response = await agent.get('/api/tasks?type=today');
 
             expect(response.status).toBe(200);
             expect(response.body.tasks).toBeDefined();
-            expect(response.body.tasks.length).toBe(2);
-            // Both tasks should be returned as "today" doesn't filter by the today field
+            expect(response.body.tasks.length).toBe(1);
+            expect(response.body.tasks[0].id).toBe(task1.id);
         });
 
         it('should require authentication', async () => {
@@ -124,7 +122,6 @@ describe('Tasks Routes', () => {
         beforeEach(async () => {
             task = await Task.create({
                 name: 'Test Task',
-                description: 'Test Description',
                 priority: 0,
                 status: 0,
                 user_id: user.id,
@@ -140,7 +137,7 @@ describe('Tasks Routes', () => {
             };
 
             const response = await agent
-                .patch(`/api/task/${task.id}`)
+                .patch(`/api/task/${task.uid}`)
                 .send(updateData);
 
             expect(response.status).toBe(200);
@@ -166,7 +163,7 @@ describe('Tasks Routes', () => {
             };
 
             const response = await agent
-                .patch(`/api/task/${recurringTask.id}`)
+                .patch(`/api/task/${recurringTask.uid}`)
                 .send(updateData);
 
             expect(response.status).toBe(200);
@@ -176,13 +173,13 @@ describe('Tasks Routes', () => {
             expect(response.body.original_name).toBe(updateData.name);
         });
 
-        it('should return 404 for non-existent task', async () => {
+        it('should return 403 for non-existent task', async () => {
             const response = await agent
-                .patch('/api/task/999999')
+                .patch('/api/task/nonexistent-uid-12345')
                 .send({ name: 'Updated' });
 
-            expect(response.status).toBe(404);
-            expect(response.body.error).toBe('Task not found.');
+            expect(response.status).toBe(403);
+            expect(response.body.error).toBe('Forbidden');
         });
 
         it("should not allow updating other user's tasks", async () => {
@@ -198,7 +195,7 @@ describe('Tasks Routes', () => {
             });
 
             const response = await agent
-                .patch(`/api/task/${otherTask.id}`)
+                .patch(`/api/task/${otherTask.uid}`)
                 .send({ name: 'Updated' });
 
             expect(response.status).toBe(403);
@@ -207,7 +204,7 @@ describe('Tasks Routes', () => {
 
         it('should require authentication', async () => {
             const response = await request(app)
-                .patch(`/api/task/${task.id}`)
+                .patch(`/api/task/${task.uid}`)
                 .send({ name: 'Updated' });
 
             expect(response.status).toBe(401);
@@ -226,7 +223,7 @@ describe('Tasks Routes', () => {
         });
 
         it('should delete task', async () => {
-            const response = await agent.delete(`/api/task/${task.id}`);
+            const response = await agent.delete(`/api/task/${task.uid}`);
 
             expect(response.status).toBe(200);
             expect(response.body.message).toBe('Task successfully deleted');
@@ -236,11 +233,13 @@ describe('Tasks Routes', () => {
             expect(deletedTask).toBeNull();
         }, 10000); // 10 second timeout for DELETE operations
 
-        it('should return 404 for non-existent task', async () => {
-            const response = await agent.delete('/api/task/999999');
+        it('should return 403 for non-existent task', async () => {
+            const response = await agent.delete(
+                '/api/task/nonexistent-uid-12345'
+            );
 
-            expect(response.status).toBe(404);
-            expect(response.body.error).toBe('Task not found.');
+            expect(response.status).toBe(403);
+            expect(response.body.error).toBe('Forbidden');
         });
 
         it("should not allow deleting other user's tasks", async () => {
@@ -255,14 +254,14 @@ describe('Tasks Routes', () => {
                 user_id: otherUser.id,
             });
 
-            const response = await agent.delete(`/api/task/${otherTask.id}`);
+            const response = await agent.delete(`/api/task/${otherTask.uid}`);
 
             expect(response.status).toBe(403);
             expect(response.body.error).toBe('Forbidden');
         }, 10000); // 10 second timeout for this specific test
 
         it('should require authentication', async () => {
-            const response = await request(app).delete(`/api/task/${task.id}`);
+            const response = await request(app).delete(`/api/task/${task.uid}`);
 
             expect(response.status).toBe(401);
             expect(response.body.error).toBe('Authentication required');
@@ -283,6 +282,27 @@ describe('Tasks Routes', () => {
             expect(response.body.Tags.length).toBe(2);
             expect(response.body.Tags.map((t) => t.name)).toContain('work');
             expect(response.body.Tags.map((t) => t.name)).toContain('urgent');
+        });
+
+        it('should return all tags when filtering by a specific tag', async () => {
+            const taskData = {
+                name: 'Task with multiple tags',
+                tags: [{ name: 'alpha' }, { name: 'beta' }],
+            };
+
+            const createResponse = await agent.post('/api/task').send(taskData);
+            expect(createResponse.status).toBe(201);
+
+            const response = await agent.get('/api/tasks?tag=alpha');
+
+            expect(response.status).toBe(200);
+            expect(response.body.tasks.length).toBe(1);
+
+            const [task] = response.body.tasks;
+            const tagNames = (task.tags || []).map((t) => t.name);
+
+            expect(tagNames).toEqual(expect.arrayContaining(['alpha', 'beta']));
+            expect(tagNames.length).toBe(2);
         });
     });
 

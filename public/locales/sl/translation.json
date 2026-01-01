@@ -18,7 +18,13 @@
     "status": "Status",
     "saving": "Shranjevanje...",
     "settings": "Nastavitve",
-    "none": "Nič"
+    "none": "Nič",
+    "discardChanges": "Zavrzite spremembe?",
+    "discardChangesMessage": "Imate neshranjene spremembe. Ste prepričani, da jih želite zavreči?",
+    "no": "Ne, nadaljuj z urejanjem",
+    "yesDiscard": "Da, zavrzi",
+    "uploading": "Nalagam...",
+    "refresh": "Osveži"
   },
   "sidebar": {
     "dashboard": "Nadzorna plošča",
@@ -41,11 +47,15 @@
     "addNoteTitle": "Dodaj opombo",
     "createNew": "Ustvari novo",
     "today": "Danes",
+    "total": "Total",
     "upcoming": "Prihajajoče",
     "nextActions": "Naslednje akcije",
     "inbox": "Prejeto",
     "completed": "Dokončano",
-    "allTasks": "Vse naloge"
+    "allTasks": "Vse naloge",
+    "views": "Pogledi",
+    "unpinView": "Odpravi pripenjanje pogleda",
+    "pinView": "Pripni pogled"
   },
   "navigation": {
     "home": "Domov",
@@ -54,7 +64,8 @@
     "profileSettings": "Nastavitve profila",
     "settings": "Nastavitve",
     "about": "O aplikaciji",
-    "logout": "Odjava"
+    "logout": "Odjava",
+    "backupRestore": "Varnostna kopija in obnova"
   },
   "settings": {
     "todayPageSettings": "Nastavitve strani Danes",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Naloge",
     "today": "Danes",
+    "total": "Total",
     "backlog": "Zamude",
     "inProgress": "V teku",
     "dueToday": "Zapade danes",
@@ -115,7 +127,33 @@
     "showSubtasks": "Prikaži podnaloge",
     "hideSubtasks": "Skrij podnaloge",
     "edit": "Uredi nalogo",
-    "delete": "Izbriši nalogo"
+    "delete": "Izbriši nalogo",
+    "sortTasks": "Razvrsti naloge",
+    "sortBy": "Razvrsti po",
+    "direction": "Smer",
+    "ascending": "Naraščajoče",
+    "descending": "Padajoče",
+    "groupBy": "Združi po",
+    "groupByProject": "Projekt",
+    "grouping": {
+      "none": "Brez"
+    },
+    "show": "Prikaži",
+    "all": "Vse",
+    "completedOnly": "Samo dokončane",
+    "notCompleted": "Nedokončane",
+    "noProject": "Brez projekta",
+    "unknownProject": "Neznan projekt",
+    "tasks": "naloge",
+    "showingItems": "Prikazovanje {{current}} od {{total}} nalog",
+    "overdue": "Zapadlo",
+    "planned": "Načrtovano",
+    "open": "Odpri",
+    "completed": "Dokončano",
+    "noCompletedTasksToday": "Danes ni zaključenih nalog.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Niso začeli",
+    "done": "Dokončano"
   },
   "timeline": {
     "activityTimeline": "Časovnica aktivnosti",
@@ -135,6 +173,7 @@
       "statusChanged": "Status spremenjen",
       "priorityChanged": "Prioriteta spremenjena",
       "dueDateChanged": "Rok spremenjen",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Ime posodobljeno",
       "descriptionUpdated": "Opis posodobljen",
       "noteUpdated": "Opomba posodobljena",
@@ -145,11 +184,19 @@
       "status": "Status",
       "priority": "Prioriteta",
       "dueDate": "Rok",
+      "deferUntil": "Defer until",
       "none": "Nič",
       "recurrenceEndDateChanged": "Datum konca ponavljanja se je spremenil",
       "recurrenceEndDate": "Datum konca ponavljanja",
       "recurrence_type_changed": "Vrsta ponavljanja se je spremenila",
-      "recurrence_interval_changed": "Interval ponavljanja se je spremenil"
+      "recurrence_interval_changed": "Interval ponavljanja se je spremenil",
+      "completionBasedChanged": "Sprememba ponavljanja na podlagi dokončanja",
+      "projectIdChanged": "Dodeljeno projektu",
+      "recurrenceType": "Vrsta ponavljanja",
+      "recurrenceTypeChanged": "Vrsta ponavljanja spremenjena",
+      "recurrence_weekday_changed": "Spremenjen dan ponavljanja",
+      "recurrence_month_day_changed": "Spremenjen dan v mesecu ponavljanja",
+      "recurrence_week_of_month_changed": "Spremenjena teden v mesecu ponavljanja"
     }
   },
   "profile": {
@@ -272,7 +319,8 @@
       "security": "Varnost",
       "productivity": "Produktivnost",
       "telegram": "Telegram",
-      "ai": "AI Funkcije"
+      "ai": "AI Funkcije",
+      "notifications": "Nastavitve obvestil"
     },
     "security": "Nastavitve varnosti",
     "changePassword": "Spremeni geslo",
@@ -290,11 +338,26 @@
     "passwordChangeSuccess": "Geslo je bilo uspešno spremenjeno!",
     "changingPassword": "Spreminjanje gesla...",
     "accountSettings": "Račun in nastavitve",
-    "aiProductivityFeatures": "AI in funkcije produktivnosti",
     "botSetup": "Nastavitev bota",
     "passwordChangeNote": "Spremembe gesla bodo shranjene, ko kliknete \"Shrani spremembe\" na dnu obrazca.",
     "passwordChangeOptional": "Pustite polja za geslo prazna, da posodobite druge nastavitve brez spreminjanja gesla.",
-    "firstDayOfWeek": "Prvi dan v tednu"
+    "firstDayOfWeek": "Prvi dan v tednu",
+    "name": "Ime",
+    "surname": "Priimek",
+    "enterName": "Vnesite svoje ime",
+    "enterSurname": "Vnesite svoj priimek",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Izberite, kako želite biti obveščeni o pomembnih dogodkih.",
+    "aiFeatures": "Funkcije AI"
   },
   "productivity": {
     "stalledProjects": "Zastali projekti",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Naloge, ki niso bile posodobljene v {{days}} dneh",
     "stuckProjects": "Zagozdene projekte",
     "stuckProjectsDesc": "Projekti, ki niso bili nedavno posodobljeni",
-    "issuesFound": "Najdenih {{count}} težav s produktivnostjo, ki potrebujejo pozornost",
     "reviewItems": "Kliknite za pregled in izboljšanje svojega delovnega toka",
-    "suggestion": "Kliknite na katerikoli element zgoraj, da ga odprete in izboljšate."
+    "suggestion": "Kliknite na katerikoli element zgoraj, da ga odprete in izboljšate.",
+    "issuesFound_one": "1 težava s produktivnostjo potrebuje pozornost",
+    "issuesFound_other": "{{count}} težav s produktivnostjo potrebuje pozornost"
   },
   "nextTask": {
     "suggestion": "Ker ni nič v teku, kaj pa, če začnete s",
@@ -365,6 +429,7 @@
     "title": "Naslov",
     "description": "Opis",
     "dueDate": "Rok",
+    "deferUntil": "Defer until",
     "priority": "Prioriteta",
     "status": "Status",
     "assignedTo": "Dodeljeno",
@@ -382,6 +447,7 @@
         "status": "Status",
         "priority": "Prioriteta",
         "dueDate": "Rok",
+        "deferUntil": "Odmik do",
         "note": "Opomba",
         "recurrenceType": "Ponovi",
         "recurrenceInterval": "Vsak",
@@ -389,7 +455,8 @@
         "monthDay": "Dan v mesecu",
         "weekOfMonth": "Teden v mesecu",
         "recurrenceEndDate": "Datum konca (neobvezno)",
-        "completionBased": "Ponovi po zaključku"
+        "completionBased": "Ponovi po zaključku",
+        "repeatOn": "Ponovi na"
       },
       "projectSearchPlaceholder": "Išči ali ustvari projekt...",
       "noMatchingProjects": "Brez ustreznih projektov",
@@ -410,7 +477,9 @@
         "short": "Poskusite biti bolj specifični glede tega, kaj je treba narediti",
         "noVerb": "Katero specifično dejanje morate izvesti? Poskusite začeti z glagolom.",
         "vague": "Poskusite začeti z glagolom akcije, kot so \"Pokliči\", \"Napiši\", \"Načrtuj\" ali \"Raziskuj\""
-      }
+      },
+      "selectAtLeastOneDay": "Prosimo, izberite vsaj en dan",
+      "deferUntilPlaceholder": "Izberite datum in čas odloga"
     },
     "noteTitle": "Naslov opombe",
     "noteContent": "Vsebina opombe",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Nizka",
     "medium": "Srednja",
-    "high": "Visoka"
+    "high": "Visoka",
+    "none": "Noben"
   },
   "status": {
     "notStarted": "Ni začeto",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Ime projekta",
     "projectImage": "Slika projekta",
-    "uploadImageHint": "Naložite sliko za vaš projekt (max 5MB)",
+    "uploadImageHint": "Naložite sliko za vaš projekt (max 10MB)",
     "browseImage": "Prebrskaj sliko",
     "noNotes": "Ni opomb za ta projekt.",
     "deleteProject": "Izbriši projekt",
-    "createSuccess": "Projekt uspešno ustvarjen!"
+    "createSuccess": "Projekt uspešno ustvarjen!",
+    "createdAndAssigned": "Projekt ustvarjen in dodeljen",
+    "createError": "Ustvarjanje projekta ni uspelo",
+    "viewProject": "Pojdi na projekt",
+    "editProject": "Uredi projekt",
+    "editBanner": "Uredi banner projekta",
+    "currentBanner": "Trenutni banner",
+    "choosePreset": "Izberite prednastavljen banner:",
+    "orUploadOwn": "Ali naložite svojega:"
   },
   "errors": {
     "required": "To polje je obvezno",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Ime oznake je obvezno.",
     "failedToSaveTag": "Shranjevanje oznake ni uspelo.",
     "projectNameRequired": "Ime projekta je obvezno.",
-    "projectSaveFailed": "Shranjevanje projekta ni uspelo."
+    "projectSaveFailed": "Shranjevanje projekta ni uspelo.",
+    "projectImageTooLarge": "Slika je prevelika. Izberite datoteko, ki je manjša od 10 MB.",
+    "projectImageUpload": "Nalaganje slike ni uspelo. Poskusite z manjšo datoteko ali drugačnim formatom.",
+    "bannerSaveFailed": "Shranjevanje bannerja ni uspelo"
   },
   "inbox": {
     "title": "Prejeto",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "DANES",
+    "total": "Total",
     "tomorrow": "JUTRI",
-    "yesterday": "VČERAJ"
+    "yesterday": "VČERAJ",
+    "nextWeek": "naslednji teden",
+    "nextMonth": "naslednji mesec"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Ogledujete si naloge za določen projekt. Uporabite to območje za upravljanje in spremljanje nalog, povezanih s tem projektom."
     },
     "today": "To so naloge, ki so zapadle danes ali naloge, ki ste jih načrtovali za takojšnjo obravnavo. Uporabite to prikaz, da se osredotočite na to, kar je treba dokončati danes. Oznake nalog kot dokončane, posodobite njihov status ali prilagodite njihove roke, če je potrebno.",
+    "total": "Total",
     "inbox": "Prejeta pošta je prostor, kjer živijo vse nekategorizirane naloge. Naloge, ki niso dodeljene projektu ali nimajo roka, se bodo prikazale tukaj. To je vaše območje \"izpustitve misli\", kjer lahko hitro zapišete naloge in jih kasneje organizirate.",
     "next": "Ta prikaz prikazuje vse naloge, ki so izvedljive v bližnji prihodnosti. Te naloge so pripravljene za delo in nimajo dolgoročnih rokov. To je dobro mesto za osredotočanje, ko želite hitro napredovati pri nalogah.",
     "upcoming": "Ta prikaz izpostavlja naloge, ki so načrtovane za prihajajoči teden. Pomaga vam, da se pripravite in ostanete pred roki, saj vam daje pregled dela, ki ga morate obravnavati v bližnji prihodnosti. Naloge z roki v naslednjih 7 dneh se bodo prikazale tukaj.",
@@ -584,7 +669,8 @@
     "taskCreated": "Naloga uspešno ustvarjena!",
     "taskUpdated": "Naloga uspešno posodobljena!",
     "taskDeleted": "Naloga uspešno izbrisana!",
-    "noteDeleted": "Opomba je bila uspešno izbrisana!"
+    "noteDeleted": "Opomba je bila uspešno izbrisana!",
+    "bannerUpdated": "Banner je bil uspešno posodobljen!"
   },
   "note": {
     "title": "Naslov",
@@ -602,6 +688,7 @@
       "status": "Status",
       "priority": "Prioriteta",
       "dueDate": "Rok",
+      "deferUntil": "Defer until",
       "note": "Opomba"
     },
     "create": "Ustvari",
@@ -637,7 +724,88 @@
     "subtasks": "Podnaloge",
     "noSubtasks": "Še ni podnalog",
     "recentActivity": "Nedavna dejavnost",
-    "noActivityYet": "Še ni dejavnosti"
+    "noActivityYet": "Še ni dejavnosti",
+    "noSubtasksClickToAdd": "Še ni podnalog, kliknite za dodajanje",
+    "project": "Projekt",
+    "noProject": "Brez projekta - Kliknite za dodelitev",
+    "tags": "Oznake",
+    "noTags": "Brez oznak",
+    "priority": "Prioriteta",
+    "dueDate": "Rok",
+    "deferUntil": "Odmik do",
+    "recurringSetup": "Nastavitev ponavljanja",
+    "notRecurring": "Ta naloga še ni ponavljajoča.",
+    "clickToEditTitle": "Kliknite za urejanje naslova",
+    "clickToEditContent": "Kliknite za urejanje vsebine",
+    "clickToAddContent": "Kliknite za dodajanje vsebine",
+    "clickToEditSubtasks": "Kliknite za urejanje podnalog",
+    "clickToAddOrEditSubtasks": "Kliknite za dodajanje ali urejanje podnalog",
+    "contentPlaceholder": "Dodajte vsebino tukaj... (podpora za Markdown)",
+    "contentEditHint": "Pritisnite Cmd/Ctrl+Enter za shranjevanje, Esc za preklic",
+    "noContentPreview": "Brez vsebine za predogled. Preklopite v način urejanja za dodajanje vsebine.",
+    "deleteConfirmTitle": "Izbriši nalogo",
+    "deleteConfirmMessage": "Ali ste prepričani, da želite izbrisati to nalogo? Te akcije ni mogoče razveljaviti.",
+    "noMoreIterations": "Ni več načrtovanih ponovitev",
+    "nextOccurrences": "Naslednji dogodki",
+    "nextOccurrencesAfterThis": "Naslednji dogodki po tem",
+    "thisTask": "Ta naloga",
+    "is": "je",
+    "and": "in",
+    "dueOn": "rok",
+    "inProject": "iz projekta",
+    "lowPriority": "nizka prioriteta",
+    "mediumPriority": "srednja prioriteta",
+    "highPriority": "visoka prioriteta",
+    "inDays": "v {{count}} dneh",
+    "daysAgo": "{{count}} dni nazaj",
+    "tagsUpdated": "Oznake so bile uspešno posodobljene",
+    "tagsUpdateError": "Posodobitev oznak je bila neuspešna",
+    "recurrenceUpdated": "Ponovitev je bila uspešno posodobljena",
+    "recurrenceUpdateError": "Posodobitev ponovitve je bila neuspešna",
+    "dueDateUpdated": "Rok je bil uspešno posodobljen",
+    "dueDateUpdateError": "Posodobitev roka je bila neuspešna",
+    "titleUpdated": "Naslov naloge je bil uspešno posodobljen",
+    "titleUpdateError": "Posodobitev naslova naloge je bila neuspešna",
+    "contentUpdated": "Vsebina naloge je bila uspešno posodobljena",
+    "contentUpdateError": "Posodobitev vsebine naloge je bila neuspešna",
+    "subtasksUpdated": "Podnaloge so bile uspešno posodobljene",
+    "subtasksUpdateError": "Posodobitev podnalog je bila neuspešna",
+    "projectUpdated": "Projekt je bil uspešno posodobljen",
+    "projectUpdateError": "Posodobitev projekta je bila neuspešna",
+    "projectCleared": "Projekt je bil uspešno očiščen",
+    "projectClearError": "Čiščenje projekta je bilo neuspešno",
+    "priorityUpdated": "Prioriteta je bila uspešno posodobljena",
+    "priorityUpdateError": "Posodobitev prioritete je bila neuspešna",
+    "status": {
+      "notStarted": "ni začeto",
+      "inProgress": "v teku",
+      "done": "zaključeno",
+      "archived": "arhivirano",
+      "unknown": "poteka",
+      "waiting": "Čaka",
+      "setAsDone": "Označi kot opravljeno"
+    },
+    "noDueDate": "Brez roka",
+    "instanceOf": "To je instanca ponavljajoče se naloge",
+    "parentTask": "Nadrejena naloga",
+    "includingToday": "vključno s danes",
+    "has": "ima",
+    "fromProject": "iz projekta",
+    "noDeferUntil": "Brez odloga do",
+    "deferUntilUpdated": "Odmik do uspešno posodobljen",
+    "deferUntilUpdateError": "Posodobitev odloga do ni uspela",
+    "showOverdueWarning": "Prikaži opozorilo o zamudi",
+    "dueDateInPastWarning": "Opozorilo: Nastavljate datum zapadlosti v preteklosti",
+    "overview": "Pregled",
+    "schedule": "Razpored",
+    "attachments": "Priloge",
+    "attachmentsComingSoon": "Funkcija prilog kmalu na voljo",
+    "activity": "Dejavnost",
+    "lastUpdatedAt": "Zadnja posodobitev ob",
+    "statusUpdated": "Status uspešno posodobljen",
+    "statusUpdateError": "Posodobitev statusa ni uspela",
+    "updatedAt": "Posodobljeno ob",
+    "upcoming": "prihajajoč"
   },
   "projects": {
     "loading": "Nalagam projekte...",
@@ -654,7 +822,8 @@
       "active": "Aktivno",
       "inactive": "Neaktivno",
       "all": "Vse",
-      "allAreas": "Vse področja"
+      "allAreas": "Vse področja",
+      "notCompleted": "Nedokončano"
     },
     "selectState": "Izberite stanje",
     "state": "Stanje projekta",
@@ -668,8 +837,33 @@
       "planned_desc": "Določeno in pripravljeno za začetek",
       "in_progress_desc": "Aktivno delo poteka",
       "blocked_desc": "Začasno ustavljeno ali zastojev",
-      "completed_desc": "Dokončano in opravljeno"
-    }
+      "completed_desc": "Dokončano in opravljeno",
+      "active": "V teku",
+      "active_desc": "Aktivno delo poteka"
+    },
+    "showMetrics": "Prikaži metrike",
+    "hideMetrics": "Skrij metrike",
+    "progress": "Napredek",
+    "taskMomentum": "Zagon nalog",
+    "activeTasks": "Aktivne naloge",
+    "dueSchedule": "Urnik rokov",
+    "next14Days": "Naslednjih 14 dni",
+    "noUpcomingDue": "Ni rokov v naslednjih 14 dneh.",
+    "peakDay": "Vrh",
+    "none": "Brez",
+    "next3days": "Naslednjih 3 dni",
+    "nextWeek": "Naslednjih 7 dni",
+    "recentCompletion": "Nedavno zaključeno",
+    "last7And30": "Zadnjih 7 in 30 dni",
+    "weeklyPace": "Tedenski tempo",
+    "prevWeekCompleted": "{{count}} prejšnji teden",
+    "vsPrevWeek": "vs prejšnji teden",
+    "monthlyCompletion": "30-dnevna zaključevanja",
+    "last30Days": "Zadnjih 30 dni",
+    "nextUp": "Naslednje najboljše dejanje",
+    "focusTask": "Najbolj vplivna naloga",
+    "focusHint": "Premakne to nalogo v v teku in danes",
+    "noNextAction": "Vse jasno - ni neizpolnjenih nalog."
   },
   "projectItem": {
     "edit": "Uredi",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Preklopi spustni meni",
     "projectInitials": "Inicialke projekta",
     "share": "Deli",
-    "sharedProject": "Deli z ekipo"
+    "sharedProject": "Deli z ekipo",
+    "noDueDate": "Ni roka",
+    "dueToday": "Zapade danes",
+    "dueIn": "Zapade čez {{count}} {{unit}}",
+    "overdue": "Zamujeno {{count}} {{unit}}",
+    "day": "dan",
+    "days": "dni",
+    "sharedUser": "Deljeni uporabnik",
+    "moreSharedUsers": "+{{count}} več uporabnikov"
   },
   "areas": {
     "title": "Območja",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Urejate nastavitve ponavljanja starševske naloge. Spremembe bodo vplivale na vse prihodnje primere te ponavljajoče se naloge."
   },
   "weekdays": {
-    "sunday": "Nedelja",
-    "monday": "Ponedeljek",
-    "tuesday": "Torek",
-    "wednesday": "Sreda",
-    "thursday": "Četrtek",
-    "friday": "Petek",
-    "saturday": "Sobota"
+    "sunday": "Ned",
+    "monday": "Pon",
+    "tuesday": "Tor",
+    "wednesday": "Sre",
+    "thursday": "Čet",
+    "friday": "Pet",
+    "saturday": "Sob"
   },
   "pomodoro": {
     "play": "Predvajaj",
@@ -769,6 +971,7 @@
     "week": "Teden",
     "day": "Dan",
     "today": "Danes",
+    "total": "Total",
     "addEvent": "Dodaj dogodek",
     "weekView": "Pogled teden",
     "dayView": "Pogled dan",
@@ -792,6 +995,7 @@
     "title": "Naslov",
     "status": "Status",
     "dueDate": "Rok",
+    "deferUntil": "Defer until",
     "priority": "Prioriteta",
     "project": "Projekt",
     "area": "Območje",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Ni uporabnikov, s katerimi bi delili",
     "shared": "Deljeno",
     "sharedWithTeam": "Deljeno s timom"
+  },
+  "views": {
+    "title": "Pametni pogledi",
+    "loading": "Nalagam poglede...",
+    "searchPlaceholder": "Išči poglede...",
+    "noViewsFound": "Noben pogled ni bil najden. Ustvarite pogled tako, da izvedete iskanje in kliknete \"Shrani kot pameten pogled\".",
+    "deleteView": "Izbriši pogled",
+    "confirmDelete": "Ali ste prepričani, da želite izbrisati pogled \"{{viewName}}\"?",
+    "pinView": "Pripni pogled",
+    "unpinView": "Odpravi pripenjanje pogleda",
+    "searchCriteria": "Iskalna merila",
+    "entityTypes": "Vrste entitet",
+    "searchText": "Iskalno besedilo",
+    "priority": "Prioriteta",
+    "dueDate": "Rok",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Nobena specifična merila niso nastavljena",
+    "priorityLabel": "Prioriteta:",
+    "dueLabel": "Rok:",
+    "tags": "Oznake",
+    "recurring": "Ponovno"
+  },
+  "search": {
+    "placeholder": "Išči naloge, projekte, zapiske...",
+    "searchingFor": "Iščete",
+    "allItems": "vse elemente",
+    "containingText": ", ki vsebuje besedilo",
+    "withPriority": ", z",
+    "priority": "prioriteto",
+    "due": ", zapadlo",
+    "taggedWith": ", označeno z",
+    "and": "in",
+    "criteria": "Merila iskanja",
+    "metadataFilters": "Filtri metapodatkov",
+    "priorityFilter": "Prioriteta",
+    "dueFilter": "Zapadlo",
+    "tagsFilter": "Oznake",
+    "saveAsSmartView": "Shrani kot pametni pogled",
+    "viewName": "Ime pogleda",
+    "viewNameRequired": "Ime pogleda je obvezno",
+    "viewNamePlaceholder": "Vnesite ime pogleda",
+    "failedToSave": "Shranjevanje pogleda ni uspelo. Poskusite znova.",
+    "cancel": "Prekliči",
+    "saving": "Shranjujem...",
+    "saveView": "Shrani pogled",
+    "startTyping": "Začnite tipkati za iskanje ali izberite filtre zgoraj",
+    "noResults": "Ni najdenih rezultatov",
+    "entityTypes": {
+      "task": "naloga",
+      "project": "projekt",
+      "area": "območje",
+      "note": "opomba"
+    },
+    "thatAre": ", ki so",
+    "extras": "Dodatki",
+    "recurringFilter": {
+      "label": "Ponovno",
+      "recurring": "ponavljajoče se predloge",
+      "nonRecurring": "neponavljajoče se",
+      "instances": "ponavljajoče se instance"
+    },
+    "deferUntilFilter": "Odloži do",
+    "deferUntil": ", odloži do",
+    "extrasFilter": {
+      "isRecurring": "je ponavljajoče",
+      "isOverdue": "je zapadlo",
+      "hasContent": "ima vsebino",
+      "isDeferred": "je odloženo",
+      "hasTags": "ima oznake",
+      "isAssignedToProject": "je dodeljeno projektu"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Dodaj podnalogo..."
+  },
+  "backup": {
+    "title": "Varnostna kopija in obnova",
+    "description": "Ustvarite varnostne kopije ali obnovite iz prejšnjih varnostnih kopij. Vaših zadnjih 5 varnostnih kopij je samodejno shranjenih.",
+    "createBackup": "Ustvari varnostno kopijo",
+    "importFromFile": "Uvozi iz datoteke",
+    "createNewBackup": "Ustvari novo varnostno kopijo",
+    "createDescription": "Ustvarite novo varnostno kopijo vseh vaših podatkov. Varnostne kopije so shranjene na strežniku in jih lahko obnovite kasneje.",
+    "createBackupNow": "Ustvari varnostno kopijo zdaj",
+    "creating": "Ustvarjanje varnostne kopije...",
+    "exportSuccess": "Varnostna kopija je bila uspešno ustvarjena!",
+    "exportError": "Ustvarjanje varnostne kopije je spodletelo",
+    "savedBackups": "Shranjene varnostne kopije",
+    "noBackups": "Nobena varnostna kopija ni bila najdena. Ustvarite svojo prvo varnostno kopijo zgoraj.",
+    "createdAt": "Ustvarjeno",
+    "version": "Različica",
+    "currentVersion": "Trenutna različica",
+    "size": "Velikost",
+    "contents": "Vsebina",
+    "actions": "Dejanja",
+    "restore": "Obnovi",
+    "download": "Prenesi",
+    "downloadSuccess": "Varnostna kopija je bila uspešno prenesena!",
+    "downloadError": "Prenos varnostne kopije ni uspel",
+    "confirmRestore": "Obnovi varnostno kopijo",
+    "confirmRestoreMessage": "Ali ste prepričani, da želite obnoviti to varnostno kopijo? To bo združilo podatke iz varnostne kopije z vašimi trenutnimi podatki.",
+    "restoreSuccess": "Varnostna kopija je bila uspešno obnovljena! Ustvarjeno: {{tasks}} nalog, {{projects}} projektov, {{notes}} opomb",
+    "restoreError": "Obnova varnostne kopije ni uspela",
+    "confirmDelete": "Izbriši varnostno kopijo",
+    "confirmDeleteMessage": "Ali ste prepričani, da želite izbrisati to varnostno kopijo? Teh dejanj ni mogoče razveljaviti.",
+    "deleteSuccess": "Varnostna kopija je bila uspešno izbrisana!",
+    "deleteError": "Brisanje varnostne kopije ni uspelo",
+    "importTitle": "Uvozi iz datoteke",
+    "importDescription": "Naložite datoteko varnostne kopije za obnovitev vaših podatkov. Vaši obstoječi podatki bodo ohranjeni, novi elementi iz varnostne kopije pa bodo dodani.",
+    "importNote": "Pomembno:",
+    "importNoteDescription": "Uvoz bo združil podatke z vašimi obstoječimi elementi. Podvojeni elementi (isti UID) bodo preskočeni.",
+    "selectFile": "Izberite datoteko varnostne kopije",
+    "clickToUpload": "Kliknite za iskanje datotek",
+    "restoreBackup": "Obnovi varnostno kopijo",
+    "importing": "Uvažam...",
+    "importSuccess": "Varnostna kopija je bila uspešno uvožena! Ustvarjeno: {{tasks}} nalog, {{projects}} projektov, {{notes}} opomb",
+    "importError": "Uvoz varnostne kopije je neuspešen",
+    "backupContents": "Vsebina varnostne kopije:",
+    "validationError": "Izbrana datoteka ni veljavna varnostna kopija",
+    "validationErrors": "Napake pri preverjanju:",
+    "versionIncompatible": "Različica ni združljiva",
+    "backupVersion": "Različica varnostne kopije",
+    "restoreButton": "Obnovi"
+  },
+  "notifications": {
+    "table": {
+      "type": "Vrsta obvestila"
+    },
+    "channels": {
+      "inApp": "V aplikaciji",
+      "email": "E-pošta",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Naloge, ki zapadejo",
+      "overdueTasks": "Zamujene naloge",
+      "deferUntil": "Odloži do",
+      "dueProjects": "Projekti, ki zapadejo",
+      "overdueProjects": "Zamujeni projekti"
+    },
+    "descriptions": {
+      "dueTasks": "Naloge, ki zapadejo v 24 urah",
+      "overdueTasks": "Naloge, ki so prešle rok",
+      "deferUntil": "Naloge, ki so zdaj na voljo za delo",
+      "dueProjects": "Projekti, ki zapadejo v 24 urah",
+      "overdueProjects": "Projekti, ki so prešli rok"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram ni konfiguriran:",
+        "message": "Da bi prejemali obvestila preko Telegrama, prosimo, konfigurirajte svoj Telegram bot na zavihku Telegram."
+      }
+    },
+    "test": {
+      "title": "Testna obvestila",
+      "description": "Pošlji testno obvestilo, da vidiš, kako se prikazuje v aplikaciji in na omogočenih kanalih (Telegram itd.)",
+      "send": "Pošlji test",
+      "sending": "Pošiljanje..."
+    },
+    "info": {
+      "title": "Opomba:",
+      "message": "Obvestila po e-pošti in potisna obvestila kmalu prihajajo. Obvestila v aplikaciji in na Telegramu so trenutno na voljo."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Niso začeli",
+    "not_started_desc": "Zajeto, a še ni začeto",
+    "planned": "Načrtovano",
+    "planned_desc": "Opredeljeno in pripravljeno za začetek",
+    "in_progress": "V teku",
+    "in_progress_desc": "Aktivno delo poteka",
+    "waiting": "Čaka",
+    "waiting_desc": "Čaka na zunanje vnose",
+    "done": "Dokončano",
+    "done_desc": "Končano in opravljeno",
+    "cancelled": "Preklicano",
+    "cancelled_desc": "Ne bo dokončano"
   }
 }

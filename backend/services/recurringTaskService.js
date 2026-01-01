@@ -1,225 +1,4 @@
-const { Task, sequelize } = require('../models');
-const { Op } = require('sequelize');
-
-// Helper function for pure calculations
-const addDays = (date, days) => {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-};
-/**
- * Generate new tasks from recurring task templates
- * @param {number} userId - Optional user ID to limit processing
- * @param {number} lookAheadDays - Number of days to look ahead for generating tasks (default: 7)
- * @returns {Promise<Array>} Array of newly created tasks
- */
-const generateRecurringTasks = async (userId = null, lookAheadDays = 7) => {
-    try {
-        const whereClause = {
-            recurrence_type: { [Op.ne]: 'none' },
-            status: { [Op.ne]: Task.STATUS.ARCHIVED },
-        };
-
-        if (userId) {
-            whereClause.user_id = userId;
-        }
-
-        // Find all recurring tasks that need processing
-        const recurringTasks = await Task.findAll({
-            where: whereClause,
-            order: [['last_generated_date', 'ASC']],
-        });
-
-        const newTasks = [];
-        const now = new Date();
-        const lookAheadDate = addDays(now, lookAheadDays);
-
-        for (const task of recurringTasks) {
-            const generatedTasks = await processRecurringTask(
-                task,
-                now,
-                lookAheadDate
-            );
-            newTasks.push(...generatedTasks);
-        }
-
-        return newTasks;
-    } catch (error) {
-        console.error('Error generating recurring tasks:', error);
-        throw error;
-    }
-};
-
-/**
- * Process a single recurring task and generate new instances if needed
- * @param {Object} task - The recurring task template
- * @param {Date} now - Current timestamp
- * @param {Date} lookAheadDate - Date to generate tasks up to (default: now)
- * @returns {Promise<Array>} Array of newly created task instances
- */
-const processRecurringTask = async (task, now, lookAheadDate = null) => {
-    const newTasks = [];
-    const generateUpTo = lookAheadDate || now;
-
-    // Skip if recurrence has ended
-    if (task.recurrence_end_date && now > task.recurrence_end_date) {
-        return newTasks;
-    }
-
-    // Special handling for the initial due date - if the task has a due_date
-    // and no instances have been generated yet, check if the original due_date
-    // falls within our generation window
-    if (!task.last_generated_date && task.due_date) {
-        const originalDueDate = new Date(task.due_date.getTime());
-
-        // If the original due date is within our generation window, create it
-        if (originalDueDate <= generateUpTo) {
-            // Use date range to handle potential precision issues
-            const startOfDay = new Date(originalDueDate);
-            startOfDay.setUTCHours(0, 0, 0, 0);
-            const endOfDay = new Date(originalDueDate);
-            endOfDay.setUTCHours(23, 59, 59, 999);
-
-            const whereClause = {
-                user_id: task.user_id,
-                recurring_parent_id: task.id,
-                due_date: {
-                    [Op.between]: [startOfDay, endOfDay],
-                },
-            };
-
-            // Only add project_id to where clause if it's not null/undefined
-            if (task.project_id !== null && task.project_id !== undefined) {
-                whereClause.project_id = task.project_id;
-            } else {
-                whereClause.project_id = null;
-            }
-
-            const existingTask = await Task.findOne({
-                where: whereClause,
-            });
-
-            if (!existingTask) {
-                const newTask = await createTaskInstance(task, originalDueDate);
-                newTasks.push(newTask);
-            }
-
-            // Update last generated date if the original due date has passed
-            if (originalDueDate <= now) {
-                task.last_generated_date = originalDueDate;
-                await task.save();
-            }
-        }
-    }
-
-    // Now generate subsequent recurring instances
-    let nextDueDate = calculateNextDueDate(
-        task,
-        task.last_generated_date || task.due_date || now
-    );
-
-    // Generate tasks up to the look-ahead date
-    while (nextDueDate && nextDueDate <= generateUpTo) {
-        // Check if this due date already has a task instance
-        // Use date range to handle potential precision issues
-        const startOfDay = new Date(nextDueDate);
-        startOfDay.setUTCHours(0, 0, 0, 0);
-        const endOfDay = new Date(nextDueDate);
-        endOfDay.setUTCHours(23, 59, 59, 999);
-
-        const whereClause = {
-            user_id: task.user_id,
-            recurring_parent_id: task.id,
-            due_date: {
-                [Op.between]: [startOfDay, endOfDay],
-            },
-        };
-
-        // Only add project_id to where clause if it's not null/undefined
-        if (task.project_id !== null && task.project_id !== undefined) {
-            whereClause.project_id = task.project_id;
-        } else {
-            whereClause.project_id = null;
-        }
-
-        // Use a transaction to ensure atomic check-and-create
-        const result = await sequelize.transaction(async (transaction) => {
-            // Check if task exists within transaction
-            const existingTask = await Task.findOne({
-                where: whereClause,
-                transaction,
-            });
-
-            if (existingTask) {
-                return null; // Task already exists
-            }
-
-            // Create the task within the same transaction
-            return await createTaskInstance(task, nextDueDate, transaction);
-        });
-
-        if (result) {
-            newTasks.push(result);
-        }
-
-        // Update last generated date only for tasks that are due today or in the past
-        if (nextDueDate <= now) {
-            task.last_generated_date = nextDueDate;
-            await task.save();
-        }
-
-        // Calculate next due date from this one
-        nextDueDate = calculateNextDueDate(task, nextDueDate);
-
-        // Safety check to prevent infinite loops
-        if (newTasks.length > 100) {
-            console.warn(
-                `Generated 100+ tasks for recurring task ${task.id}, stopping to prevent overflow`
-            );
-            break;
-        }
-    }
-
-    return newTasks;
-};
-
-/**
- * Create a new task instance from a recurring task template
- * @param {Object} template - The recurring task template
- * @param {Date} dueDate - Due date for the new task instance
- * @returns {Promise<Object>} The newly created task
- */
-const createTaskInstance = async (template, dueDate, transaction = null) => {
-    const taskData = {
-        name: template.name,
-        description: template.description,
-        due_date: dueDate,
-        today: false,
-        priority: template.priority,
-        status: Task.STATUS.NOT_STARTED,
-        note: template.note,
-        user_id: template.user_id,
-        project_id: template.project_id,
-        recurrence_type: 'none', // Instances are not recurring themselves
-        recurring_parent_id: template.id, // Link to the original recurring task
-    };
-
-    const options = {};
-    if (transaction) {
-        options.transaction = transaction;
-    }
-
-    return await Task.create(taskData, options);
-};
-
-/**
- * Calculate the next due date for a recurring task
- * @param {Object} task - The recurring task
- * @param {Date} fromDate - Date to calculate from
- * @returns {Date|null} Next due date or null if no more recurrences
- */
 const calculateNextDueDate = (task, fromDate) => {
-    // Handle invalid inputs
     if (
         !task ||
         !task.recurrence_type ||
@@ -229,8 +8,6 @@ const calculateNextDueDate = (task, fromDate) => {
         return null;
     }
 
-    // Use the fromDate parameter directly for calculation instead of baseDate logic
-    // This ensures we always move forward from the provided date
     const startDate = new Date(fromDate.getTime());
 
     switch (task.recurrence_type) {
@@ -273,76 +50,50 @@ const calculateNextDueDate = (task, fromDate) => {
     }
 };
 
-/**
- * Calculate next daily recurrence
- * @param {Date} fromDate - Starting date
- * @param {number} interval - Days between recurrences
- * @returns {Date} Next due date
- */
 const calculateDailyRecurrence = (fromDate, interval) => {
     const nextDate = new Date(fromDate);
-    nextDate.setDate(nextDate.getDate() + interval);
+    nextDate.setUTCDate(nextDate.getUTCDate() + interval);
     return nextDate;
 };
 
-/**
- * Calculate next weekly recurrence
- * @param {Date} fromDate - Starting date
- * @param {number} interval - Weeks between recurrences
- * @param {number} weekday - Target day of week (0=Sunday, 6=Saturday)
- * @returns {Date} Next due date
- */
 const calculateWeeklyRecurrence = (fromDate, interval, weekday) => {
     const nextDate = new Date(fromDate);
 
     if (weekday !== null && weekday !== undefined) {
-        // Find next occurrence of the specified weekday
-        const currentWeekday = nextDate.getDay();
+        const currentWeekday = nextDate.getUTCDay();
         const daysUntilTarget = (weekday - currentWeekday + 7) % 7;
 
         if (
             daysUntilTarget === 0 &&
             nextDate.getTime() === fromDate.getTime()
         ) {
-            // If today is the target weekday and we're calculating from today, add interval weeks
-            nextDate.setDate(nextDate.getDate() + interval * 7);
+            nextDate.setUTCDate(nextDate.getUTCDate() + interval * 7);
         } else {
-            nextDate.setDate(nextDate.getDate() + daysUntilTarget);
+            nextDate.setUTCDate(nextDate.getUTCDate() + daysUntilTarget);
             if (nextDate <= fromDate) {
-                nextDate.setDate(nextDate.getDate() + interval * 7);
+                nextDate.setUTCDate(nextDate.getUTCDate() + interval * 7);
             }
         }
     } else {
-        // No specific weekday, just add interval weeks
-        nextDate.setDate(nextDate.getDate() + interval * 7);
+        nextDate.setUTCDate(nextDate.getUTCDate() + interval * 7);
     }
 
     return nextDate;
 };
 
-/**
- * Calculate next monthly recurrence on specific day
- * @param {Date} fromDate - Starting date
- * @param {number} interval - Months between recurrences
- * @param {number} dayOfMonth - Target day of month (1-31)
- * @returns {Date} Next due date
- */
 const calculateMonthlyRecurrence = (fromDate, interval, dayOfMonth) => {
     const nextDate = new Date(fromDate);
     const targetDay = dayOfMonth || fromDate.getUTCDate();
 
-    // Move to target month
     const targetMonth = nextDate.getUTCMonth() + interval;
     const targetYear = nextDate.getUTCFullYear() + Math.floor(targetMonth / 12);
     const finalMonth = targetMonth % 12;
 
-    // Get the max day for the target month
     const maxDay = new Date(
         Date.UTC(targetYear, finalMonth + 1, 0)
     ).getUTCDate();
     const finalDay = Math.min(targetDay, maxDay);
 
-    // Create the new date
     const result = new Date(
         Date.UTC(
             targetYear,
@@ -358,14 +109,6 @@ const calculateMonthlyRecurrence = (fromDate, interval, dayOfMonth) => {
     return result;
 };
 
-/**
- * Calculate next monthly recurrence on specific weekday of month
- * @param {Date} fromDate - Starting date
- * @param {number} interval - Months between recurrences
- * @param {number} weekday - Target weekday (0=Sunday, 6=Saturday)
- * @param {number} weekOfMonth - Which occurrence in month (1-5)
- * @returns {Date} Next due date
- */
 const calculateMonthlyWeekdayRecurrence = (
     fromDate,
     interval,
@@ -375,28 +118,22 @@ const calculateMonthlyWeekdayRecurrence = (
     const nextDate = new Date(fromDate);
     nextDate.setUTCMonth(nextDate.getUTCMonth() + interval);
 
-    // Find the first day of the month
     const firstOfMonth = new Date(
         Date.UTC(nextDate.getUTCFullYear(), nextDate.getUTCMonth(), 1)
     );
     const firstWeekday = firstOfMonth.getUTCDay();
 
-    // Calculate the first occurrence of the target weekday
     const daysToAdd = (weekday - firstWeekday + 7) % 7;
     const firstOccurrence = new Date(firstOfMonth);
     firstOccurrence.setUTCDate(1 + daysToAdd);
 
-    // Add weeks to get to the target week of month
     const targetDate = new Date(firstOccurrence);
     targetDate.setUTCDate(firstOccurrence.getUTCDate() + (weekOfMonth - 1) * 7);
 
-    // Make sure we're still in the same month
     if (targetDate.getUTCMonth() !== nextDate.getUTCMonth()) {
-        // Week doesn't exist in this month, use last occurrence
         targetDate.setUTCDate(targetDate.getUTCDate() - 7);
     }
 
-    // Preserve the original time
     targetDate.setUTCHours(
         fromDate.getUTCHours(),
         fromDate.getUTCMinutes(),
@@ -407,29 +144,32 @@ const calculateMonthlyWeekdayRecurrence = (
     return targetDate;
 };
 
-/**
- * Calculate next monthly recurrence on last day of month
- * @param {Date} fromDate - Starting date
- * @param {number} interval - Months between recurrences
- * @returns {Date} Next due date
- */
 const calculateMonthlyLastDayRecurrence = (fromDate, interval) => {
-    const nextDate = new Date(fromDate);
-    nextDate.setUTCMonth(nextDate.getUTCMonth() + interval);
+    // Calculate target year and month directly to avoid date overflow
+    // (e.g., Jan 31 + 1 month via setUTCMonth would overflow to March)
+    const currentMonth = fromDate.getUTCMonth();
+    const currentYear = fromDate.getUTCFullYear();
 
-    // Set to last day of month
-    nextDate.setUTCMonth(nextDate.getUTCMonth() + 1, 0);
+    const totalMonths = currentMonth + interval;
+    const targetYear = currentYear + Math.floor(totalMonths / 12);
+    const targetMonth = totalMonths % 12;
 
-    return nextDate;
+    // Get last day of target month by creating date at day 0 of following month
+    const lastDayOfMonth = new Date(
+        Date.UTC(
+            targetYear,
+            targetMonth + 1, // next month
+            0, // day 0 = last day of previous month
+            fromDate.getUTCHours(),
+            fromDate.getUTCMinutes(),
+            fromDate.getUTCSeconds(),
+            fromDate.getUTCMilliseconds()
+        )
+    );
+
+    return lastDayOfMonth;
 };
 
-/**
- * Helper function to get first weekday of month
- * @param {number} year - Year
- * @param {number} month - Month (0-11)
- * @param {number} weekday - Weekday (0=Sunday, 6=Saturday)
- * @returns {Date} First occurrence of weekday in month
- */
 const getFirstWeekdayOfMonth = (year, month, weekday) => {
     const firstOfMonth = new Date(year, month, 1);
     const firstWeekday = firstOfMonth.getDay();
@@ -437,13 +177,6 @@ const getFirstWeekdayOfMonth = (year, month, weekday) => {
     return new Date(year, month, 1 + daysToAdd);
 };
 
-/**
- * Helper function to get last weekday of month
- * @param {number} year - Year
- * @param {number} month - Month (0-11)
- * @param {number} weekday - Weekday (0=Sunday, 6=Saturday)
- * @returns {Date} Last occurrence of weekday in month
- */
 const getLastWeekdayOfMonth = (year, month, weekday) => {
     const lastOfMonth = new Date(year, month + 1, 0);
     const lastWeekday = lastOfMonth.getDay();
@@ -451,20 +184,11 @@ const getLastWeekdayOfMonth = (year, month, weekday) => {
     return new Date(year, month, lastOfMonth.getDate() - daysToSubtract);
 };
 
-/**
- * Helper function to get nth weekday of month
- * @param {number} year - Year
- * @param {number} month - Month (0-11)
- * @param {number} weekday - Weekday (0=Saturday)
- * @param {number} n - Which occurrence (1-5)
- * @returns {Date} Nth occurrence of weekday in month
- */
 const getNthWeekdayOfMonth = (year, month, weekday, n) => {
     const firstOccurrence = getFirstWeekdayOfMonth(year, month, weekday);
     const targetDate = new Date(firstOccurrence);
     targetDate.setDate(firstOccurrence.getDate() + (n - 1) * 7);
 
-    // If target date is in next month, return null
     if (targetDate.getMonth() !== month) {
         return null;
     }
@@ -472,12 +196,6 @@ const getNthWeekdayOfMonth = (year, month, weekday, n) => {
     return targetDate;
 };
 
-/**
- * Helper function to check if next task should be generated
- * @param {Object} task - The recurring task
- * @param {Date} nextDate - Next due date
- * @returns {boolean} Whether to generate next task
- */
 const shouldGenerateNextTask = (task, nextDate) => {
     if (!task.recurrence_end_date) {
         return true;
@@ -485,84 +203,50 @@ const shouldGenerateNextTask = (task, nextDate) => {
     return nextDate < task.recurrence_end_date;
 };
 
-/**
- * Handle task completion for recurring tasks
- * @param {Object} task - The completed task
- * @returns {Promise<Object|null>} Next task instance if applicable
- */
-const handleTaskCompletion = async (task) => {
-    // Check if the completed task itself is a recurring task
-    if (!task.recurrence_type || task.recurrence_type === 'none') {
-        return null;
+const calculateVirtualOccurrences = (task, count = 7, startFrom = null) => {
+    const occurrences = [];
+    let currentDate = startFrom
+        ? new Date(startFrom)
+        : task.due_date
+          ? new Date(task.due_date)
+          : new Date();
+    let iterationCount = 0;
+    const MAX_ITERATIONS = 100;
+
+    while (occurrences.length < count && iterationCount < MAX_ITERATIONS) {
+        if (
+            task.recurrence_end_date &&
+            currentDate > new Date(task.recurrence_end_date)
+        ) {
+            break;
+        }
+
+        occurrences.push({
+            due_date: currentDate.toISOString().split('T')[0],
+            is_virtual: true,
+        });
+
+        currentDate = calculateNextDueDate(task, currentDate);
+        if (!currentDate) break;
+
+        iterationCount++;
     }
 
-    // Only generate next task if completion_based is true
-    if (!task.completion_based) {
-        return null;
-    }
-
-    // Update the task's last generated date to completion date
-    task.last_generated_date = new Date();
-    await task.save();
-
-    // For completion-based tasks, create the next instance immediately
-    const nextDueDate = calculateNextDueDate(task, new Date());
-
-    if (!nextDueDate) {
-        return null;
-    }
-
-    // Check if this due date already has a task instance
-    // Use date range to handle potential precision issues
-    const startOfDay = new Date(nextDueDate);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date(nextDueDate);
-    endOfDay.setUTCHours(23, 59, 59, 999);
-
-    const whereClause = {
-        user_id: task.user_id,
-        recurring_parent_id: task.id,
-        due_date: {
-            [Op.between]: [startOfDay, endOfDay],
-        },
-    };
-
-    // Only add project_id to where clause if it's not null/undefined
-    if (task.project_id !== null && task.project_id !== undefined) {
-        whereClause.project_id = task.project_id;
-    } else {
-        whereClause.project_id = null;
-    }
-
-    const existingTask = await Task.findOne({
-        where: whereClause,
-    });
-
-    if (existingTask) {
-        return null; // Task already exists for this date
-    }
-
-    // Create the next task instance
-    const nextTask = await createTaskInstance(task, nextDueDate);
-    return nextTask;
+    return occurrences;
 };
 
 module.exports = {
-    generateRecurringTasks,
-    processRecurringTask,
-    createTaskInstance,
     calculateNextDueDate,
     calculateDailyRecurrence,
     calculateWeeklyRecurrence,
     calculateMonthlyRecurrence,
     calculateMonthlyWeekdayRecurrence,
     calculateMonthlyLastDayRecurrence,
-    handleTaskCompletion,
+    calculateVirtualOccurrences,
     shouldGenerateNextTask,
     getFirstWeekdayOfMonth,
     getLastWeekdayOfMonth,
     getNthWeekdayOfMonth,
-    // For testing compatibility - underscore versions
     _getFirstWeekdayOfMonth: getFirstWeekdayOfMonth,
     _getLastWeekdayOfMonth: getLastWeekdayOfMonth,
     _getNthWeekdayOfMonth: getNthWeekdayOfMonth,

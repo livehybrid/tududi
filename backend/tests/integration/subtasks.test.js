@@ -7,6 +7,18 @@ describe('Subtasks API', () => {
     let testUser;
     let agent;
 
+    const toggleTaskCompletion = async (taskId) => {
+        const task = await Task.findByPk(taskId);
+        const newStatus =
+            task.status === Task.STATUS.DONE
+                ? task.note
+                    ? Task.STATUS.IN_PROGRESS
+                    : Task.STATUS.NOT_STARTED
+                : Task.STATUS.DONE;
+
+        return agent.patch(`/api/task/${task.uid}`).send({ status: newStatus });
+    };
+
     beforeEach(async () => {
         await Task.destroy({ where: {}, truncate: true });
 
@@ -46,7 +58,7 @@ describe('Subtasks API', () => {
             });
 
             const response = await agent
-                .get(`/api/task/${parentTask.id}/subtasks`)
+                .get(`/api/task/${parentTask.uid}/subtasks`)
                 .expect(200);
 
             expect(response.body).toHaveLength(2);
@@ -65,7 +77,7 @@ describe('Subtasks API', () => {
             });
 
             const response = await agent
-                .get(`/api/task/${task.id}/subtasks`)
+                .get(`/api/task/${task.uid}/subtasks`)
 
                 .expect(200);
 
@@ -73,8 +85,9 @@ describe('Subtasks API', () => {
         });
 
         it('should return empty array for non-existent task', async () => {
+            // Valid UID format (15 chars, valid characters) but doesn't exist
             const response = await agent
-                .get('/api/task/999999/subtasks')
+                .get('/api/task/abcdef123456789/subtasks')
                 .expect(200);
 
             expect(response.body).toHaveLength(0);
@@ -89,7 +102,7 @@ describe('Subtasks API', () => {
             });
 
             const response = await request(app)
-                .get(`/api/task/${task.id}/subtasks`)
+                .get(`/api/task/${task.uid}/subtasks`)
                 .expect(401);
             expect(response.status).toBe(401);
         });
@@ -207,7 +220,7 @@ describe('Subtasks API', () => {
             };
 
             const response = await agent
-                .patch(`/api/task/${parentTask.id}`)
+                .patch(`/api/task/${parentTask.uid}`)
 
                 .send(updateData)
                 .expect(200);
@@ -255,7 +268,7 @@ describe('Subtasks API', () => {
             };
 
             await agent
-                .patch(`/api/task/${parentTask.id}`)
+                .patch(`/api/task/${parentTask.uid}`)
 
                 .send(updateData)
                 .expect(200);
@@ -293,7 +306,7 @@ describe('Subtasks API', () => {
             };
 
             await agent
-                .patch(`/api/task/${parentTask.id}`)
+                .patch(`/api/task/${parentTask.uid}`)
 
                 .send(updateData)
                 .expect(200);
@@ -332,10 +345,8 @@ describe('Subtasks API', () => {
             });
 
             // Complete parent task
-            await agent
-                .patch(`/api/task/${parentTask.id}/toggle_completion`)
-
-                .expect(200);
+            let res = await toggleTaskCompletion(parentTask.id);
+            expect(res.status).toBe(200);
 
             // Check that all subtasks are completed
             const updatedSubtasks = await Task.findAll({
@@ -377,10 +388,8 @@ describe('Subtasks API', () => {
             });
 
             // Undone parent task
-            await agent
-                .patch(`/api/task/${parentTask.id}/toggle_completion`)
-
-                .expect(200);
+            let res = await toggleTaskCompletion(parentTask.id);
+            expect(res.status).toBe(200);
 
             // Check that all subtasks are undone
             const updatedSubtasks = await Task.findAll({
@@ -419,20 +428,16 @@ describe('Subtasks API', () => {
             });
 
             // Complete first subtask
-            await agent
-                .patch(`/api/task/${subtask1.id}/toggle_completion`)
-
-                .expect(200);
+            let res = await toggleTaskCompletion(subtask1.id);
+            expect(res.status).toBe(200);
 
             // Parent should still be not started
             let updatedParent = await Task.findByPk(parentTask.id);
             expect(updatedParent.status).toBe(Task.STATUS.NOT_STARTED);
 
             // Complete second subtask
-            await agent
-                .patch(`/api/task/${subtask2.id}/toggle_completion`)
-
-                .expect(200);
+            const res2 = await toggleTaskCompletion(subtask2.id);
+            expect(res2.status).toBe(200);
 
             // Parent should now be completed
             updatedParent = await Task.findByPk(parentTask.id);
@@ -468,10 +473,8 @@ describe('Subtasks API', () => {
             });
 
             // Undone one subtask
-            await agent
-                .patch(`/api/task/${subtask1.id}/toggle_completion`)
-
-                .expect(200);
+            let res = await toggleTaskCompletion(subtask1.id);
+            expect(res.status).toBe(200);
 
             // Parent should be undone
             const updatedParent = await Task.findByPk(parentTask.id);
@@ -527,13 +530,13 @@ describe('Subtasks API', () => {
             });
 
             const response = await agent
-                .get('/api/tasks')
+                .get('/api/tasks?type=today&include_lists=true')
 
                 .expect(200);
 
             // Should only show parent task in completed today, not subtask
-            expect(response.body.metrics.tasks_completed_today).toHaveLength(1);
-            expect(response.body.metrics.tasks_completed_today[0].id).toBe(
+            expect(response.body.tasks_completed_today).toHaveLength(1);
+            expect(response.body.tasks_completed_today[0].id).toBe(
                 parentTask.id
             );
         });
@@ -628,7 +631,7 @@ describe('Subtasks API', () => {
             });
 
             const response = await agent
-                .get(`/api/task/${otherTask.id}/subtasks`)
+                .get(`/api/task/${otherTask.uid}/subtasks`)
                 .expect(403);
             expect(response.body.error).toBe('Forbidden');
         });

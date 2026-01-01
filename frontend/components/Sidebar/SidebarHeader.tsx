@@ -1,14 +1,28 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { getAssetPath } from '../../config/paths';
 
-const SidebarHeader: React.FC = () => {
+interface SidebarHeaderProps {
+    isDarkMode: boolean;
+}
+
+const SidebarHeader: React.FC<SidebarHeaderProps> = ({ isDarkMode }) => {
     return (
         <div className="flex justify-center mb-6 mt-2">
-            <a
-                href="/"
-                className="flex justify-center items-center mb-2 no-underline text-gray-900 dark:text-white"
+            <Link
+                to="/"
+                className="flex justify-center items-center mb-2 no-underline"
             >
-                <span className="text-2xl font-bold mt-1">tududi</span>
-            </a>
+                <img
+                    src={getAssetPath(
+                        isDarkMode
+                            ? 'wide-logo-light.png'
+                            : 'wide-logo-dark.png'
+                    )}
+                    alt="tududi"
+                    className="h-12 w-auto"
+                />
+            </Link>
         </div>
     );
 };

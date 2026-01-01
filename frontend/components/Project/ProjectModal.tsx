@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Area } from '../../entities/Area';
 import { Project } from '../../entities/Project';
 import ConfirmDialog from '../Shared/ConfirmDialog';
+import DiscardChangesDialog from '../Shared/DiscardChangesDialog';
 import { useToast } from '../Shared/ToastContext';
 import TagInput from '../Tag/TagInput';
 import PriorityDropdown from '../Shared/PriorityDropdown';
@@ -16,7 +17,6 @@ import {
     TagIcon,
     Squares2X2Icon,
     TrashIcon,
-    CameraIcon,
     CalendarIcon,
     ExclamationTriangleIcon,
     PlayIcon,
@@ -45,22 +45,17 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             name: '',
             description: '',
             area_id: null,
-            state: 'idea',
+            status: 'not_started',
             tags: [],
-            priority: 'low',
+            priority: null,
             due_date_at: null,
-            image_url: '',
         }
     );
 
     const [tags, setTags] = useState<string[]>(
         project?.tags?.map((tag) => tag.name) || []
     );
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string>(
-        project?.image_url || ''
-    );
-    const [isUploading, setIsUploading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const { tagsStore } = useStore();
     // Avoid calling getTags() during component initialization to prevent remounting
@@ -68,18 +63,17 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     const { addNewTags } = tagsStore;
 
     const modalRef = useRef<HTMLDivElement>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const [isClosing, setIsClosing] = useState(false);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [showDiscardDialog, setShowDiscardDialog] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Collapsible sections state
     const [expandedSections, setExpandedSections] = useState({
-        state: false,
+        status: false,
         tags: false,
         area: false,
-        image: false,
         priority: false,
         dueDate: false,
     });
@@ -127,25 +121,20 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 ...project,
                 tags: project.tags || [],
                 due_date_at: dueDateValue || null,
-                image_url: project.image_url || '',
             });
             setTags(project.tags?.map((tag) => tag.name) || []);
-            setImagePreview(project.image_url || '');
         } else {
             setFormData({
                 name: '',
                 description: '',
                 area_id: null,
-                state: 'idea',
+                status: 'not_started',
                 tags: [],
-                priority: 'low',
+                priority: null,
                 due_date_at: null,
-                image_url: '',
             });
             setTags([]);
-            setImagePreview('');
         }
-        setImageFile(null);
         setError(null);
     }, [project]);
 
@@ -184,7 +173,21 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                handleClose();
+                // Don't show discard dialog if already showing a dialog
+                if (showConfirmDialog || showDiscardDialog) {
+                    // Let the dialog handle its own Escape
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Check for unsaved changes using ref to get current value
+                if (hasUnsavedChangesRef.current()) {
+                    setShowDiscardDialog(true);
+                } else {
+                    handleClose();
+                }
             }
         };
         if (isOpen) {
@@ -193,7 +196,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen]);
+    }, [isOpen, showConfirmDialog, showDiscardDialog]);
 
     const handleChange = (
         e: React.ChangeEvent<
@@ -256,60 +259,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         }));
     };
 
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setImageFile(file);
-
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setImagePreview(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleImageUpload = async (): Promise<string | null> => {
-        if (!imageFile) return null;
-
-        setIsUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append('image', imageFile);
-
-            const response = await fetch('/api/upload/project-image', {
-                method: 'POST',
-                credentials: 'include',
-                body: formData,
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to upload image');
-            }
-
-            const result = await response.json();
-            return result.imageUrl;
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            return null;
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    const handleRemoveImage = () => {
-        setImageFile(null);
-        setImagePreview('');
-        setFormData((prev) => ({
-            ...prev,
-            image_url: '',
-        }));
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-    };
-
     const handleSubmit = async () => {
         // Validate required fields
         if (!formData.name.trim()) {
@@ -319,6 +268,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             return;
         }
 
+        setIsSaving(true);
         try {
             // Add new tags to the global store
             const existingTagNames = availableTags.map((tag: any) => tag.name);
@@ -329,19 +279,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 addNewTags(newTagNames);
             }
 
-            let imageUrl = formData.image_url;
-
-            // Upload image if a new one was selected
-            if (imageFile) {
-                const uploadedImageUrl = await handleImageUpload();
-                if (uploadedImageUrl) {
-                    imageUrl = uploadedImageUrl;
-                }
-            }
-
             const projectData = {
                 ...formData,
-                image_url: imageUrl,
                 tags: tags.map((name) => ({ name })),
             };
 
@@ -358,6 +297,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         } catch (error) {
             console.error('Error saving project:', error);
             setError(t('errors.projectSaveFailed', 'Failed to save project'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -379,12 +320,61 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         }
     };
 
+    // Check if there are unsaved changes
+    const hasUnsavedChanges = () => {
+        if (!project) {
+            // New project - check if any field has been filled
+            return (
+                formData.name.trim() !== '' ||
+                formData.description?.trim() !== '' ||
+                formData.area_id !== null ||
+                formData.status !== 'not_started' ||
+                tags.length > 0 ||
+                formData.priority !== null ||
+                formData.due_date_at !== null
+            );
+        }
+
+        // Existing project - compare with original
+        const formChanged =
+            formData.name !== project.name ||
+            formData.description !== project.description ||
+            formData.area_id !== project.area_id ||
+            formData.status !== project.status ||
+            formData.priority !== project.priority ||
+            formData.due_date_at !== project.due_date_at;
+
+        // Compare tags
+        const originalTags = project.tags?.map((tag) => tag.name) || [];
+        const tagsChanged =
+            tags.length !== originalTags.length ||
+            tags.some((tag, index) => tag !== originalTags[index]);
+
+        return formChanged || tagsChanged;
+    };
+
+    // Use ref to store hasUnsavedChanges so it's always current in the event handler
+    const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+    useEffect(() => {
+        hasUnsavedChangesRef.current = hasUnsavedChanges;
+    });
+
     const handleClose = () => {
         setIsClosing(true);
         setTimeout(() => {
             onClose();
             setIsClosing(false);
+            setShowDiscardDialog(false);
         }, 300);
+    };
+
+    const handleDiscardChanges = () => {
+        setShowDiscardDialog(false);
+        handleClose();
+    };
+
+    const handleCancelDiscard = () => {
+        setShowDiscardDialog(false);
     };
 
     const toggleSection = useCallback(
@@ -450,6 +440,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             >
                 <div
                     ref={modalRef}
+                    data-testid="project-modal"
+                    data-state={isSaving ? 'saving' : 'idle'}
                     className={`bg-white dark:bg-gray-800 border-0 sm:border sm:border-gray-200 sm:dark:border-gray-800 sm:rounded-lg sm:shadow-2xl w-full sm:max-w-2xl transform transition-transform duration-300 ${
                         isClosing ? 'scale-95' : 'scale-100'
                     } h-full sm:h-auto sm:my-4`}
@@ -519,25 +511,25 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                             </div>
 
                                             {/* Expandable Sections - Only show when expanded */}
-                                            {/* State Section - First */}
-                                            {expandedSections.state && (
+                                            {/* Status Section - First */}
+                                            {expandedSections.status && (
                                                 <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4 px-4">
                                                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                                         {t(
-                                                            'projects.state',
-                                                            'Project State'
+                                                            'projects.status',
+                                                            'Project Status'
                                                         )}
                                                     </h3>
                                                     <ProjectStateDropdown
                                                         value={
-                                                            formData.state ||
-                                                            'idea'
+                                                            formData.status ||
+                                                            'not_started'
                                                         }
-                                                        onChange={(state) =>
+                                                        onChange={(status) =>
                                                             setFormData(
                                                                 (prev) => ({
                                                                     ...prev,
-                                                                    state,
+                                                                    status,
                                                                 })
                                                             )
                                                         }
@@ -597,81 +589,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                                 </div>
                                             )}
 
-                                            {expandedSections.image && (
-                                                <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4 px-4">
-                                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                                        {t(
-                                                            'project.projectImage',
-                                                            'Project Image'
-                                                        )}
-                                                    </h3>
-
-                                                    {imagePreview ? (
-                                                        <div className="mb-3">
-                                                            <div className="relative inline-block">
-                                                                <img
-                                                                    src={
-                                                                        imagePreview
-                                                                    }
-                                                                    alt="Project preview"
-                                                                    className="w-32 h-20 object-cover rounded-md border border-gray-300 dark:border-gray-600"
-                                                                />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={
-                                                                        handleRemoveImage
-                                                                    }
-                                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                                                                >
-                                                                    ×
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : null}
-
-                                                    <input
-                                                        ref={fileInputRef}
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={
-                                                            handleImageSelect
-                                                        }
-                                                        className="hidden"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            fileInputRef.current?.click()
-                                                        }
-                                                        className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                                                    >
-                                                        <svg
-                                                            className="w-4 h-4 mr-2"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth={2}
-                                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                                            />
-                                                        </svg>
-                                                        {t(
-                                                            'project.browseImage',
-                                                            'Browse Image'
-                                                        )}
-                                                    </button>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                        {t(
-                                                            'project.uploadImageHint',
-                                                            'Upload an image for your project (max 5MB)'
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            )}
-
                                             {expandedSections.priority && (
                                                 <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4 px-4">
                                                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -682,8 +599,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                                     </h3>
                                                     <PriorityDropdown
                                                         value={
-                                                            formData.priority ||
-                                                            'medium'
+                                                            formData.priority ??
+                                                            null
                                                         }
                                                         onChange={(
                                                             value: PriorityType
@@ -729,25 +646,26 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                 <div className="flex items-center justify-between">
                                     {/* Left side: Section icons */}
                                     <div className="flex items-center space-x-1">
-                                        {/* State Toggle - First */}
+                                        {/* Status Toggle - First */}
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                toggleSection('state')
+                                                toggleSection('status')
                                             }
                                             className={`relative p-2 rounded-full transition-colors ${
-                                                expandedSections.state
+                                                expandedSections.status
                                                     ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
                                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                             }`}
                                             title={t(
-                                                'projects.state',
-                                                'Project State'
+                                                'projects.status',
+                                                'Project Status'
                                             )}
                                         >
                                             <PlayIcon className="h-5 w-5" />
-                                            {formData.state &&
-                                                formData.state !== 'idea' && (
+                                            {formData.status &&
+                                                formData.status !==
+                                                    'not_started' && (
                                                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
                                                 )}
                                         </button>
@@ -791,28 +709,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                             )}
                                         </button>
 
-                                        {/* Project Image Toggle */}
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                toggleSection('image')
-                                            }
-                                            className={`relative p-2 rounded-full transition-colors ${
-                                                expandedSections.image
-                                                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400'
-                                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                            }`}
-                                            title={t(
-                                                'project.projectImage',
-                                                'Project Image'
-                                            )}
-                                        >
-                                            <CameraIcon className="h-5 w-5" />
-                                            {formData.image_url && (
-                                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
-                                            )}
-                                        </button>
-
                                         {/* Priority Toggle */}
                                         <button
                                             type="button"
@@ -830,7 +726,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                             )}
                                         >
                                             <ExclamationTriangleIcon className="h-5 w-5" />
-                                            {formData.priority !== 'medium' && (
+                                            {formData.priority != null && (
                                                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
                                             )}
                                         </button>
@@ -887,25 +783,18 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                                 <button
                                     type="button"
                                     onClick={handleSubmit}
-                                    disabled={isUploading}
-                                    className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none transition duration-150 ease-in-out text-sm ${
-                                        isUploading
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : ''
-                                    }`}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none transition duration-150 ease-in-out text-sm"
                                     data-testid="project-save-button"
                                 >
-                                    {isUploading
-                                        ? 'Uploading...'
-                                        : project
-                                          ? t(
-                                                'modals.updateProject',
-                                                'Update Project'
-                                            )
-                                          : t(
-                                                'modals.createProject',
-                                                'Create Project'
-                                            )}
+                                    {project
+                                        ? t(
+                                              'modals.updateProject',
+                                              'Update Project'
+                                          )
+                                        : t(
+                                              'modals.createProject',
+                                              'Create Project'
+                                          )}
                                 </button>
                             </div>
                         </div>
@@ -921,6 +810,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                     )}
                     onConfirm={handleDeleteConfirm}
                     onCancel={() => setShowConfirmDialog(false)}
+                />
+            )}
+            {showDiscardDialog && (
+                <DiscardChangesDialog
+                    onDiscard={handleDiscardChanges}
+                    onCancel={handleCancelDiscard}
                 />
             )}
         </>,

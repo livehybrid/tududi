@@ -18,7 +18,13 @@
     "status": "Status",
     "saving": "Gemmer...",
     "settings": "Indstillinger",
-    "none": "Ingen"
+    "none": "Ingen",
+    "discardChanges": "Forkast ændringer?",
+    "discardChangesMessage": "Du har ikke gemte ændringer. Er du sikker på, at du vil forkaste dem?",
+    "no": "Nej, fortsæt med at redigere",
+    "yesDiscard": "Ja, forkast",
+    "uploading": "Uploader...",
+    "refresh": "Opdater"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -34,6 +40,7 @@
     "addTagAriaLabel": "Tilføj tag",
     "addTagTitle": "Tilføj tag",
     "today": "I dag",
+    "total": "Total",
     "upcoming": "Kommende",
     "nextActions": "Næste handlinger",
     "inbox": "Indbakke",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Tilføj projekt",
     "addNoteAriaLabel": "Tilføj note",
     "addNoteTitle": "Tilføj note",
-    "createNew": "Opret ny"
+    "createNew": "Opret ny",
+    "views": "Visninger",
+    "unpinView": "Fjern fastgørelse af visning",
+    "pinView": "Fastgør visning"
   },
   "navigation": {
     "home": "Hjem",
@@ -54,7 +64,8 @@
     "profileSettings": "Profilindstillinger",
     "settings": "Indstillinger",
     "about": "Om",
-    "logout": "Log ud"
+    "logout": "Log ud",
+    "backupRestore": "Backup & Gendan"
   },
   "settings": {
     "todayPageSettings": "Indstillinger for i dag",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Opgaver",
     "today": "I Dag",
+    "total": "Total",
     "backlog": "Backlog",
     "inProgress": "I Gang",
     "dueToday": "Forfaldt I Dag",
@@ -115,7 +127,33 @@
     "showSubtasks": "Vis underopgaver",
     "hideSubtasks": "Skjul underopgaver",
     "edit": "Rediger opgave",
-    "delete": "Slet opgave"
+    "delete": "Slet opgave",
+    "sortTasks": "Sortér opgaver",
+    "sortBy": "Sortér efter",
+    "direction": "Retning",
+    "ascending": "Stigende",
+    "descending": "Faldende",
+    "groupBy": "Gruppér efter",
+    "groupByProject": "Projekt",
+    "grouping": {
+      "none": "Ingen"
+    },
+    "show": "Vis",
+    "all": "Alle",
+    "completedOnly": "Kun afsluttede",
+    "notCompleted": "Ikke afsluttet",
+    "noProject": "Intet projekt",
+    "unknownProject": "Ukendt projekt",
+    "tasks": "opgaver",
+    "showingItems": "Viser {{current}} af {{total}} opgaver",
+    "overdue": "Forsinket",
+    "planned": "Planlagt",
+    "open": "Åbn",
+    "completed": "Fuldført",
+    "noCompletedTasksToday": "Ingen fuldførte opgaver i dag.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Ikke startet",
+    "done": "Færdig"
   },
   "timeline": {
     "activityTimeline": "Aktivitets Tidslinje",
@@ -128,6 +166,7 @@
       "statusChanged": "Status ændret",
       "priorityChanged": "Prioritet ændret",
       "dueDateChanged": "Forfaldsdato ændret",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Navn opdateret",
       "descriptionUpdated": "Beskrivelse opdateret",
       "noteUpdated": "Note opdateret",
@@ -138,11 +177,19 @@
       "status": "Status",
       "priority": "Prioritet",
       "dueDate": "Forfaldsdato",
+      "deferUntil": "Defer until",
       "none": "Ingen",
       "recurrenceEndDateChanged": "Ændret slutdato for gentagelse",
       "recurrenceEndDate": "Slutdato for gentagelse",
       "recurrence_type_changed": "Ændret gentagelsestype",
-      "recurrence_interval_changed": "Ændret gentagelsesinterval"
+      "recurrence_interval_changed": "Ændret gentagelsesinterval",
+      "completionBasedChanged": "Ændret baseret på fuldførelse",
+      "projectIdChanged": "Tildelt et projekt",
+      "recurrenceType": "Gentagelsestype",
+      "recurrenceTypeChanged": "Gentagelsestype ændret",
+      "recurrence_weekday_changed": "Ugentlig tilbagevendende ændret",
+      "recurrence_month_day_changed": "Månedlig tilbagevendende dag ændret",
+      "recurrence_week_of_month_changed": "Uge i måneden tilbagevendende ændret"
     },
     "justNow": "Lige nu",
     "minutesAgo": "{{minutes}}m siden",
@@ -272,7 +319,8 @@
       "security": "Sikkerhed",
       "productivity": "Produktivitet",
       "telegram": "Telegram",
-      "ai": "AI-funktioner"
+      "ai": "AI-funktioner",
+      "notifications": "Notifikationsindstillinger"
     },
     "security": "Sikkerhedsindstillinger",
     "changePassword": "Skift adgangskode",
@@ -290,11 +338,26 @@
     "passwordChangeSuccess": "Adgangskoden blev ændret med succes!",
     "changingPassword": "Ændrer adgangskode...",
     "accountSettings": "Konto & Indstillinger",
-    "aiProductivityFeatures": "AI & Produktivitetsfunktioner",
     "botSetup": "Bot Opsætning",
     "passwordChangeNote": "Ændringer af adgangskode gemmes, når du klikker på \"Gem ændringer\" nederst i formularen.",
     "passwordChangeOptional": "Lad adgangskodefelterne stå tomme for at opdatere andre indstillinger uden at ændre din adgangskode.",
-    "firstDayOfWeek": "Første dag i ugen"
+    "firstDayOfWeek": "Første dag i ugen",
+    "name": "Navn",
+    "surname": "Efternavn",
+    "enterName": "Indtast dit navn",
+    "enterSurname": "Indtast dit efternavn",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Vælg hvordan du ønsker at blive underrettet om vigtige begivenheder.",
+    "aiFeatures": "AI-funktioner"
   },
   "productivity": {
     "stalledProjects": "Stagnerede Projekter",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Opgaver der ikke er opdateret i {{days}} dage",
     "stuckProjects": "Fastlåste Projekter",
     "stuckProjectsDesc": "Projekter der ikke er opdateret for nylig",
-    "issuesFound": "Fundet {{count}} produktivitetsproblem(er) der kræver opmærksomhed",
     "reviewItems": "Klik for at gennemgå og forbedre dit arbejdsgang",
-    "suggestion": "Klik på ethvert element ovenfor for at åbne det og lave forbedringer."
+    "suggestion": "Klik på ethvert element ovenfor for at åbne det og lave forbedringer.",
+    "issuesFound_one": "1 produktivitetsproblem kræver opmærksomhed",
+    "issuesFound_other": "{{count}} produktivitetsproblemer kræver opmærksomhed"
   },
   "nextTask": {
     "suggestion": "Da der ikke er noget i gang, hvad med at starte med",
@@ -365,6 +429,7 @@
     "title": "Titel",
     "description": "Beskrivelse",
     "dueDate": "Forfaldsdato",
+    "deferUntil": "Defer until",
     "priority": "Prioritet",
     "status": "Status",
     "assignedTo": "Tildelt Til",
@@ -382,6 +447,7 @@
         "status": "Status",
         "priority": "Prioritet",
         "dueDate": "Forfaldsdato",
+        "deferUntil": "Udsæt indtil",
         "note": "Bemærkning",
         "recurrenceType": "Gentag",
         "recurrenceInterval": "Hver",
@@ -389,7 +455,8 @@
         "monthDay": "Dag i måneden",
         "weekOfMonth": "Uge i måneden",
         "recurrenceEndDate": "Slutdato (valgfri)",
-        "completionBased": "Gentag efter fuldførelse"
+        "completionBased": "Gentag efter fuldførelse",
+        "repeatOn": "Gentag på"
       },
       "projectSearchPlaceholder": "Søg eller opret et projekt...",
       "noMatchingProjects": "Ingen matchende projekter",
@@ -410,7 +477,9 @@
         "short": "Prøv at være mere specifik om, hvad der skal gøres",
         "noVerb": "Hvilken specifik handling skal du tage? Prøv at starte med et verbum.",
         "vague": "Prøv at starte med et handlingsverb som \"Ring\", \"Skriv\", \"Planlæg\" eller \"Undersøg\""
-      }
+      },
+      "selectAtLeastOneDay": "Vælg venligst mindst én dag",
+      "deferUntilPlaceholder": "Vælg udsætte indtil dato og tid"
     },
     "noteTitle": "Notetitel",
     "noteContent": "Noteindhold",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Lav",
     "medium": "Medium",
-    "high": "Høj"
+    "high": "Høj",
+    "none": "Ingen"
   },
   "status": {
     "notStarted": "Ikke Startet",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Projekt Navn",
     "projectImage": "Projektbillede",
-    "uploadImageHint": "Upload et billede til dit projekt (maks 5MB)",
+    "uploadImageHint": "Upload et billede til dit projekt (maks 10MB)",
     "browseImage": "Gennemse Billede",
     "noNotes": "Ingen noter til dette projekt.",
     "deleteProject": "Slet Projekt",
-    "createSuccess": "Projekt oprettet med succes!"
+    "createSuccess": "Projekt oprettet med succes!",
+    "createdAndAssigned": "Projekt oprettet og tildelt",
+    "createError": "Fejl ved oprettelse af projekt",
+    "viewProject": "Gå til projekt",
+    "editProject": "Rediger projekt",
+    "editBanner": "Rediger projektbanner",
+    "currentBanner": "Nuværende banner",
+    "choosePreset": "Vælg et forudindstillet banner:",
+    "orUploadOwn": "Eller upload dit eget:"
   },
   "errors": {
     "required": "Dette felt er påkrævet",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Tag navn er påkrævet.",
     "failedToSaveTag": "Kunne ikke gemme tag.",
     "projectNameRequired": "Projektnavn er påkrævet.",
-    "projectSaveFailed": "Kunne ikke gemme projekt."
+    "projectSaveFailed": "Kunne ikke gemme projekt.",
+    "projectImageTooLarge": "Billedet er for stort. Vælg venligst en fil under 10MB.",
+    "projectImageUpload": "Fejl ved upload af billede. Prøv venligst en mindre fil eller et andet format.",
+    "bannerSaveFailed": "Fejl ved gemme banner"
   },
   "inbox": {
     "title": "Indbakke",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "I DAG",
+    "total": "Total",
     "tomorrow": "I MORGEN",
-    "yesterday": "I GÅR"
+    "yesterday": "I GÅR",
+    "nextWeek": "næste uge",
+    "nextMonth": "næste måned"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Du ser opgaver for et specifikt projekt. Brug dette rum til at administrere og følge opgaver knyttet til dette projekt."
     },
     "today": "Dette er opgaverne, der skal være færdige i dag, eller opgaver du har planlagt til øjeblikkelig opmærksomhed. Brug denne visning til at fokusere på, hvad der skal færdiggøres i dag. Marker opgaver som færdige, opdater deres status, eller juster deres forfaldsdatoer, hvis det er nødvendigt.",
+    "total": "Total",
     "inbox": "Indbakken er, hvor alle ukategoriserede opgaver befinder sig. Opgaver, der ikke er tildelt et projekt eller givet en forfaldsdato, vil vises her. Dette er dit \"hjernedump\" område, hvor du hurtigt kan notere opgaver og organisere dem senere.",
     "next": "Denne visning viser alle opgaver, der er handlingsbare i den nærmeste fremtid. Disse opgaver er klar til at blive arbejdet på næste gang og har ikke langsigtede frister. Det er et godt sted at fokusere, når du ønsker at gøre hurtige fremskridt med opgaver.",
     "upcoming": "Denne visning fremhæver opgaver, der er planlagt til den kommende uge. Det hjælper dig med at forberede dig og holde dig foran fristerne ved at give dig et overblik over det arbejde, du skal tackle i den nærmeste fremtid. Opgaver med forfaldsdatoer inden for de næste 7 dage vil vises her.",
@@ -584,7 +669,8 @@
     "taskCreated": "Opgave oprettet med succes!",
     "taskUpdated": "Opgave opdateret med succes!",
     "taskDeleted": "Opgave slettet med succes!",
-    "noteDeleted": "Noten blev slettet med succes!"
+    "noteDeleted": "Noten blev slettet med succes!",
+    "bannerUpdated": "Banner opdateret med succes!"
   },
   "note": {
     "title": "Titel",
@@ -602,6 +688,7 @@
       "status": "Status",
       "priority": "Prioritet",
       "dueDate": "Forfaldsdato",
+      "deferUntil": "Defer until",
       "note": "Note"
     },
     "create": "Opret",
@@ -637,7 +724,88 @@
     "subtasks": "Underopgaver",
     "noSubtasks": "Ingen underopgaver endnu",
     "recentActivity": "Seneste aktivitet",
-    "noActivityYet": "Ingen aktivitet endnu"
+    "noActivityYet": "Ingen aktivitet endnu",
+    "thisTask": "Denne opgave",
+    "is": "er",
+    "and": "og",
+    "dueOn": "forfald",
+    "inProject": "fra projekt",
+    "lowPriority": "lav prioritet",
+    "mediumPriority": "medium prioritet",
+    "highPriority": "høj prioritet",
+    "inDays": "om {{count}} dage",
+    "daysAgo": "{{count}} dage siden",
+    "tagsUpdated": "Tags opdateret med succes",
+    "tagsUpdateError": "Kunne ikke opdatere tags",
+    "recurrenceUpdated": "Gentagelse opdateret med succes",
+    "recurrenceUpdateError": "Kunne ikke opdatere gentagelse",
+    "dueDateUpdated": "Forfaldsdato opdateret med succes",
+    "dueDateUpdateError": "Kunne ikke opdatere forfaldsdato",
+    "titleUpdated": "Opgavetitlen blev opdateret med succes",
+    "titleUpdateError": "Fejl ved opdatering af opgavetitel",
+    "contentUpdated": "Opgaveindholdet blev opdateret med succes",
+    "contentUpdateError": "Fejl ved opdatering af opgaveindhold",
+    "subtasksUpdated": "Underopgaver opdateret med succes",
+    "subtasksUpdateError": "Fejl ved opdatering af underopgaver",
+    "projectUpdated": "Projektet blev opdateret med succes",
+    "projectUpdateError": "Fejl ved opdatering af projekt",
+    "projectCleared": "Projektet blev ryddet med succes",
+    "projectClearError": "Fejl ved rydning af projekt",
+    "priorityUpdated": "Prioritet opdateret med succes",
+    "priorityUpdateError": "Fejl ved opdatering af prioritet",
+    "status": {
+      "notStarted": "ikke startet",
+      "inProgress": "i gang",
+      "done": "fuldført",
+      "archived": "arkiveret",
+      "unknown": "gående",
+      "waiting": "Venter",
+      "setAsDone": "Sæt som færdig"
+    },
+    "noSubtasksClickToAdd": "Ingen underopgaver endnu, klik for at tilføje",
+    "project": "Projekt",
+    "noProject": "Ingen projekt - Klik for at tildele",
+    "tags": "Tags",
+    "noTags": "Ingen tags",
+    "priority": "Prioritet",
+    "dueDate": "Forfaldsdato",
+    "deferUntil": "Udsæt indtil",
+    "recurringSetup": "Gentagen opsætning",
+    "notRecurring": "Denne opgave er ikke gentagende endnu.",
+    "clickToEditTitle": "Klik for at redigere titel",
+    "clickToEditContent": "Klik for at redigere indhold",
+    "clickToAddContent": "Klik for at tilføje indhold",
+    "clickToEditSubtasks": "Klik for at redigere underopgaver",
+    "clickToAddOrEditSubtasks": "Klik for at tilføje eller redigere underopgaver",
+    "contentPlaceholder": "Tilføj indhold her... (Markdown understøttet)",
+    "contentEditHint": "Tryk på Cmd/Ctrl+Enter for at gemme, Esc for at annullere",
+    "noContentPreview": "Ingen indhold at forhåndsvise. Skift til redigeringstilstand for at tilføje indhold.",
+    "deleteConfirmTitle": "Slet Opgave",
+    "deleteConfirmMessage": "Er du sikker på, at du vil slette denne opgave? Denne handling kan ikke fortrydes.",
+    "noMoreIterations": "Ingen flere iterationer planlagt",
+    "nextOccurrences": "Næste Forekomster",
+    "nextOccurrencesAfterThis": "Næste Forekomster Efter Dette",
+    "noDueDate": "Ingen forfaldsdato",
+    "instanceOf": "Dette er en instans af en tilbagevendende opgave",
+    "parentTask": "Overordnet opgave",
+    "includingToday": "inklusive i dag",
+    "has": "har",
+    "fromProject": "fra projektet",
+    "noDeferUntil": "Ingen udsættelse indtil",
+    "deferUntilUpdated": "Udsæt indtil opdateret med succes",
+    "deferUntilUpdateError": "Fejl ved opdatering af udsættelse indtil",
+    "showOverdueWarning": "Vis advarsel om forfaldne opgaver",
+    "dueDateInPastWarning": "Advarsel: Du sætter en forfaldsdato i fortiden",
+    "overview": "Oversigt",
+    "schedule": "Planlægning",
+    "attachments": "Vedhæftninger",
+    "attachmentsComingSoon": "Funktion til vedhæftninger kommer snart",
+    "activity": "Aktivitet",
+    "lastUpdatedAt": "Sidst opdateret den",
+    "statusUpdated": "Status opdateret med succes",
+    "statusUpdateError": "Fejl ved opdatering af status",
+    "updatedAt": "Opdateret den",
+    "upcoming": "kommende"
   },
   "projects": {
     "loading": "Indlæser projekter...",
@@ -654,7 +822,8 @@
       "active": "Aktiv",
       "inactive": "Inaktiv",
       "all": "Alle",
-      "allAreas": "Alle områder"
+      "allAreas": "Alle områder",
+      "notCompleted": "Ikke færdiggjort"
     },
     "selectState": "Vælg tilstand",
     "state": "Projektstatus",
@@ -668,8 +837,33 @@
       "planned_desc": "Afgrænset og klar til at starte",
       "in_progress_desc": "Aktivt arbejde i gang",
       "blocked_desc": "Midlertidigt pauseret eller fastlåst",
-      "completed_desc": "Afsluttet og færdig"
-    }
+      "completed_desc": "Afsluttet og færdig",
+      "active": "I gang",
+      "active_desc": "Aktivt arbejde i gang"
+    },
+    "showMetrics": "Vis målinger",
+    "hideMetrics": "Skjul målinger",
+    "progress": "Fremgang",
+    "taskMomentum": "Opgavemomentum",
+    "activeTasks": "Aktive opgaver",
+    "dueSchedule": "Forfaldsoversigt",
+    "next14Days": "Næste 14 dage",
+    "noUpcomingDue": "Ingen frister de næste 14 dage.",
+    "peakDay": "Top",
+    "none": "Ingen",
+    "next3days": "Næste 3 dage",
+    "nextWeek": "Næste 7 dage",
+    "recentCompletion": "Seneste færdiggørelse",
+    "last7And30": "Sidste 7 og 30 dage",
+    "weeklyPace": "Ugentligt tempo",
+    "prevWeekCompleted": "{{count}} forrige uge",
+    "vsPrevWeek": "vs forrige uge",
+    "monthlyCompletion": "30-dages færdiggørelser",
+    "last30Days": "Sidste 30 dage",
+    "nextUp": "Næste bedste handling",
+    "focusTask": "Mest indflydelsesrige opgave",
+    "focusHint": "Flytter denne opgave til i gang og i dag",
+    "noNextAction": "Alt klart - ingen udestående opgaver."
   },
   "projectItem": {
     "edit": "Rediger",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Skift dropdown-menu",
     "projectInitials": "Projektinitialer",
     "share": "Del",
-    "sharedProject": "Delt med teamet"
+    "sharedProject": "Delt med teamet",
+    "noDueDate": "Ingen frist",
+    "dueToday": "Forfalder i dag",
+    "dueIn": "Forfalder om {{count}} {{unit}}",
+    "overdue": "Overskredet med {{count}} {{unit}}",
+    "day": "dag",
+    "days": "dage",
+    "sharedUser": "Delt bruger",
+    "moreSharedUsers": "+{{count}} flere brugere"
   },
   "areas": {
     "title": "Områder",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Du redigerer forælderopgavens tilbagevendende indstillinger. Ændringer vil påvirke alle fremtidige tilfælde af denne tilbagevendende opgave."
   },
   "weekdays": {
-    "sunday": "Søndag",
-    "monday": "Mandag",
-    "tuesday": "Tirsdag",
-    "wednesday": "Onsdag",
-    "thursday": "Torsdag",
-    "friday": "Fredag",
-    "saturday": "Lørdag"
+    "sunday": "Søn",
+    "monday": "Man",
+    "tuesday": "Tir",
+    "wednesday": "Ons",
+    "thursday": "Tor",
+    "friday": "Fre",
+    "saturday": "Lør"
   },
   "pomodoro": {
     "play": "Spil",
@@ -769,6 +971,7 @@
     "week": "Uge",
     "day": "Dag",
     "today": "I dag",
+    "total": "Total",
     "addEvent": "Tilføj Begivenhed",
     "weekView": "Ugevisning",
     "dayView": "Dagsvisning",
@@ -792,6 +995,7 @@
     "title": "Titel",
     "status": "Status",
     "dueDate": "Forfaldsdato",
+    "deferUntil": "Defer until",
     "priority": "Prioritet",
     "project": "Projekt",
     "area": "Område",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Ingen brugere tilgængelige til at dele med",
     "shared": "Delt",
     "sharedWithTeam": "Delt med teamet"
+  },
+  "views": {
+    "title": "Smarte Visninger",
+    "loading": "Indlæser visninger...",
+    "searchPlaceholder": "Søg visninger...",
+    "noViewsFound": "Ingen visninger fundet. Opret en visning ved at udføre en søgning og klikke på \"Gem som Smart Visning\".",
+    "deleteView": "Slet Visning",
+    "confirmDelete": "Er du sikker på, at du vil slette visningen \"{{viewName}}\"?",
+    "pinView": "Fastgør visning",
+    "unpinView": "Fjern fastgørelse af visning",
+    "searchCriteria": "Søgekriterier",
+    "entityTypes": "Enhedstyper",
+    "searchText": "Søgetekst",
+    "priority": "Prioritet",
+    "dueDate": "Forfaldsdato",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Ingen specifikke kriterier sat",
+    "priorityLabel": "Prioritet:",
+    "dueLabel": "Forfalder:",
+    "tags": "Tags",
+    "recurring": "Gentagende"
+  },
+  "search": {
+    "placeholder": "Søg opgaver, projekter, noter...",
+    "searchingFor": "Du søger efter",
+    "allItems": "alle elementer",
+    "containingText": ", der indeholder teksten",
+    "withPriority": ", med",
+    "priority": "prioritet",
+    "due": ", forfald",
+    "taggedWith": ", mærket med",
+    "and": "og",
+    "criteria": "Søgekriterier",
+    "metadataFilters": "Metadata Filtre",
+    "priorityFilter": "Prioritet",
+    "dueFilter": "Forfald",
+    "tagsFilter": "Tags",
+    "saveAsSmartView": "Gem som Smart Visning",
+    "viewName": "Visningsnavn",
+    "viewNameRequired": "Visningsnavn er påkrævet",
+    "viewNamePlaceholder": "Indtast visningsnavn",
+    "failedToSave": "Kunne ikke gemme visningen. Prøv venligst igen.",
+    "cancel": "Annuller",
+    "saving": "Gemer...",
+    "saveView": "Gem visning",
+    "startTyping": "Begynd at skrive for at søge eller vælg filtre ovenfor",
+    "noResults": "Ingen resultater fundet",
+    "entityTypes": {
+      "task": "opgave",
+      "project": "projekt",
+      "area": "område",
+      "note": "note"
+    },
+    "thatAre": ", der er",
+    "extras": "Ekstra",
+    "recurringFilter": {
+      "label": "Gentagende",
+      "recurring": "gentagende skabeloner",
+      "nonRecurring": "ikke-gentagende",
+      "instances": "gentagende instanser"
+    },
+    "deferUntilFilter": "Udskyd indtil",
+    "deferUntil": ", udskyd indtil",
+    "extrasFilter": {
+      "isRecurring": "er tilbagevendende",
+      "isOverdue": "er forfalden",
+      "hasContent": "har indhold",
+      "isDeferred": "er udsat",
+      "hasTags": "har tags",
+      "isAssignedToProject": "er tildelt projekt"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Tilføj en underopgave..."
+  },
+  "backup": {
+    "title": "Backup & Gendan",
+    "description": "Opret backups eller gendan fra tidligere backups. Dine sidste 5 backups gemmes automatisk.",
+    "createBackup": "Opret Backup",
+    "importFromFile": "Importer fra Fil",
+    "createNewBackup": "Opret Ny Backup",
+    "createDescription": "Opret en ny backup af alle dine data. Backups gemmes på serveren, og du kan gendanne dem senere.",
+    "createBackupNow": "Opret Backup Nu",
+    "creating": "Opretter backup...",
+    "exportSuccess": "Backup oprettet med succes!",
+    "exportError": "Fejl ved oprettelse af backup",
+    "savedBackups": "Gemte Backups",
+    "noBackups": "Ingen backups fundet. Opret din første backup ovenfor.",
+    "createdAt": "Oprettet",
+    "version": "Version",
+    "currentVersion": "Nuværende version",
+    "size": "Størrelse",
+    "contents": "Indhold",
+    "actions": "Handlinger",
+    "restore": "Gendan",
+    "download": "Download",
+    "downloadSuccess": "Backup downloadet med succes!",
+    "downloadError": "Fejl ved download af backup",
+    "confirmRestore": "Gendan Backup",
+    "confirmRestoreMessage": "Er du sikker på, at du vil gendanne denne backup? Dette vil sammenflette de sikkerhedskopierede data med dine nuværende data.",
+    "restoreSuccess": "Backup gendannet med succes! Oprettet: {{tasks}} opgaver, {{projects}} projekter, {{notes}} noter",
+    "restoreError": "Fejl ved gendannelse af backup",
+    "confirmDelete": "Slet Backup",
+    "confirmDeleteMessage": "Er du sikker på, at du vil slette denne backup? Denne handling kan ikke fortrydes.",
+    "deleteSuccess": "Backup slettet med succes!",
+    "deleteError": "Fejl ved sletning af backup",
+    "importTitle": "Importer fra Fil",
+    "importDescription": "Upload en backupfil for at gendanne dine data. Dine eksisterende data vil blive bevaret, og nye elementer fra backupen vil blive tilføjet.",
+    "importNote": "Vigtigt:",
+    "importNoteDescription": "Import vil sammenflette data med dine eksisterende elementer. Duplikerede elementer (samme UID) vil blive sprunget over.",
+    "selectFile": "Vælg Backup Fil",
+    "clickToUpload": "Klik for at gennemse filer",
+    "restoreBackup": "Gendan Backup",
+    "importing": "Importer...",
+    "importSuccess": "Backup importeret med succes! Oprettet: {{tasks}} opgaver, {{projects}} projekter, {{notes}} noter",
+    "importError": "Fejl ved import af backup",
+    "backupContents": "Backup indhold:",
+    "validationError": "Den valgte fil er ikke en gyldig backup",
+    "validationErrors": "Valideringsfejl:",
+    "versionIncompatible": "Version inkompatibel",
+    "backupVersion": "Backup version",
+    "restoreButton": "Gendan"
+  },
+  "notifications": {
+    "table": {
+      "type": "Notifikationstype"
+    },
+    "channels": {
+      "inApp": "I-app",
+      "email": "E-mail",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Forfaldne opgaver",
+      "overdueTasks": "Overdue opgaver",
+      "deferUntil": "Udsæt indtil",
+      "dueProjects": "Forfaldne projekter",
+      "overdueProjects": "Overdue projekter"
+    },
+    "descriptions": {
+      "dueTasks": "Opgaver der forfalder inden for 24 timer",
+      "overdueTasks": "Opgaver der er overskredet deres forfaldsdato",
+      "deferUntil": "Opgaver der nu er tilgængelige for arbejde",
+      "dueProjects": "Projekter der forfalder inden for 24 timer",
+      "overdueProjects": "Projekter der er overskredet deres forfaldsdato"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram ikke konfigureret:",
+        "message": "For at modtage Telegram-notifikationer, bedes du konfigurere din Telegram-bot i Telegram-fanen."
+      }
+    },
+    "test": {
+      "title": "Testnotifikationer",
+      "description": "Send en testnotifikation for at se, hvordan den vises i appen og på aktiverede kanaler (Telegram osv.)",
+      "send": "Send test",
+      "sending": "Sender..."
+    },
+    "info": {
+      "title": "Bemærk:",
+      "message": "E-mail og push-notifikationer kommer snart. Notifikationer i appen og Telegram er i øjeblikket tilgængelige."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Ikke startet",
+    "not_started_desc": "Registreret, men ikke startet endnu",
+    "planned": "Planlagt",
+    "planned_desc": "Afgrænset og klar til at starte",
+    "in_progress": "I gang",
+    "in_progress_desc": "Aktivt arbejde i gang",
+    "waiting": "Venter",
+    "waiting_desc": "Venter på ekstern input",
+    "done": "Færdiggjort",
+    "done_desc": "Afsluttet og færdig",
+    "cancelled": "Annulleret",
+    "cancelled_desc": "Vil ikke blive færdiggjort"
   }
 }

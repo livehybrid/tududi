@@ -1,27 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { InboxItem } from '../../entities/InboxItem';
 import { useTranslation } from 'react-i18next';
 import {
     TrashIcon,
-    PencilIcon,
     DocumentTextIcon,
     FolderIcon,
     ClipboardDocumentListIcon,
     TagIcon,
-    EllipsisVerticalIcon,
+    GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Note } from '../../entities/Note';
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import { useStore } from '../../store/useStore';
+import QuickCaptureInput, {
+    InboxComposerFooterContext,
+    QuickCaptureInputHandle,
+} from './QuickCaptureInput';
+import InboxCard from './InboxCard';
+import { isUrl } from '../../utils/urlService';
 
 interface InboxItemDetailProps {
     item: InboxItem;
-    onProcess: (uid: string) => void;
     onDelete: (uid: string) => void;
-    onUpdate?: (uid: string) => Promise<void>;
+    onUpdate?: (uid: string, newContent: string) => Promise<void>;
     openTaskModal: (task: Task, inboxItemUid?: string) => void;
     openProjectModal: (project: Project | null, inboxItemUid?: string) => void;
     openNoteModal: (note: Note | null, inboxItemUid?: string) => void;
@@ -30,7 +34,6 @@ interface InboxItemDetailProps {
 
 const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
     item,
-    onProcess, // eslint-disable-line @typescript-eslint/no-unused-vars
     onDelete,
     onUpdate,
     openTaskModal,
@@ -44,69 +47,53 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
     } = useStore();
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const dropdownId = useRef(
-        `dropdown-${Math.random().toString(36).substr(2, 9)}`
-    ).current;
+    const [isEditing, setIsEditing] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const composerRef = useRef<QuickCaptureInputHandle>(null);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (isDropdownOpen && buttonRef.current) {
-                const target = event.target as Node;
-                const isOutsideButton = !buttonRef.current.contains(target);
-                const currentDropdown = document.querySelector(
-                    `[data-dropdown-id="${dropdownId}"]`
-                );
-                const isOutsideDropdown = !currentDropdown?.contains(target);
+        if (!isEditing) {
+            return;
+        }
 
-                if (isOutsideButton && isOutsideDropdown) {
-                    setIsDropdownOpen(false);
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                containerRef.current &&
+                !containerRef.current.contains(event.target as Node)
+            ) {
+                if (composerRef.current) {
+                    void composerRef.current.submit();
+                } else {
+                    setIsEditing(false);
                 }
             }
         };
 
-        // Listen for custom event to close this dropdown when another opens
-        const handleCloseOtherDropdowns = (event: CustomEvent) => {
-            if (event.detail.dropdownId !== dropdownId && isDropdownOpen) {
-                setIsDropdownOpen(false);
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setIsEditing(false);
             }
         };
 
-        if (isDropdownOpen) {
-            document.addEventListener('click', handleClickOutside);
-            document.addEventListener(
-                'closeOtherDropdowns',
-                handleCloseOtherDropdowns as EventListener
-            );
-        }
-
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
         return () => {
-            document.removeEventListener('click', handleClickOutside);
-            document.removeEventListener(
-                'closeOtherDropdowns',
-                handleCloseOtherDropdowns as EventListener
-            );
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isDropdownOpen, dropdownId]);
+    }, [isEditing]);
 
-    // Helper function to parse hashtags from text (consecutive groups anywhere)
     const parseHashtags = (text: string): string[] => {
         const trimmedText = text.trim();
         const matches: string[] = [];
 
-        // Split text into words
         const words = trimmedText.split(/\s+/);
         if (words.length === 0) return matches;
 
-        // Find all consecutive groups of tags/projects
         let i = 0;
         while (i < words.length) {
-            // Check if current word starts a tag/project group
             if (words[i].startsWith('#') || words[i].startsWith('+')) {
-                // Found start of a group, collect all consecutive tags/projects
                 let groupEnd = i;
                 while (
                     groupEnd < words.length &&
@@ -116,7 +103,6 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
                     groupEnd++;
                 }
 
-                // Process all hashtags in this group
                 for (let j = i; j < groupEnd; j++) {
                     if (words[j].startsWith('#')) {
                         const tagName = words[j].substring(1);
@@ -130,7 +116,6 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
                     }
                 }
 
-                // Skip to end of this group
                 i = groupEnd;
             } else {
                 i++;
@@ -140,20 +125,15 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
         return matches;
     };
 
-    // Helper function to parse project references from text (consecutive groups anywhere)
     const parseProjectRefs = (text: string): string[] => {
         const trimmedText = text.trim();
         const matches: string[] = [];
 
-        // Tokenize the text handling quoted strings properly
         const tokens = tokenizeText(trimmedText);
 
-        // Find consecutive groups of tags/projects
         let i = 0;
         while (i < tokens.length) {
-            // Check if current token starts a tag/project group
             if (tokens[i].startsWith('#') || tokens[i].startsWith('+')) {
-                // Found start of a group, collect all consecutive tags/projects
                 let groupEnd = i;
                 while (
                     groupEnd < tokens.length &&
@@ -163,12 +143,10 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
                     groupEnd++;
                 }
 
-                // Process all project references in this group
                 for (let j = i; j < groupEnd; j++) {
                     if (tokens[j].startsWith('+')) {
                         let projectName = tokens[j].substring(1);
 
-                        // Handle quoted project names
                         if (
                             projectName.startsWith('"') &&
                             projectName.endsWith('"')
@@ -182,7 +160,6 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
                     }
                 }
 
-                // Skip to end of this group
                 i = groupEnd;
             } else {
                 i++;
@@ -192,7 +169,6 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
         return matches;
     };
 
-    // Helper function to tokenize text handling quoted strings
     const tokenizeText = (text: string): string[] => {
         const tokens: string[] = [];
         let currentToken = '';
@@ -203,27 +179,22 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
             const char = text[i];
 
             if (char === '"' && (i === 0 || text[i - 1] === '+')) {
-                // Start of a quoted string after +
                 inQuotes = true;
                 currentToken += char;
             } else if (char === '"' && inQuotes) {
-                // End of quoted string
                 inQuotes = false;
                 currentToken += char;
             } else if (char === ' ' && !inQuotes) {
-                // Space outside quotes - end current token
                 if (currentToken) {
                     tokens.push(currentToken);
                     currentToken = '';
                 }
             } else {
-                // Regular character
                 currentToken += char;
             }
             i++;
         }
 
-        // Add final token
         if (currentToken) {
             tokens.push(currentToken);
         }
@@ -231,7 +202,6 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
         return tokens;
     };
 
-    // Helper function to clean text by removing tags and project references (consecutive groups anywhere)
     const cleanTextFromTagsAndProjects = (text: string): string => {
         const trimmedText = text.trim();
         const tokens = tokenizeText(trimmedText);
@@ -239,9 +209,7 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
 
         let i = 0;
         while (i < tokens.length) {
-            // Check if current token starts a tag/project group
             if (tokens[i].startsWith('#') || tokens[i].startsWith('+')) {
-                // Skip this entire consecutive group
                 while (
                     i < tokens.length &&
                     (tokens[i].startsWith('#') || tokens[i].startsWith('+'))
@@ -249,7 +217,6 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
                     i++;
                 }
             } else {
-                // Keep regular tokens
                 cleanedTokens.push(tokens[i]);
                 i++;
             }
@@ -258,72 +225,201 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
         return cleanedTokens.join(' ').trim();
     };
 
-    const hashtags = parseHashtags(item.content);
-    const projectRefs = parseProjectRefs(item.content);
-    const cleanedContent = cleanTextFromTagsAndProjects(item.content);
+    const fullContent = item.content || '';
+    const displayText =
+        item.title && item.title.trim().length > 0 ? item.title : fullContent;
+    const baseContent = fullContent || displayText;
+    const cleanedPreviewText = cleanTextFromTagsAndProjects(displayText);
+    const previewText =
+        cleanedPreviewText.length > 0 ? cleanedPreviewText : displayText;
 
-    const handleConvertToTask = () => {
-        try {
-            // Convert hashtags to Tag objects
-            const taskTags = hashtags.map((hashtagName) => {
-                // Find existing tag or create a placeholder for new tag
-                const existingTag = tags.find(
-                    (tag) =>
-                        tag.name.toLowerCase() === hashtagName.toLowerCase()
-                );
-                return existingTag || { name: hashtagName };
-            });
+    const hashtags = useMemo(() => {
+        const parsed = parseHashtags(fullContent);
+        const hasBookmark = parsed.some(
+            (tag) => tag.toLowerCase() === 'bookmark'
+        );
+        if (!hasBookmark && isUrl(fullContent.trim())) {
+            return [...parsed, 'bookmark'];
+        }
+        return parsed;
+    }, [fullContent]);
+    const isBookmarkItem = useMemo(
+        () => hashtags.some((tag) => tag.toLowerCase() === 'bookmark'),
+        [hashtags]
+    );
+    const projectRefs = parseProjectRefs(fullContent);
+    const hasLongContent =
+        Boolean(item.title && item.title.trim()) &&
+        item.title !== null &&
+        item.title !== fullContent;
+    const iconTooltip = isBookmarkItem
+        ? t('inbox.iconTooltip.bookmark', 'Bookmark link')
+        : t('inbox.iconTooltip.text', 'Captured text');
 
-            // Find the project to assign (use first project reference if any)
-            let projectId = undefined;
-            if (projectRefs.length > 0) {
-                // Look for an existing project with the first project reference name
-                const projectName = projectRefs[0];
-                const matchingProject = projects.find(
-                    (project) =>
-                        project.name.toLowerCase() === projectName.toLowerCase()
+    const slugify = (text: string) =>
+        text
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+
+    const getTagLink = (tagName: string) => {
+        const tag = tags.find(
+            (t) => t.name.toLowerCase() === tagName.toLowerCase()
+        );
+        if (tag?.uid) {
+            return `/tag/${tag.uid}-${slugify(tag.name)}`;
+        }
+        return `/tag/${encodeURIComponent(tagName)}`;
+    };
+
+    const linkifyContent = (text: string): React.ReactNode => {
+        const urlRegex = /(https?:\/\/[^\s]+)/gi;
+        const matches = [...text.matchAll(urlRegex)];
+
+        if (matches.length === 0) {
+            return text;
+        }
+
+        const nodes: React.ReactNode[] = [];
+        let lastIndex = 0;
+
+        matches.forEach((match, idx) => {
+            const start = match.index ?? 0;
+            const url = match[0];
+            if (start > lastIndex) {
+                nodes.push(
+                    <React.Fragment key={`text-${idx}-${start}`}>
+                        {text.slice(lastIndex, start)}
+                    </React.Fragment>
                 );
-                if (matchingProject) {
-                    projectId = matchingProject.id;
-                }
             }
+            nodes.push(
+                <a
+                    key={`url-${idx}-${start}`}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 dark:text-blue-400 underline-offset-2 hover:underline break-all"
+                >
+                    {url}
+                </a>
+            );
+            lastIndex = start + url.length;
+        });
+
+        if (lastIndex < text.length) {
+            nodes.push(
+                <React.Fragment key={`text-tail-${lastIndex}`}>
+                    {text.slice(lastIndex)}
+                </React.Fragment>
+            );
+        }
+
+        return nodes;
+    };
+
+    const buildConversionPayload = (
+        textOverride?: string,
+        hashtagOverride?: string[],
+        projectRefsOverride?: string[],
+        cleanedOverride?: string
+    ) => {
+        const sourceText = textOverride ?? baseContent;
+        const sourceHashtags = hashtagOverride ?? parseHashtags(sourceText);
+        const sourceProjectRefs =
+            projectRefsOverride ?? parseProjectRefs(sourceText);
+        const cleaned =
+            cleanedOverride ??
+            cleanTextFromTagsAndProjects(sourceText) ??
+            sourceText;
+
+        const tagObjects = sourceHashtags.map((hashtagName) => {
+            const existingTag = tags.find(
+                (tag) => tag.name.toLowerCase() === hashtagName.toLowerCase()
+            );
+            return existingTag || { name: hashtagName };
+        });
+
+        let projectId = undefined;
+        if (sourceProjectRefs.length > 0) {
+            const projectName = sourceProjectRefs[0];
+            const matchingProject = projects.find(
+                (project) =>
+                    project.name.toLowerCase() === projectName.toLowerCase()
+            );
+            if (matchingProject) {
+                projectId = matchingProject.id;
+            }
+        }
+
+        return {
+            sourceText,
+            cleanedContent: cleaned,
+            tagObjects,
+            projectId,
+            projectRefsList: sourceProjectRefs,
+            hashtagsList: sourceHashtags,
+        };
+    };
+
+    const handleConvertToTask = (context?: InboxComposerFooterContext) => {
+        try {
+            const payload = buildConversionPayload(
+                context?.text,
+                context?.hashtags,
+                context?.projectRefs,
+                context?.cleanedText
+            );
 
             const newTask: Task = {
-                name: cleanedContent || item.content,
+                name: payload.cleanedContent || displayText,
                 status: 'not_started',
-                priority: 'low',
-                tags: taskTags,
-                project_id: projectId,
+                priority: null,
+                tags: payload.tagObjects,
+                project_id: payload.projectId,
                 completed_at: null,
             };
 
             if (item.uid !== undefined) {
-                openTaskModal(newTask, item.uid);
+                void openTaskModal(newTask, item.uid);
             } else {
-                openTaskModal(newTask);
+                void openTaskModal(newTask);
             }
         } catch (error) {
             console.error('Error converting to task:', error);
         }
     };
 
-    const handleConvertToProject = () => {
+    const handleSubmitEdit = async (text: string) => {
+        if (!onUpdate || item.uid === undefined) {
+            return;
+        }
+
+        const trimmedCurrent = baseContent.trim();
+        const trimmedNew = text.trim();
+
+        if (trimmedCurrent === trimmedNew) {
+            setIsEditing(false);
+            return;
+        }
+
+        await onUpdate(item.uid, text);
+    };
+
+    const handleConvertToProject = (context?: InboxComposerFooterContext) => {
         try {
-            // Convert hashtags to Tag objects (ignore any existing project references)
-            const projectTags = hashtags.map((hashtagName) => {
-                // Find existing tag or create a placeholder for new tag
-                const existingTag = tags.find(
-                    (tag) =>
-                        tag.name.toLowerCase() === hashtagName.toLowerCase()
-                );
-                return existingTag || { name: hashtagName };
-            });
+            const payload = buildConversionPayload(
+                context?.text,
+                context?.hashtags,
+                context?.projectRefs,
+                context?.cleanedText
+            );
 
             const newProject: Project = {
-                name: cleanedContent || item.content,
+                name: payload.cleanedContent || displayText,
                 description: '',
-                state: 'planned',
-                tags: projectTags,
+                status: 'planned',
+                tags: payload.tagObjects,
             };
 
             if (item.uid !== undefined) {
@@ -336,43 +432,38 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
         }
     };
 
-    const handleConvertToNote = async () => {
-        let title =
-            item.content.split('\n')[0] || item.content.substring(0, 50);
-        let content = item.content;
+    const handleConvertToNote = async (
+        context?: InboxComposerFooterContext
+    ) => {
+        const sourceText = context?.text ?? baseContent;
+        let title = sourceText.split('\n')[0] || sourceText.substring(0, 50);
+        let content = sourceText;
         let isBookmark = false;
 
         try {
-            const { isUrl, extractUrlTitle } = await import(
+            const { isUrl: detectUrl, extractUrlTitle } = await import(
                 '../../utils/urlService'
             );
 
-            if (isUrl(item.content.trim())) {
+            if (detectUrl(sourceText.trim())) {
                 setLoading(true);
                 try {
-                    // Add a timeout to prevent infinite loading
-                    const timeoutPromise = new Promise(
-                        (_, reject) =>
-                            setTimeout(
-                                () => reject(new Error('Timeout')),
-                                10000
-                            ) // 10 second timeout
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Timeout')), 10000)
                     );
 
                     const result = (await Promise.race([
-                        extractUrlTitle(item.content.trim()),
+                        extractUrlTitle(sourceText.trim()),
                         timeoutPromise,
                     ])) as any;
 
                     if (result && result.title) {
                         title = result.title;
-                        content = item.content;
+                        content = sourceText;
                         isBookmark = true;
                     }
                 } catch (titleError) {
                     console.error('Error extracting URL title:', titleError);
-                    // Continue with default title if URL title extraction fails
-                    // Still mark as bookmark if it's a URL
                     isBookmark = true;
                 } finally {
                     setLoading(false);
@@ -383,43 +474,25 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
             setLoading(false);
         }
 
-        // Convert hashtags to Tag objects and include bookmark tag if needed
-        const hashtagTags = hashtags.map((hashtagName) => {
-            // Find existing tag or create a placeholder for new tag
-            const existingTag = tags.find(
-                (tag) => tag.name.toLowerCase() === hashtagName.toLowerCase()
-            );
-            return existingTag || { name: hashtagName };
-        });
+        const payload = buildConversionPayload(
+            context?.text,
+            context?.hashtags,
+            context?.projectRefs,
+            context?.cleanedText
+        );
 
-        // Combine hashtag tags with bookmark tag if it's a URL
         const bookmarkTag = isBookmark ? [{ name: 'bookmark' }] : [];
-        const tagObjects = [...hashtagTags, ...bookmarkTag];
+        const tagObjects = [...payload.tagObjects, ...bookmarkTag];
 
-        // Use cleaned content for note title if no URL title was extracted
         const finalTitle =
-            title === content ? cleanedContent || item.content : title;
-        const finalContent = cleanedContent || item.content;
-
-        // Find the project to assign (use first project reference if any)
-        let projectId = undefined;
-        if (projectRefs.length > 0) {
-            // Look for an existing project with the first project reference name
-            const projectName = projectRefs[0];
-            const matchingProject = projects.find(
-                (project) =>
-                    project.name.toLowerCase() === projectName.toLowerCase()
-            );
-            if (matchingProject) {
-                projectId = matchingProject.id;
-            }
-        }
+            title === content ? payload.cleanedContent || sourceText : title;
+        const finalContent = payload.cleanedContent || sourceText;
 
         const newNote: Note = {
             title: finalTitle,
             content: finalContent,
             tags: tagObjects,
-            project_uid: projectId,
+            project_uid: payload.projectId,
         };
 
         if (item.uid !== undefined) {
@@ -428,6 +501,69 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
             openNoteModal(newNote);
         }
     };
+
+    const renderComposerFooter = (context: InboxComposerFooterContext) => (
+        <div className="pt-3 mt-3 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    {loading && <div className="spinner h-4 w-4" />}
+                    <button
+                        onClick={() => handleConvertToTask(context)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-200 dark:focus:ring-offset-gray-900"
+                    >
+                        <span className="flex items-center gap-1">
+                            <span className="sm:hidden text-sm font-semibold leading-none">
+                                +
+                            </span>
+                            <ClipboardDocumentListIcon className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                {t('inbox.createTask', 'Task')}
+                            </span>
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => handleConvertToNote(context)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 dark:text-purple-200 bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-200 dark:focus:ring-offset-gray-900"
+                    >
+                        <span className="flex items-center gap-1">
+                            <span className="sm:hidden text-sm font-semibold leading-none">
+                                +
+                            </span>
+                            <DocumentTextIcon className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                {t('inbox.createNote', 'Note')}
+                            </span>
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => handleConvertToProject(context)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 dark:text-green-200 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-md hover:bg-green-100 dark:hover:bg-green-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-200 dark:focus:ring-offset-gray-900"
+                    >
+                        <span className="flex items-center gap-1">
+                            <span className="sm:hidden text-sm font-semibold leading-none">
+                                +
+                            </span>
+                            <FolderIcon className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                {t('inbox.createProject', 'Project')}
+                            </span>
+                        </span>
+                    </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        onClick={handleDelete}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-200 dark:focus:ring-offset-gray-900"
+                    >
+                        <TrashIcon className="h-4 w-4" />
+                        <span className="hidden sm:inline">
+                            {t('common.delete', 'Delete')}
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 
     const handleDelete = () => {
         setShowConfirmDialog(true);
@@ -440,307 +576,142 @@ const InboxItemDetail: React.FC<InboxItemDetailProps> = ({
         setShowConfirmDialog(false);
     };
 
-    return (
-        <div
-            className="rounded-lg shadow-sm bg-white dark:bg-gray-900 mt-1"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <div className="flex items-center px-4 py-2 gap-2">
-                <div className="flex-1 w-4/5">
-                    <button
-                        onClick={() => {
-                            if (onUpdate && item.uid !== undefined) {
-                                onUpdate(item.uid);
-                            }
-                        }}
-                        className="text-base font-medium text-gray-900 dark:text-gray-300 break-words text-left cursor-pointer w-full"
-                    >
-                        {cleanedContent || item.content}
-                    </button>
+    const handleStartEdit = () => {
+        if (!isEditing) {
+            setIsEditing(true);
+        }
+    };
 
-                    {/* Tags and Projects display - TaskHeader style */}
-                    {(hashtags.length > 0 || projectRefs.length > 0) && (
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {/* Projects display first */}
-                            {projectRefs.length > 0 && (
-                                <div className="flex items-center">
-                                    <FolderIcon className="h-3 w-3 mr-1" />
-                                    <span>
-                                        {projectRefs.map(
-                                            (projectRef, index) => {
-                                                // Find matching project
-                                                const matchingProject =
-                                                    projects.find(
-                                                        (project) =>
-                                                            project.name.toLowerCase() ===
-                                                            projectRef.toLowerCase()
-                                                    );
-
-                                                if (matchingProject) {
-                                                    return (
-                                                        <React.Fragment
-                                                            key={projectRef}
-                                                        >
-                                                            <Link
-                                                                to={
-                                                                    matchingProject.uid
-                                                                        ? `/project/${matchingProject.uid}-${matchingProject.name
-                                                                              .toLowerCase()
-                                                                              .replace(
-                                                                                  /[^a-z0-9]+/g,
-                                                                                  '-'
-                                                                              )
-                                                                              .replace(
-                                                                                  /^-|-$/g,
-                                                                                  ''
-                                                                              )}`
-                                                                        : `/project/${matchingProject.id}`
-                                                                }
-                                                                className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
-                                                            >
-                                                                {projectRef}
-                                                            </Link>
-                                                            {index <
-                                                                projectRefs.length -
-                                                                    1 && ', '}
-                                                        </React.Fragment>
-                                                    );
-                                                } else {
-                                                    return (
-                                                        <React.Fragment
-                                                            key={projectRef}
-                                                        >
-                                                            <span>
-                                                                {projectRef}
-                                                            </span>
-                                                            {index <
-                                                                projectRefs.length -
-                                                                    1 && ', '}
-                                                        </React.Fragment>
-                                                    );
-                                                }
-                                            }
-                                        )}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Add spacing between project and tags */}
-                            {projectRefs.length > 0 && hashtags.length > 0 && (
-                                <span className="mx-2">•</span>
-                            )}
-
-                            {/* Tags display */}
-                            {hashtags.length > 0 && (
-                                <div className="flex items-center">
-                                    <TagIcon className="h-3 w-3 mr-1" />
-                                    <span>
-                                        {hashtags.map((hashtag, index) => {
-                                            return (
-                                                <React.Fragment key={hashtag}>
-                                                    <Link
-                                                        to={`/tag/${encodeURIComponent(hashtag)}`}
-                                                        className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
-                                                    >
-                                                        {hashtag}
-                                                    </Link>
-                                                    {index <
-                                                        hashtags.length - 1 &&
-                                                        ', '}
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Desktop view (md and larger) */}
-                <div className="hidden md:flex items-center justify-end w-1/5 space-x-1">
-                    {loading && <div className="spinner" />}
-
-                    {/* Edit Button */}
-                    <button
-                        onClick={() => {
-                            if (onUpdate && item.uid !== undefined) {
-                                onUpdate(item.uid);
-                            }
-                        }}
-                        className={`p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                        title={t('common.edit')}
-                    >
-                        <PencilIcon className="h-4 w-4" />
-                    </button>
-
-                    {/* Convert to Task Button */}
-                    <button
-                        onClick={handleConvertToTask}
-                        className={`p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-full transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                        title={t('inbox.createTask')}
-                    >
-                        <ClipboardDocumentListIcon className="h-4 w-4" />
-                    </button>
-
-                    {/* Convert to Project Button */}
-                    <button
-                        onClick={handleConvertToProject}
-                        className={`p-2 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900 rounded-full transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                        title={t('inbox.createProject')}
-                    >
-                        <FolderIcon className="h-4 w-4" />
-                    </button>
-
-                    {/* Convert to Note Button */}
-                    <button
-                        onClick={handleConvertToNote}
-                        className={`p-2 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900 rounded-full transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                        title={t('inbox.createNote', 'Create Note')}
-                    >
-                        <DocumentTextIcon className="h-4 w-4" />
-                    </button>
-
-                    {/* Delete Button */}
-                    <button
-                        onClick={handleDelete}
-                        className={`p-2 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900 rounded-full transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-                        title={t('common.delete', 'Delete')}
-                    >
-                        <TrashIcon className="h-4 w-4" />
-                    </button>
-                </div>
-
-                {/* Mobile 3-dot dropdown menu */}
-                <div className="flex md:hidden items-center justify-end w-1/5 relative">
-                    {loading && <div className="spinner mr-2" />}
-                    <button
-                        ref={buttonRef}
-                        type="button"
-                        data-dropdown-button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            const newOpenState = !isDropdownOpen;
-
-                            // Close other dropdowns when opening this one
-                            if (newOpenState) {
-                                document.dispatchEvent(
-                                    new CustomEvent('closeOtherDropdowns', {
-                                        detail: { dropdownId },
-                                    })
+    const renderMetadata = () =>
+        (hashtags.length > 0 || projectRefs.length > 0) && (
+            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 ml-8">
+                {projectRefs.length > 0 && (
+                    <div className="flex items-center">
+                        <FolderIcon className="h-3 w-3 mr-1" />
+                        <span>
+                            {projectRefs.map((projectRef, index) => {
+                                const matchingProject = projects.find(
+                                    (project) =>
+                                        project.name.toLowerCase() ===
+                                        projectRef.toLowerCase()
                                 );
-                            }
 
-                            setIsDropdownOpen(newOpenState);
-                        }}
-                        className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                        <EllipsisVerticalIcon className="h-5 w-5" />
-                    </button>
+                                if (matchingProject) {
+                                    return (
+                                        <React.Fragment key={projectRef}>
+                                            <Link
+                                                to={
+                                                    matchingProject.uid
+                                                        ? `/project/${matchingProject.uid}-${matchingProject.name
+                                                              .toLowerCase()
+                                                              .replace(
+                                                                  /[^a-z0-9]+/g,
+                                                                  '-'
+                                                              )
+                                                              .replace(
+                                                                  /^-|-$/g,
+                                                                  ''
+                                                              )}`
+                                                        : `/project/${matchingProject.id}`
+                                                }
+                                                className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
+                                            >
+                                                {projectRef}
+                                            </Link>
+                                            {index < projectRefs.length - 1 &&
+                                                ', '}
+                                        </React.Fragment>
+                                    );
+                                }
 
-                    {/* Dropdown Menu - Positioned Relatively */}
-                    {isDropdownOpen && (
-                        <div
-                            data-dropdown-id={dropdownId}
-                            className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] transform-gpu"
-                            style={{
-                                // Prevent dropdown from being cut off at the bottom of viewport
-                                transform:
-                                    buttonRef.current &&
-                                    buttonRef.current.getBoundingClientRect()
-                                        .bottom +
-                                        240 >
-                                        window.innerHeight
-                                        ? 'translateY(-100%) translateY(-8px)'
-                                        : 'none',
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="py-1">
-                                {/* Edit Button */}
+                                return (
+                                    <React.Fragment key={projectRef}>
+                                        <span>{projectRef}</span>
+                                        {index < projectRefs.length - 1 && ', '}
+                                    </React.Fragment>
+                                );
+                            })}
+                        </span>
+                    </div>
+                )}
+
+                {projectRefs.length > 0 && hashtags.length > 0 && (
+                    <span className="mx-2">•</span>
+                )}
+
+                {hashtags.length > 0 && (
+                    <div className="flex items-center">
+                        <TagIcon className="h-3 w-3 mr-1" />
+                        <span>
+                            {hashtags.map((hashtag, index) => (
+                                <React.Fragment key={hashtag}>
+                                    <Link
+                                        to={getTagLink(hashtag)}
+                                        className="text-gray-500 dark:text-gray-400 hover:underline transition-colors"
+                                    >
+                                        {hashtag}
+                                    </Link>
+                                    {index < hashtags.length - 1 && ', '}
+                                </React.Fragment>
+                            ))}
+                        </span>
+                    </div>
+                )}
+            </div>
+        );
+
+    return (
+        <div ref={containerRef}>
+            {isEditing ? (
+                <QuickCaptureInput
+                    ref={composerRef}
+                    mode="edit"
+                    initialValue={fullContent}
+                    hidePrimaryButton
+                    projects={projects}
+                    onSubmitOverride={handleSubmitEdit}
+                    onAfterSubmit={() => setIsEditing(false)}
+                    renderFooterActions={renderComposerFooter}
+                    openTaskModal={openTaskModal}
+                    openProjectModal={openProjectModal}
+                    openNoteModal={openNoteModal}
+                    cardClassName="mb-0"
+                    multiline={hasLongContent}
+                />
+            ) : (
+                <InboxCard className="w-full">
+                    <div className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <div
+                                className="flex-shrink-0"
+                                title={iconTooltip}
+                                aria-label={iconTooltip}
+                            >
+                                {isBookmarkItem ? (
+                                    <GlobeAltIcon className="h-5 w-5 text-blue-500 dark:text-blue-300" />
+                                ) : (
+                                    <DocumentTextIcon
+                                        className={`h-5 w-5 ${
+                                            hasLongContent
+                                                ? 'text-purple-500 dark:text-purple-300'
+                                                : 'text-gray-400 dark:text-gray-500'
+                                        }`}
+                                    />
+                                )}
+                            </div>
+                            <div className="flex-1">
                                 <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (onUpdate) {
-                                            const identifier =
-                                                item.uid ??
-                                                (item.id !== undefined
-                                                    ? String(item.id)
-                                                    : null);
-
-                                            if (identifier) {
-                                                onUpdate(identifier);
-                                            } else {
-                                                console.warn(
-                                                    'Inbox item is missing an identifier for update.'
-                                                );
-                                            }
-                                        }
-                                        setIsDropdownOpen(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    onClick={handleStartEdit}
+                                    className="text-base font-medium text-gray-900 dark:text-gray-300 break-words text-left cursor-pointer w-full hover:text-blue-600 dark:hover:text-blue-400"
                                 >
-                                    {t('common.edit', 'Edit')}
-                                </button>
-
-                                {/* Convert to Task Button */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleConvertToTask();
-                                        setIsDropdownOpen(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >
-                                    {t('inbox.createTask', 'Create Task')}
-                                </button>
-
-                                {/* Convert to Project Button */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleConvertToProject();
-                                        setIsDropdownOpen(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >
-                                    {t('inbox.createProject', 'Create Project')}
-                                </button>
-
-                                {/* Convert to Note Button */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleConvertToNote();
-                                        setIsDropdownOpen(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >
-                                    {t('inbox.createNote', 'Create Note')}
-                                </button>
-
-                                {/* Delete Button */}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDelete();
-                                        setIsDropdownOpen(false);
-                                    }}
-                                    className="w-full px-4 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                >
-                                    {t('common.delete', 'Delete')}
+                                    {linkifyContent(previewText)}
                                 </button>
                             </div>
                         </div>
-                    )}
-                </div>
-            </div>
+                        {renderMetadata()}
+                    </div>
+                </InboxCard>
+            )}
             {showConfirmDialog && (
                 <ConfirmDialog
                     title={t('inbox.deleteConfirmTitle', 'Delete Item')}

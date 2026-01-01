@@ -3,6 +3,26 @@ const { Note, Tag, Project } = require('../models');
 const { extractUidFromSlug, isValidUid } = require('../utils/slug-utils');
 const { validateTagName } = require('../services/tagsService');
 const router = express.Router();
+const { getAuthenticatedUserId } = require('../utils/request-utils');
+const { sortTags } = require('./tasks/core/serializers');
+
+// Helper function to serialize a note with sorted tags
+function serializeNote(note) {
+    const noteJson = note.toJSON ? note.toJSON() : note;
+    return {
+        ...noteJson,
+        Tags: sortTags(noteJson.Tags),
+    };
+}
+
+router.use((req, res, next) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    req.authUserId = userId;
+    next();
+});
 const permissionsService = require('../services/permissionsService');
 const { hasAccess } = require('../middleware/authorize');
 const _ = require('lodash');
@@ -54,7 +74,6 @@ async function updateNoteTags(note, tagsArray, userId) {
     }
 }
 
-// GET /api/notes
 router.get('/notes', async (req, res) => {
     try {
         const orderBy = req.query.order_by || 'title:asc';
@@ -62,7 +81,7 @@ router.get('/notes', async (req, res) => {
 
         const whereClause = await permissionsService.ownershipOrPermissionWhere(
             'note',
-            req.session.userId
+            req.authUserId
         );
         let includeClause = [
             {
@@ -90,7 +109,7 @@ router.get('/notes', async (req, res) => {
             distinct: true,
         });
 
-        res.json(notes);
+        res.json(notes.map(serializeNote));
     } catch (error) {
         logError('Error fetching notes:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -131,7 +150,7 @@ router.get(
                 ],
             });
 
-            res.json(note);
+            res.json(serializeNote(note));
         } catch (error) {
             logError('Error fetching note:', error);
             res.status(500).json({ error: 'Internal server error' });
@@ -139,16 +158,21 @@ router.get(
     }
 );
 
-// POST /api/note
 router.post('/note', async (req, res) => {
     try {
-        const { title, content, project_uid, project_id, tags } = req.body;
+        const { title, content, project_uid, project_id, tags, color } =
+            req.body;
 
         const noteAttributes = {
             title,
             content,
-            user_id: req.session.userId,
+            user_id: req.authUserId,
         };
+
+        // Add color if provided
+        if (color !== undefined) {
+            noteAttributes.color = color;
+        }
 
         // Support both project_uid (new) and project_id (legacy)
         const projectIdentifier = project_uid || project_id;
@@ -179,11 +203,11 @@ router.post('/note', async (req, res) => {
 
             // Check if user has write access to the project
             const projectAccess = await permissionsService.getAccess(
-                req.session.userId,
+                req.authUserId,
                 'project',
                 project.uid
             );
-            const isOwner = project.user_id === req.session.userId;
+            const isOwner = project.user_id === req.authUserId;
             const canWrite =
                 isOwner || projectAccess === 'rw' || projectAccess === 'admin';
 
@@ -207,7 +231,7 @@ router.post('/note', async (req, res) => {
             }
         }
 
-        await updateNoteTags(note, tagNames, req.session.userId);
+        await updateNoteTags(note, tagNames, req.authUserId);
 
         // Reload note with associations
         const noteWithAssociations = await Note.findByPk(note.id, {
@@ -225,8 +249,9 @@ router.post('/note', async (req, res) => {
             ],
         });
 
+        const serializedNote = serializeNote(noteWithAssociations);
         res.status(201).json({
-            ...noteWithAssociations.toJSON(),
+            ...serializedNote,
             uid: noteWithAssociations.uid,
         });
     } catch (error) {
@@ -262,11 +287,13 @@ router.patch(
                 where: { uid: req.params.uid },
             });
 
-            const { title, content, project_uid, project_id, tags } = req.body;
+            const { title, content, project_uid, project_id, tags, color } =
+                req.body;
 
             const updateData = {};
             if (title !== undefined) updateData.title = title;
             if (content !== undefined) updateData.content = content;
+            if (color !== undefined) updateData.color = color;
 
             // Handle project assignment - support both project_uid (new) and project_id (legacy)
             const projectIdentifier =
@@ -296,11 +323,11 @@ router.patch(
                             .json({ error: 'Invalid project.' });
                     }
                     const projectAccess = await permissionsService.getAccess(
-                        req.session.userId,
+                        req.authUserId,
                         'project',
                         project.uid
                     );
-                    const isOwner = project.user_id === req.session.userId;
+                    const isOwner = project.user_id === req.authUserId;
                     const canWrite =
                         isOwner ||
                         projectAccess === 'rw' ||
@@ -328,7 +355,7 @@ router.patch(
                         tagNames = tags.map((t) => t.name);
                     }
                 }
-                await updateNoteTags(note, tagNames, req.session.userId);
+                await updateNoteTags(note, tagNames, req.authUserId);
             }
 
             // Reload note with associations
@@ -347,7 +374,7 @@ router.patch(
                 ],
             });
 
-            res.json(noteWithAssociations);
+            res.json(serializeNote(noteWithAssociations));
         } catch (error) {
             logError('Error updating note:', error);
             res.status(400).json({

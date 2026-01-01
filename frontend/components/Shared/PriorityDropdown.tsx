@@ -5,6 +5,7 @@ import {
     ArrowDownIcon,
     ArrowUpIcon,
     FireIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { PriorityType } from '../../entities/Task';
 import { useTranslation } from 'react-i18next';
@@ -22,24 +23,31 @@ const PriorityDropdown: React.FC<PriorityDropdownProps> = ({
 
     const priorities = [
         {
+            value: null,
+            label: t('priority.none', 'None'),
+            icon: (
+                <XMarkIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            ),
+        },
+        {
             value: 'low',
             label: t('priority.low', 'Low'),
             icon: (
-                <ArrowDownIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <ArrowDownIcon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
             ),
         },
         {
             value: 'medium',
             label: t('priority.medium', 'Medium'),
             icon: (
-                <ArrowUpIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <ArrowUpIcon className="w-5 h-5 text-orange-500 dark:text-orange-400" />
             ),
         },
         {
             value: 'high',
             label: t('priority.high', 'High'),
             icon: (
-                <FireIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                <FireIcon className="w-5 h-5 text-red-500 dark:text-red-400" />
             ),
         },
     ];
@@ -102,18 +110,21 @@ const PriorityDropdown: React.FC<PriorityDropdownProps> = ({
     }, [isOpen]);
 
     // Convert numeric priority to string if needed
+    // Don't default to any value - allow null/undefined
     const normalizedValue =
         typeof value === 'number'
-            ? ['low', 'medium', 'high'][value] || 'medium'
+            ? (['low', 'medium', 'high'][value] as PriorityType)
             : value;
 
     const selectedPriority = priorities.find(
-        (p) => p.value === normalizedValue
+        (p) => p.value === (normalizedValue || null)
     );
 
     return (
         <div
             ref={dropdownRef}
+            data-testid="priority-dropdown"
+            data-state={isOpen ? 'open' : 'closed'}
             className="relative inline-block text-left w-full"
         >
             <button
@@ -149,12 +160,12 @@ const PriorityDropdown: React.FC<PriorityDropdownProps> = ({
                                 onClick={() =>
                                     handleSelect(priority.value as PriorityType)
                                 }
-                                className="flex items-center justify-between px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 w-full first:rounded-t-md last:rounded-b-md"
+                                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 w-full first:rounded-t-md last:rounded-b-md"
+                                data-testid={`priority-option-${priority.value || 'none'}`}
+                                title={priority.label}
                             >
-                                <span className="flex items-center space-x-2">
-                                    {priority.icon}{' '}
-                                    <span>{priority.label}</span>
-                                </span>
+                                {priority.icon}
+                                <span>{priority.label}</span>
                             </button>
                         ))}
                     </div>,

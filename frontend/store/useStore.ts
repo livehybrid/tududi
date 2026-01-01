@@ -62,13 +62,12 @@ interface TasksStore {
     setError: (isError: boolean) => void;
     loadTasks: (query?: string) => Promise<void>;
     createTask: (taskData: Task) => Promise<Task>;
-    updateTask: (taskId: number, taskData: Task) => Promise<Task>;
-    deleteTask: (taskId: number) => Promise<void>;
-    toggleTaskCompletion: (taskId: number) => Promise<Task>;
-    toggleTaskToday: (taskId: number) => Promise<Task>;
+    updateTask: (taskUid: string, taskData: Task) => Promise<Task>;
+    deleteTask: (taskUid: string) => Promise<void>;
+    toggleTaskCompletion: (taskUid: string) => Promise<Task>;
     loadTaskById: (taskId: number) => Promise<Task>;
     loadTaskByUid: (uid: string) => Promise<Task>;
-    loadSubtasks: (parentTaskId: number) => Promise<Task[]>;
+    loadSubtasks: (parentTaskUid: string) => Promise<Task[]>;
     addTask: (task: Task) => void;
     removeTask: (taskId: number) => void;
     updateTaskInStore: (updatedTask: Task) => void;
@@ -101,11 +100,16 @@ interface InboxStore {
     resetPagination: () => void;
 }
 
-interface ModalStore {
-    openTaskModalId: number | null;
-    openTaskModal: (taskId: number) => void;
-    closeTaskModal: () => void;
-    isTaskModalOpen: (taskId: number) => boolean;
+interface HabitsStore {
+    habits: Task[];
+    isLoading: boolean;
+    isError: boolean;
+    setHabits: (habits: Task[]) => void;
+    setLoading: (isLoading: boolean) => void;
+    setError: (isError: boolean) => void;
+    loadHabits: () => Promise<void>;
+    logCompletion: (habitUid: string, completedAt?: Date) => Promise<void>;
+    removeTodayCompletion: (habitUid: string) => Promise<void>;
 }
 
 interface StoreState {
@@ -115,7 +119,7 @@ interface StoreState {
     tagsStore: TagsStore;
     tasksStore: TasksStore;
     inboxStore: InboxStore;
-    modalStore: ModalStore;
+    habitsStore: HabitsStore;
 }
 
 export const useStore = create<StoreState>((set: any) => ({
@@ -382,15 +386,15 @@ export const useStore = create<StoreState>((set: any) => ({
                 throw error;
             }
         },
-        updateTask: async (taskId, taskData) => {
+        updateTask: async (taskUid, taskData) => {
             const { updateTask } = await import('../utils/tasksService');
             try {
-                const updatedTask = await updateTask(taskId, taskData);
+                const updatedTask = await updateTask(taskUid, taskData);
                 set((state) => ({
                     tasksStore: {
                         ...state.tasksStore,
                         tasks: state.tasksStore.tasks.map((task) =>
-                            task.id === taskId ? updatedTask : task
+                            task.uid === taskUid ? updatedTask : task
                         ),
                     },
                 }));
@@ -403,15 +407,15 @@ export const useStore = create<StoreState>((set: any) => ({
                 throw error;
             }
         },
-        deleteTask: async (taskId) => {
+        deleteTask: async (taskUid) => {
             const { deleteTask } = await import('../utils/tasksService');
             try {
-                await deleteTask(taskId);
+                await deleteTask(taskUid);
                 set((state) => ({
                     tasksStore: {
                         ...state.tasksStore,
                         tasks: state.tasksStore.tasks.filter(
-                            (task) => task.id !== taskId
+                            (task) => task.uid !== taskUid
                         ),
                     },
                 }));
@@ -423,17 +427,17 @@ export const useStore = create<StoreState>((set: any) => ({
                 throw error;
             }
         },
-        toggleTaskCompletion: async (taskId) => {
+        toggleTaskCompletion: async (taskUid) => {
             const { toggleTaskCompletion } = await import(
                 '../utils/tasksService'
             );
             try {
-                const updatedTask = await toggleTaskCompletion(taskId);
+                const updatedTask = await toggleTaskCompletion(taskUid);
                 set((state) => ({
                     tasksStore: {
                         ...state.tasksStore,
                         tasks: state.tasksStore.tasks.map((task) =>
-                            task.id === taskId ? updatedTask : task
+                            task.uid === taskUid ? updatedTask : task
                         ),
                     },
                 }));
@@ -441,30 +445,6 @@ export const useStore = create<StoreState>((set: any) => ({
             } catch (error) {
                 console.error(
                     'toggleTaskCompletion: Failed to toggle task completion:',
-                    error
-                );
-                set((state) => ({
-                    tasksStore: { ...state.tasksStore, isError: true },
-                }));
-                throw error;
-            }
-        },
-        toggleTaskToday: async (taskId) => {
-            const { toggleTaskToday } = await import('../utils/tasksService');
-            try {
-                const updatedTask = await toggleTaskToday(taskId);
-                set((state) => ({
-                    tasksStore: {
-                        ...state.tasksStore,
-                        tasks: state.tasksStore.tasks.map((task) =>
-                            task.id === taskId ? updatedTask : task
-                        ),
-                    },
-                }));
-                return updatedTask;
-            } catch (error) {
-                console.error(
-                    'toggleTaskToday: Failed to toggle task today status:',
                     error
                 );
                 set((state) => ({
@@ -521,10 +501,12 @@ export const useStore = create<StoreState>((set: any) => ({
                 throw error;
             }
         },
-        loadSubtasks: async (parentTaskId) => {
+        loadSubtasks: async (parentTaskUid) => {
             const { fetchSubtasks } = await import('../utils/tasksService');
             try {
-                const subtasks = await fetchSubtasks(parentTaskId);
+                const subtasks = await fetchSubtasks(parentTaskUid);
+                const parentTaskId =
+                    subtasks.length > 0 ? subtasks[0].parent_task_id : null;
                 set((state) => ({
                     tasksStore: {
                         ...state.tasksStore,
@@ -570,18 +552,9 @@ export const useStore = create<StoreState>((set: any) => ({
                             ? {
                                   ...task,
                                   ...updatedTask,
-                                  // Explicitly preserve subtasks data
                                   subtasks:
                                       updatedTask.subtasks ||
-                                      updatedTask.Subtasks ||
                                       task.subtasks ||
-                                      task.Subtasks ||
-                                      [],
-                                  Subtasks:
-                                      updatedTask.subtasks ||
-                                      updatedTask.Subtasks ||
-                                      task.subtasks ||
-                                      task.Subtasks ||
                                       [],
                               }
                             : task
@@ -690,19 +663,109 @@ export const useStore = create<StoreState>((set: any) => ({
                 },
             })),
     },
-    modalStore: {
-        openTaskModalId: null,
-        openTaskModal: (taskId: number) =>
+    habitsStore: {
+        habits: [],
+        isLoading: false,
+        isError: false,
+        setHabits: (habits) =>
+            set((state) => ({ habitsStore: { ...state.habitsStore, habits } })),
+        setLoading: (isLoading) =>
             set((state) => ({
-                modalStore: { ...state.modalStore, openTaskModalId: taskId },
+                habitsStore: { ...state.habitsStore, isLoading },
             })),
-        closeTaskModal: () =>
+        setError: (isError) =>
             set((state) => ({
-                modalStore: { ...state.modalStore, openTaskModalId: null },
+                habitsStore: { ...state.habitsStore, isError },
             })),
-        isTaskModalOpen: (taskId: number) => {
-            const state = useStore.getState();
-            return state.modalStore.openTaskModalId === taskId;
+        loadHabits: async () => {
+            const { fetchHabits } = await import('../utils/habitsService');
+            set((state) => ({
+                habitsStore: {
+                    ...state.habitsStore,
+                    isLoading: true,
+                    isError: false,
+                },
+            }));
+            try {
+                const habits = await fetchHabits();
+                set((state) => ({
+                    habitsStore: {
+                        ...state.habitsStore,
+                        habits,
+                        isLoading: false,
+                    },
+                }));
+            } catch (error) {
+                console.error('Failed to load habits:', error);
+                set((state) => ({
+                    habitsStore: {
+                        ...state.habitsStore,
+                        isError: true,
+                        isLoading: false,
+                    },
+                }));
+            }
+        },
+        logCompletion: async (habitUid, completedAt) => {
+            const { logHabitCompletion } = await import(
+                '../utils/habitsService'
+            );
+            try {
+                const updated = await logHabitCompletion(habitUid, completedAt);
+                set((state) => ({
+                    habitsStore: {
+                        ...state.habitsStore,
+                        habits: state.habitsStore.habits.map((h) =>
+                            h.uid === habitUid ? { ...h, ...updated.task } : h
+                        ),
+                    },
+                }));
+            } catch (error) {
+                console.error('Failed to log completion:', error);
+                throw error;
+            }
+        },
+        removeTodayCompletion: async (habitUid) => {
+            const { fetchHabitCompletions, deleteHabitCompletion } =
+                await import('../utils/habitsService');
+            try {
+                const startDate = new Date();
+                startDate.setHours(0, 0, 0, 0);
+                const endDate = new Date();
+                endDate.setHours(23, 59, 59, 999);
+                const completions = await fetchHabitCompletions(
+                    habitUid,
+                    startDate,
+                    endDate
+                );
+                const today = new Date();
+                const targetCompletion = completions.find((completion) => {
+                    const completionDate = new Date(completion.completed_at);
+                    return (
+                        completionDate.getFullYear() === today.getFullYear() &&
+                        completionDate.getMonth() === today.getMonth() &&
+                        completionDate.getDate() === today.getDate()
+                    );
+                });
+                if (!targetCompletion) {
+                    return;
+                }
+                const result = await deleteHabitCompletion(
+                    habitUid,
+                    targetCompletion.id
+                );
+                set((state) => ({
+                    habitsStore: {
+                        ...state.habitsStore,
+                        habits: state.habitsStore.habits.map((h) =>
+                            h.uid === habitUid ? { ...h, ...result.task } : h
+                        ),
+                    },
+                }));
+            } catch (error) {
+                console.error('Failed to remove habit completion:', error);
+                throw error;
+            }
         },
     },
 }));

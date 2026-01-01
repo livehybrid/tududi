@@ -9,13 +9,10 @@ import ProjectModal from './components/Project/ProjectModal';
 import NoteModal from './components/Note/NoteModal';
 import AreaModal from './components/Area/AreaModal';
 import TagModal from './components/Tag/TagModal';
-import InboxModal from './components/Inbox/InboxModal';
-import TaskModal from './components/Task/TaskModal';
 import { Note } from './entities/Note';
 import { Area } from './entities/Area';
 import { Tag } from './entities/Tag';
 import { Project } from './entities/Project';
-import { Task } from './entities/Task';
 import { User } from './entities/User';
 import { useStore } from './store/useStore';
 import { createNote, updateNote } from './utils/notesService';
@@ -26,8 +23,10 @@ import {
     createProject,
     updateProject,
 } from './utils/projectsService';
-import { createTask, updateTask } from './utils/tasksService';
 import { isAuthError } from './utils/authUtils';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getApiPath } from './config/paths';
+import { KeyboardShortcutsConfig } from './utils/keyboardShortcutsService';
 
 interface LayoutProps {
     currentUser: User;
@@ -45,27 +44,50 @@ const Layout: React.FC<LayoutProps> = ({
     children,
 }) => {
     const { t } = useTranslation();
-    const { showSuccessToast } = useToast();
+    const { showSuccessToast, showErrorToast } = useToast();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isUpcomingView = location.pathname === '/upcoming';
     const [isSidebarOpen, setIsSidebarOpen] = useState(
         window.innerWidth >= 1024
     );
-    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
     const [isAreaModalOpen, setIsAreaModalOpen] = useState(false);
     const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-    const [taskModalType, setTaskModalType] = useState<'simplified' | 'full'>(
-        'simplified'
-    );
 
     const [selectedNote, setSelectedNote] = useState<Note | null>(null);
     const [selectedArea, setSelectedArea] = useState<Area | null>(null);
     const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
+    const [keyboardShortcuts, setKeyboardShortcuts] = useState<KeyboardShortcutsConfig | null>(null);
+
+    // Fetch keyboard shortcuts from profile
+    useEffect(() => {
+        const fetchKeyboardShortcuts = async () => {
+            try {
+                const response = await fetch(getApiPath('profile'));
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.keyboard_shortcuts) {
+                        setKeyboardShortcuts(data.keyboard_shortcuts);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching keyboard shortcuts:', error);
+            }
+        };
+        fetchKeyboardShortcuts();
+    }, []);
 
     const {
         notesStore: { notes, isLoading: isNotesLoading, isError: isNotesError },
         areasStore: { areas, isLoading: isAreasLoading, isError: isAreasError },
-        tasksStore: { isLoading: isTasksLoading, isError: isTasksError },
+        tasksStore: {
+            isLoading: isTasksLoading,
+            isError: isTasksError,
+            createTask: createTaskInStore,
+        },
         projectsStore: {
             projects,
             setProjects,
@@ -75,9 +97,27 @@ const Layout: React.FC<LayoutProps> = ({
         tagsStore: { tags, isLoading: isTagsLoading, isError: isTagsError },
     } = useStore();
 
-    const openTaskModal = (type: 'simplified' | 'full' = 'simplified') => {
-        setIsTaskModalOpen(true);
-        setTaskModalType(type);
+    const createAndOpenTaskDetails = async () => {
+        try {
+            const newTask = await createTaskInStore({
+                name: t('task.newTaskPlaceholder', 'New Task'),
+                status: 'not_started',
+                completed_at: null,
+            });
+
+            if (newTask?.uid) {
+                navigate(`/task/${newTask.uid}`);
+            } else {
+                throw new Error('New task missing UID');
+            }
+        } catch (error) {
+            console.error('Error creating task from Layout:', error);
+            showErrorToast(t('task.createError', 'Failed to create task.'));
+        }
+    };
+
+    const openTaskModal = () => {
+        void createAndOpenTaskDetails();
     };
 
     useEffect(() => {
@@ -86,6 +126,23 @@ const Layout: React.FC<LayoutProps> = ({
         };
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        // Listen for mobile search toggle events from Navbar
+        const handleMobileSearchToggle = (event: CustomEvent) => {
+            setIsMobileSearchOpen(event.detail.isOpen);
+        };
+
+        window.addEventListener(
+            'mobileSearchToggle',
+            handleMobileSearchToggle as EventListener
+        );
+        return () =>
+            window.removeEventListener(
+                'mobileSearchToggle',
+                handleMobileSearchToggle as EventListener
+            );
     }, []);
 
     useEffect(() => {
@@ -114,16 +171,16 @@ const Layout: React.FC<LayoutProps> = ({
         setSelectedNote(null);
     };
 
-    const closeTaskModal = () => {
-        setIsTaskModalOpen(false);
-    };
-
     const openProjectModal = () => {
         setIsProjectModalOpen(true);
     };
 
     const closeProjectModal = () => {
         setIsProjectModalOpen(false);
+    };
+
+    const openNewHabit = () => {
+        navigate('/habit/new');
     };
 
     const openAreaModal = (area: Area | null = null) => {
@@ -179,51 +236,11 @@ const Layout: React.FC<LayoutProps> = ({
         }
     };
 
-    const handleSaveTask = async (taskData: Task) => {
-        try {
-            if (taskData.id) {
-                await updateTask(taskData.id, taskData);
-                const taskLink = (
-                    <span>
-                        {t('task.updated', 'Task')}{' '}
-                        <a
-                            href="/tasks"
-                            className="text-green-200 underline hover:text-green-100"
-                        >
-                            {taskData.name}
-                        </a>{' '}
-                        {t('task.updatedSuccessfully', 'updated successfully!')}
-                    </span>
-                );
-                showSuccessToast(taskLink);
-            } else {
-                const createdTask = await createTask(taskData);
-
-                // Notify Tasks component that a task was created
-                window.dispatchEvent(
-                    new CustomEvent('taskCreated', { detail: createdTask })
-                );
-            }
-            // Don't refetch all tasks here - let individual components handle their own state
-            // This prevents unnecessary re-renders and race conditions
-            closeTaskModal();
-        } catch (error: any) {
-            console.error('Error saving task:', error);
-            // Don't close modal if there's an auth error (user will be redirected)
-            if (isAuthError(error)) {
-                return;
-            }
-            // For other errors, still close the modal but let the error bubble up
-            closeTaskModal();
-            throw error;
-        }
-    };
-
     const handleCreateProject = async (name: string): Promise<Project> => {
         try {
             const newProject = await createProject({
                 name,
-                state: 'planned',
+                status: 'planned',
             });
             return newProject;
         } catch (error) {
@@ -312,7 +329,8 @@ const Layout: React.FC<LayoutProps> = ({
             if (isAuthError(error)) {
                 return;
             }
-            closeTagModal();
+            // Re-throw error so TagModal can handle it
+            throw error;
         }
     };
 
@@ -341,7 +359,6 @@ const Layout: React.FC<LayoutProps> = ({
                     setCurrentUser={setCurrentUser}
                     isSidebarOpen={isSidebarOpen}
                     setIsSidebarOpen={setIsSidebarOpen}
-                    openTaskModal={openTaskModal}
                 />
                 <Sidebar
                     isSidebarOpen={isSidebarOpen}
@@ -354,9 +371,11 @@ const Layout: React.FC<LayoutProps> = ({
                     openNoteModal={openNoteModal}
                     openAreaModal={openAreaModal}
                     openTagModal={openTagModal}
+                    openNewHabit={openNewHabit}
                     notes={notes}
                     areas={areas}
                     tags={tags}
+                    keyboardShortcuts={keyboardShortcuts}
                 />
                 <div
                     className={`flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out ${mainContentMarginLeft}`}
@@ -379,7 +398,6 @@ const Layout: React.FC<LayoutProps> = ({
                     setCurrentUser={setCurrentUser}
                     isSidebarOpen={isSidebarOpen}
                     setIsSidebarOpen={setIsSidebarOpen}
-                    openTaskModal={openTaskModal}
                 />
                 <Sidebar
                     isSidebarOpen={isSidebarOpen}
@@ -392,9 +410,11 @@ const Layout: React.FC<LayoutProps> = ({
                     openNoteModal={openNoteModal}
                     openAreaModal={openAreaModal}
                     openTagModal={openTagModal}
+                    openNewHabit={openNewHabit}
                     notes={notes}
                     areas={areas}
                     tags={tags}
+                    keyboardShortcuts={keyboardShortcuts}
                 />
                 <div
                     className={`flex-1 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 transition-all duration-300 ease-in-out ${mainContentMarginLeft}`}
@@ -417,7 +437,6 @@ const Layout: React.FC<LayoutProps> = ({
                     setCurrentUser={setCurrentUser}
                     isSidebarOpen={isSidebarOpen}
                     setIsSidebarOpen={setIsSidebarOpen}
-                    openTaskModal={openTaskModal}
                 />
                 <Sidebar
                     isSidebarOpen={isSidebarOpen}
@@ -430,44 +449,28 @@ const Layout: React.FC<LayoutProps> = ({
                     openNoteModal={openNoteModal}
                     openAreaModal={openAreaModal}
                     openTagModal={openTagModal}
+                    openNewHabit={openNewHabit}
                     notes={notes}
                     areas={areas}
                     tags={tags}
+                    keyboardShortcuts={keyboardShortcuts}
                 />
 
                 <div
-                    className={`transition-all duration-300 ease-in-out ${mainContentMarginLeft}`}
+                    className={`transition-all duration-300 ease-in-out ${mainContentMarginLeft} h-screen flex flex-col`}
                 >
-                    <div className="flex flex-col bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 min-h-screen overflow-y-auto">
-                        <div className="flex-grow py-6 px-2 md:px-6 pt-24">
-                            <div className="w-full">{children}</div>
+                    <div className="flex flex-col bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex-1 overflow-hidden">
+                        <div
+                            className={`flex-1 flex flex-col py-0 px-0 transition-all duration-300 ${
+                                isMobileSearchOpen ? 'pt-32' : 'pt-20'
+                            } md:pt-20 ${isUpcomingView ? '' : 'md:px-4'} overflow-hidden`}
+                        >
+                            <div className="w-full h-full overflow-auto">
+                                {children}
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                {isTaskModalOpen &&
-                    (taskModalType === 'simplified' ? (
-                        <InboxModal
-                            isOpen={isTaskModalOpen}
-                            onClose={closeTaskModal}
-                            onSave={handleSaveTask}
-                            projects={projects}
-                        />
-                    ) : (
-                        <TaskModal
-                            isOpen={isTaskModalOpen}
-                            onClose={closeTaskModal}
-                            task={{
-                                name: '',
-                                status: 'not_started',
-                                completed_at: null,
-                            }}
-                            onSave={handleSaveTask}
-                            onDelete={async () => {}}
-                            projects={projects}
-                            onCreateProject={handleCreateProject}
-                        />
-                    ))}
 
                 {isProjectModalOpen && (
                     <ProjectModal

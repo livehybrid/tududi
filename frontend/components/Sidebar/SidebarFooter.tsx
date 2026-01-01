@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     SunIcon,
     MoonIcon,
@@ -10,11 +11,20 @@ import {
     TagIcon,
     InboxIcon,
 } from '@heroicons/react/24/outline';
-import TelegramIcon from '../Icons/TelegramIcon';
+import TelegramIcon from '../Shared/Icons/TelegramIcon';
 import { useTranslation } from 'react-i18next';
 import { Note } from '../../entities/Note';
 import { Area } from '../../entities/Area';
 import { useTelegramStatus } from '../../contexts/TelegramStatusContext';
+import { getApiPath } from '../../config/paths';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import {
+    KeyboardShortcutsConfig,
+    ShortcutAction,
+    formatShortcutDisplay,
+    getDefaultShortcuts,
+    getShortcutByAction,
+} from '../../utils/keyboardShortcutsService';
 
 interface SidebarFooterProps {
     currentUser: { email: string };
@@ -24,27 +34,39 @@ interface SidebarFooterProps {
     setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
     isDropdownOpen: boolean;
     toggleDropdown: () => void;
-    openTaskModal: (type?: 'simplified' | 'full') => void;
+    openTaskModal: () => void;
     openProjectModal: () => void;
     openNoteModal: (note: Note | null) => void;
     openAreaModal: (area: Area | null) => void;
     openTagModal: (tag: any | null) => void;
+    keyboardShortcuts?: KeyboardShortcutsConfig | null;
 }
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({
     isDarkMode,
     toggleDarkMode,
     isSidebarOpen,
+    setIsSidebarOpen,
     openTaskModal,
     openProjectModal,
     openNoteModal,
     openAreaModal,
     openTagModal,
+    keyboardShortcuts,
 }) => {
     const { t } = useTranslation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const { status: telegramStatus } = useTelegramStatus();
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [version, setVersion] = useState<string>('v0.86');
+    const navigate = useNavigate();
+
+    // Get shortcuts config, using defaults if not provided
+    const shortcuts = useMemo(() => {
+        return keyboardShortcuts?.shortcuts || getDefaultShortcuts();
+    }, [keyboardShortcuts]);
+
+    const shortcutsEnabled = keyboardShortcuts?.enabled ?? true;
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -70,56 +92,30 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
         };
     }, [isDropdownOpen]);
 
-    // Handle keyboard shortcuts
+    // Fetch version from API
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            // Check for Ctrl + Shift key combinations only (not Cmd/Meta key)
-            if (event.ctrlKey && event.shiftKey && !event.metaKey) {
-                switch (event.key.toLowerCase()) {
-                    case 'i':
-                        event.preventDefault();
-                        handleDropdownSelect('Inbox');
-                        break;
-                    case 't':
-                        event.preventDefault();
-                        handleDropdownSelect('Task');
-                        break;
-                    case 'p':
-                        event.preventDefault();
-                        handleDropdownSelect('Project');
-                        break;
-                    case 'n':
-                        event.preventDefault();
-                        handleDropdownSelect('Note');
-                        break;
-                    case 'a':
-                        event.preventDefault();
-                        handleDropdownSelect('Area');
-                        break;
-                    case 'g':
-                        event.preventDefault();
-                        handleDropdownSelect('Tag');
-                        break;
-                    default:
-                        break;
+        fetch(getApiPath('version'))
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.version) {
+                    setVersion(data.version);
                 }
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
+            })
+            .catch((error) => {
+                console.error('Error fetching version:', error);
+            });
     }, []);
 
     const handleDropdownSelect = (type: string) => {
         switch (type) {
             case 'Inbox':
-                openTaskModal('simplified');
+                navigate('/inbox');
+                if (window.innerWidth < 1024) {
+                    setIsSidebarOpen(false);
+                }
                 break;
             case 'Task':
-                openTaskModal('full');
+                openTaskModal();
                 break;
             case 'Project':
                 openProjectModal();
@@ -139,46 +135,75 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
         setIsDropdownOpen(false);
     };
 
+    // Use the keyboard shortcuts hook
+    useKeyboardShortcuts(
+        shortcuts,
+        {
+            inbox: () => handleDropdownSelect('Inbox'),
+            task: () => handleDropdownSelect('Task'),
+            project: () => handleDropdownSelect('Project'),
+            note: () => handleDropdownSelect('Note'),
+            area: () => handleDropdownSelect('Area'),
+            tag: () => handleDropdownSelect('Tag'),
+        },
+        shortcutsEnabled
+    );
+
+    // Helper to get the display string for a shortcut action
+    const getShortcutDisplay = (action: ShortcutAction): string => {
+        const shortcut = getShortcutByAction(shortcuts, action);
+        return shortcut ? formatShortcutDisplay(shortcut) : '';
+    };
+
     const dropdownItems = [
         {
             label: 'Inbox',
             translationKey: 'dropdown.inbox',
             icon: <InboxIcon className="h-5 w-5 mr-2" />,
-            shortcut: 'Ctrl+Shift+I',
+            action: 'inbox' as ShortcutAction,
         },
         {
             label: 'Task',
             translationKey: 'dropdown.task',
             icon: <CheckIcon className="h-5 w-5 mr-2" />,
-            shortcut: 'Ctrl+Shift+T',
+            action: 'task' as ShortcutAction,
         },
         {
             label: 'Project',
             translationKey: 'dropdown.project',
             icon: <FolderIcon className="h-5 w-5 mr-2" />,
-            shortcut: 'Ctrl+Shift+P',
+            action: 'project' as ShortcutAction,
         },
         {
             label: 'Note',
             translationKey: 'dropdown.note',
             icon: <BookOpenIcon className="h-5 w-5 mr-2" />,
-            shortcut: 'Ctrl+Shift+N',
+            action: 'note' as ShortcutAction,
         },
         {
             label: 'Area',
             translationKey: 'dropdown.area',
             icon: <Squares2X2Icon className="h-5 w-5 mr-2" />,
-            shortcut: 'Ctrl+Shift+A',
+            action: 'area' as ShortcutAction,
         },
         {
             label: 'Tag',
             translationKey: 'dropdown.tag',
             icon: <TagIcon className="h-5 w-5 mr-2" />,
-            shortcut: 'Ctrl+Shift+G',
+            action: 'tag' as ShortcutAction,
         },
     ];
+
     return (
         <div className="mt-auto p-3">
+            {/* Version Display */}
+            {isSidebarOpen && (
+                <div className="flex justify-end pb-2">
+                    <span className="text-xs text-gray-400 dark:text-gray-600 font-light italic opacity-60">
+                        {version}
+                    </span>
+                </div>
+            )}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                 {isSidebarOpen && (
                     <div
@@ -207,7 +232,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
                                                 label,
                                                 translationKey,
                                                 icon,
-                                                shortcut,
+                                                action,
                                             }) => (
                                                 <button
                                                     key={label}
@@ -226,15 +251,12 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({
                                                         )}
                                                     </div>
                                                     <span
-                                                        className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-xs font-mono text-gray-500 dark:text-gray-400 opacity-60"
+                                                        className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs font-mono text-gray-500 dark:text-gray-400"
                                                         style={{
                                                             fontSize: '10px',
                                                         }}
                                                     >
-                                                        ^ + Shift +{' '}
-                                                        {shortcut
-                                                            .split('+')
-                                                            .pop()}
+                                                        {getShortcutDisplay(action)}
                                                     </span>
                                                 </button>
                                             )

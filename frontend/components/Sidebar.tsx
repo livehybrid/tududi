@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Area } from '../entities/Area';
 import { Note } from '../entities/Note';
@@ -7,8 +7,12 @@ import SidebarAreas from './Sidebar/SidebarAreas';
 import SidebarFooter from './Sidebar/SidebarFooter';
 import SidebarNav from './Sidebar/SidebarNav';
 import SidebarNotes from './Sidebar/SidebarNotes';
+import SidebarHabits from './Sidebar/SidebarHabits';
 import SidebarProjects from './Sidebar/SidebarProjects';
 import SidebarTags from './Sidebar/SidebarTags';
+import SidebarViews from './Sidebar/SidebarViews';
+import { getFeatureFlags, FeatureFlags } from '../utils/featureFlags';
+import { KeyboardShortcutsConfig } from '../utils/keyboardShortcutsService';
 
 interface SidebarProps {
     isSidebarOpen: boolean;
@@ -16,14 +20,16 @@ interface SidebarProps {
     currentUser: { email: string };
     isDarkMode: boolean;
     toggleDarkMode: () => void;
-    openTaskModal: (type?: 'simplified' | 'full') => void;
+    openTaskModal: () => void;
     openProjectModal: () => void;
     openNoteModal: (note: Note | null) => void;
     openAreaModal: (area: Area | null) => void;
     openTagModal: (tag: Tag | null) => void;
+    openNewHabit: () => void;
     notes: Note[];
     areas: Area[];
     tags: Tag[];
+    keyboardShortcuts?: KeyboardShortcutsConfig | null;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -37,14 +43,21 @@ const Sidebar: React.FC<SidebarProps> = ({
     openNoteModal,
     openAreaModal,
     openTagModal,
+    openNewHabit,
     notes,
     areas,
     tags,
+    keyboardShortcuts,
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
+        backups: false,
+        calendar: false,
+        habits: false,
+    });
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -56,6 +69,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             setIsSidebarOpen(false);
         }
     };
+
+    useEffect(() => {
+        const fetchFlags = async () => {
+            const flags = await getFeatureFlags();
+            setFeatureFlags(flags);
+        };
+
+        fetchFlags();
+    }, []);
 
     return (
         <div
@@ -73,6 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             handleNavClick={handleNavClick}
                             location={location}
                             isDarkMode={isDarkMode}
+                            openTaskModal={openTaskModal}
                         />
                         <SidebarProjects
                             handleNavClick={handleNavClick}
@@ -87,6 +110,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                             location={location}
                             isDarkMode={isDarkMode}
                         />
+                        {featureFlags.habits && (
+                            <SidebarHabits
+                                handleNavClick={handleNavClick}
+                                location={location}
+                                isDarkMode={isDarkMode}
+                                openNewHabit={openNewHabit}
+                            />
+                        )}
                         <SidebarAreas
                             handleNavClick={handleNavClick}
                             areas={areas}
@@ -100,6 +131,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                             isDarkMode={isDarkMode}
                             openTagModal={openTagModal}
                             tags={tags}
+                        />
+                        <SidebarViews
+                            handleNavClick={handleNavClick}
+                            location={location}
+                            isDarkMode={isDarkMode}
                         />
                     </div>
 
@@ -116,6 +152,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         openNoteModal={openNoteModal}
                         openAreaModal={openAreaModal}
                         openTagModal={openTagModal}
+                        keyboardShortcuts={keyboardShortcuts}
                     />
                 </div>
             )}

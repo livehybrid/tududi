@@ -15,6 +15,7 @@ import { useStore } from '../../store/useStore';
 import { useTranslation } from 'react-i18next';
 import ProjectDropdown from '../Shared/ProjectDropdown';
 import ConfirmDialog from '../Shared/ConfirmDialog';
+import DiscardChangesDialog from '../Shared/DiscardChangesDialog';
 import {
     EyeIcon,
     PencilIcon,
@@ -63,6 +64,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
     const [isClosing, setIsClosing] = useState(false);
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [showDiscardDialog, setShowDiscardDialog] = useState(false);
 
     // Project-related state
     const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -149,11 +151,40 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
     // Tags are now loaded automatically via getTags() when needed
 
+    // Check if there are unsaved changes
+    const hasUnsavedChanges = () => {
+        if (!note) {
+            // New note - check if any field has been filled
+            return (
+                formData.title.trim() !== '' ||
+                formData.content?.trim() !== '' ||
+                tags.length > 0 ||
+                formData.project_id !== null
+            );
+        }
+
+        // Existing note - compare with original
+        const formChanged =
+            formData.title !== note.title ||
+            formData.content !== note.content ||
+            formData.project_id !== note.project_id;
+
+        // Compare tags
+        const originalTags =
+            (note.tags || note.Tags)?.map((tag) => tag.name) || [];
+        const tagsChanged =
+            tags.length !== originalTags.length ||
+            tags.some((tag, index) => tag !== originalTags[index]);
+
+        return formChanged || tagsChanged;
+    };
+
     const handleClose = useCallback(() => {
         setIsClosing(true);
         setTimeout(() => {
             onClose();
             setIsClosing(false);
+            setShowDiscardDialog(false);
             // Reset expanded sections when closing
             setExpandedSections({
                 tags: false,
@@ -161,6 +192,15 @@ const NoteModal: React.FC<NoteModalProps> = ({
             });
         }, 300);
     }, [onClose]);
+
+    const handleDiscardChanges = () => {
+        setShowDiscardDialog(false);
+        handleClose();
+    };
+
+    const handleCancelDiscard = () => {
+        setShowDiscardDialog(false);
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -173,17 +213,45 @@ const NoteModal: React.FC<NoteModalProps> = ({
         };
 
         if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
+            // Add a small delay to prevent the opening click from closing the modal
+            const timer = setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+            }, 100);
+
+            return () => {
+                clearTimeout(timer);
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
         }
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isOpen, handleClose]);
 
+    // Use ref to store hasUnsavedChanges so it's always current in the event handler
+    const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+    useEffect(() => {
+        hasUnsavedChangesRef.current = hasUnsavedChanges;
+    });
+
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                handleClose();
+                // Don't show discard dialog if already showing a dialog
+                if (showConfirmDialog || showDiscardDialog) {
+                    // Let the dialog handle its own Escape
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Check for unsaved changes using ref to get current value
+                if (hasUnsavedChangesRef.current()) {
+                    setShowDiscardDialog(true);
+                } else {
+                    handleClose();
+                }
             }
         };
 
@@ -193,7 +261,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isOpen, handleClose]);
+    }, [isOpen, handleClose, showConfirmDialog, showDiscardDialog]);
 
     // Handle body scroll when modal opens/closes
     useEffect(() => {
@@ -258,9 +326,8 @@ const NoteModal: React.FC<NoteModalProps> = ({
         []
     );
 
-    const handleProjectSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setNewProjectName(value);
+    const handleProjectSearch = (query: string) => {
+        setNewProjectName(query);
         setDropdownOpen(true);
 
         if (!projects || projects.length === 0) {
@@ -268,14 +335,14 @@ const NoteModal: React.FC<NoteModalProps> = ({
             return;
         }
 
-        const query = value.toLowerCase();
+        const searchQuery = query.toLowerCase();
         const filtered = projects.filter((project) =>
-            project.name.toLowerCase().includes(query)
+            project.name.toLowerCase().includes(searchQuery)
         );
         setFilteredProjects(filtered);
 
         // If the user clears the project name, also clear the project_id in form data
-        if (value.trim() === '') {
+        if (query.trim() === '') {
             setFormData((prev) => ({ ...prev, project_id: null }));
         }
     };
@@ -290,11 +357,11 @@ const NoteModal: React.FC<NoteModalProps> = ({
         setDropdownOpen(false);
     };
 
-    const handleCreateProject = async () => {
-        if (newProjectName.trim() !== '' && onCreateProject) {
+    const handleCreateProject = async (name: string) => {
+        if (name.trim() !== '' && onCreateProject) {
             setIsCreatingProject(true);
             try {
-                const newProject = await onCreateProject(newProjectName.trim());
+                const newProject = await onCreateProject(name.trim());
                 setFormData((prev) => ({
                     ...prev,
                     project: {
@@ -531,6 +598,19 @@ const NoteModal: React.FC<NoteModalProps> = ({
                                                                     content={
                                                                         formData.content
                                                                     }
+                                                                    onContentChange={(
+                                                                        newContent
+                                                                    ) => {
+                                                                        setFormData(
+                                                                            (
+                                                                                prev
+                                                                            ) => ({
+                                                                                ...prev,
+                                                                                content:
+                                                                                    newContent,
+                                                                            })
+                                                                        );
+                                                                    }}
                                                                 />
                                                             ) : (
                                                                 <p className="text-gray-500 dark:text-gray-400 italic">
@@ -733,6 +813,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
                         setShowConfirmDialog(false);
                     }}
                     onCancel={() => setShowConfirmDialog(false)}
+                />
+            )}
+            {showDiscardDialog && (
+                <DiscardChangesDialog
+                    onDiscard={handleDiscardChanges}
+                    onCancel={handleCancelDiscard}
                 />
             )}
         </>

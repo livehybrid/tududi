@@ -18,7 +18,13 @@
     "status": "Estado",
     "saving": "Guardando...",
     "none": "Ninguno",
-    "settings": "Configuraciones"
+    "settings": "Configuraciones",
+    "discardChanges": "¿Descartar cambios?",
+    "discardChangesMessage": "Tienes cambios no guardados. ¿Estás seguro de que quieres descartarlos?",
+    "no": "No, seguir editando",
+    "yesDiscard": "Sí, descartar",
+    "uploading": "Subiendo...",
+    "refresh": "Actualizar"
   },
   "sidebar": {
     "dashboard": "Tablero",
@@ -30,6 +36,7 @@
     "areas": "Áreas",
     "tags": "Etiquetas",
     "today": "Hoy",
+    "total": "Total",
     "upcoming": "Próximamente",
     "nextActions": "Próximas Acciones",
     "inbox": "Bandeja de Entrada",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Agregar proyecto",
     "addNoteAriaLabel": "Agregar nota",
     "addNoteTitle": "Agregar nota",
-    "createNew": "Crear nuevo"
+    "createNew": "Crear nuevo",
+    "views": "Vistas",
+    "unpinView": "Desanclar vista",
+    "pinView": "Anclar vista"
   },
   "navigation": {
     "home": "Inicio",
@@ -54,7 +64,8 @@
     "profileSettings": "Configuración de Perfil",
     "settings": "Ajustes",
     "about": "Acerca de",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "backupRestore": "Copia de seguridad y restauración"
   },
   "settings": {
     "todayPageSettings": "Configuración de Página Hoy",
@@ -151,7 +162,8 @@
       "security": "Seguridad",
       "productivity": "Productividad",
       "telegram": "Telegram",
-      "ai": "Funciones IA"
+      "ai": "Funciones IA",
+      "notifications": "Preferencias de Notificación"
     },
     "security": "Configuración de Seguridad",
     "changePassword": "Cambiar Contraseña",
@@ -169,7 +181,6 @@
     "passwordChangeSuccess": "¡Contraseña cambiada exitosamente!",
     "changingPassword": "Cambiando contraseña...",
     "accountSettings": "Cuenta y Preferencias",
-    "aiProductivityFeatures": "Funciones de IA y Productividad",
     "botSetup": "Configuración del Bot",
     "pollingNote": "El sondeo verifica periódicamente nuevos mensajes de Telegram y los agrega a tu bandeja de entrada.",
     "pollingDescription": "El sondeo verifica periódicamente nuevos mensajes de Telegram y los agrega a tu bandeja de entrada.",
@@ -248,7 +259,23 @@
     "polish": "Polaco",
     "slovenian": "Esloveno",
     "swedish": "Sueco",
-    "firstDayOfWeek": "Primer día de la semana"
+    "firstDayOfWeek": "Primer día de la semana",
+    "name": "Nombre",
+    "surname": "Apellido",
+    "enterName": "Introduce tu nombre",
+    "enterSurname": "Introduce tu apellido",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Elige cómo deseas ser notificado sobre eventos importantes.",
+    "aiFeatures": "Funciones de IA"
   },
   "errors": {
     "required": "Este campo es obligatorio",
@@ -273,7 +300,10 @@
     "areaNameRequired": "Se requiere el nombre del área.",
     "failedToSaveArea": "No se pudo guardar el área.",
     "tagNameRequired": "Se requiere el nombre de la etiqueta.",
-    "failedToSaveTag": "No se pudo guardar la etiqueta."
+    "failedToSaveTag": "No se pudo guardar la etiqueta.",
+    "projectImageTooLarge": "La imagen es demasiado grande. Por favor, elige un archivo de menos de 10MB.",
+    "projectImageUpload": "Error al subir la imagen. Por favor, intenta con un archivo más pequeño o un formato diferente.",
+    "bannerSaveFailed": "Error al guardar el banner"
   },
   "dropdown": {
     "createNew": "Crear Nuevo",
@@ -287,12 +317,15 @@
   "tasks": {
     "title": "Tareas",
     "today": "Hoy",
+    "total": "Total",
     "backlog": "Pendientes",
     "inProgress": "En Progreso",
+    "overdue": "Vencidas",
+    "planned": "Planificadas",
     "dueToday": "Vence Hoy",
     "stale": "Atrasados",
     "suggested": "Sugeridos",
-    "completedToday": "Completadas Hoy",
+    "completedToday": "Completadas",
     "noTasksAvailable": "No hay tareas disponibles para hoy.",
     "searchPlaceholder": "Buscar tareas...",
     "addNewTask": "Añadir Nueva Tarea",
@@ -311,7 +344,31 @@
     "showSubtasks": "Mostrar subtareas",
     "hideSubtasks": "Ocultar subtareas",
     "edit": "Editar tarea",
-    "delete": "Eliminar tarea"
+    "delete": "Eliminar tarea",
+    "sortTasks": "Ordenar tareas",
+    "sortBy": "Ordenar por",
+    "direction": "Dirección",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
+    "groupBy": "Agrupar por",
+    "groupByProject": "Proyecto",
+    "grouping": {
+      "none": "Ninguno"
+    },
+    "show": "Mostrar",
+    "all": "Todos",
+    "completedOnly": "Solo completadas",
+    "notCompleted": "No completadas",
+    "noProject": "Sin proyecto",
+    "unknownProject": "Proyecto desconocido",
+    "tasks": "tareas",
+    "showingItems": "Mostrando {{current}} de {{total}} tareas",
+    "open": "Abrir",
+    "completed": "Completado",
+    "noCompletedTasksToday": "No hay tareas completadas hoy.",
+    "markAsDone": "Mark as done",
+    "notStarted": "No Iniciado",
+    "done": "Hecho"
   },
   "timeline": {
     "activityTimeline": "Línea de Tiempo de Actividad",
@@ -324,6 +381,7 @@
       "statusChanged": "Estado cambiado",
       "priorityChanged": "Prioridad cambiada",
       "dueDateChanged": "Fecha de vencimiento cambiada",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Nombre actualizado",
       "descriptionUpdated": "Descripción actualizada",
       "noteUpdated": "Nota actualizada",
@@ -334,11 +392,19 @@
       "status": "Estado",
       "priority": "Prioridad",
       "dueDate": "Fecha de vencimiento",
+      "deferUntil": "Defer until",
       "none": "Ninguno",
       "recurrenceEndDateChanged": "Fecha de finalización de la recurrencia cambiada",
       "recurrenceEndDate": "Fecha de finalización de la recurrencia",
       "recurrence_type_changed": "Tipo de recurrencia cambiado",
-      "recurrence_interval_changed": "Intervalo de recurrencia cambiado"
+      "recurrence_interval_changed": "Intervalo de recurrencia cambiado",
+      "completionBasedChanged": "Recurrencia basada en la finalización cambiada",
+      "projectIdChanged": "Asignado a un proyecto",
+      "recurrenceType": "Tipo de recurrencia",
+      "recurrenceTypeChanged": "Tipo de recurrencia cambiado",
+      "recurrence_weekday_changed": "Día de la semana de recurrencia cambiado",
+      "recurrence_month_day_changed": "Día del mes de recurrencia cambiado",
+      "recurrence_week_of_month_changed": "Semana del mes de recurrencia cambiada"
     },
     "justNow": "Justo ahora",
     "minutesAgo": "{{minutes}}m hace",
@@ -363,22 +429,34 @@
       "active": "Activos",
       "inactive": "Inactivos",
       "all": "Todos",
-      "allAreas": "Todas las áreas"
+      "allAreas": "Todas las áreas",
+      "notCompleted": "No Completados"
     },
     "selectState": "Seleccionar Estado",
     "state": "Estado del Proyecto",
-    "states": {
-      "idea": "Idea",
-      "planned": "Planificado",
-      "in_progress": "En Progreso",
-      "blocked": "Bloqueado",
-      "completed": "Completado",
-      "idea_desc": "Capturado pero aún no planificado",
-      "planned_desc": "Definido y listo para comenzar",
-      "in_progress_desc": "Trabajo activo en curso",
-      "blocked_desc": "Pausado temporalmente o atascado",
-      "completed_desc": "Terminado y completado"
-    }
+    "showMetrics": "Mostrar métricas",
+    "hideMetrics": "Ocultar métricas",
+    "progress": "Progreso",
+    "taskMomentum": "Impulso de tareas",
+    "activeTasks": "Tareas activas",
+    "dueSchedule": "Cronograma de vencimientos",
+    "next14Days": "Próximos 14 días",
+    "noUpcomingDue": "No hay vencimientos en los próximos 14 días.",
+    "peakDay": "Pico",
+    "none": "Ninguno",
+    "next3days": "Próximos 3 días",
+    "nextWeek": "Próximos 7 días",
+    "recentCompletion": "Finalización reciente",
+    "last7And30": "Últimos 7 y 30 días",
+    "weeklyPace": "Ritmo semanal",
+    "prevWeekCompleted": "{{count}} semana anterior",
+    "vsPrevWeek": "vs semana anterior",
+    "monthlyCompletion": "Finalizaciones de 30 días",
+    "last30Days": "Últimos 30 días",
+    "nextUp": "Siguiente mejor acción",
+    "focusTask": "Tarea más impactante",
+    "focusHint": "Mueve esta tarea a en progreso y hoy",
+    "noNextAction": "Todo despejado: no hay tareas pendientes."
   },
   "projectItem": {
     "edit": "Editar",
@@ -388,7 +466,15 @@
     "toggleDropdownMenu": "Alternar menú desplegable",
     "projectInitials": "Iniciales del proyecto",
     "share": "Compartir",
-    "sharedProject": "Compartido con el equipo"
+    "sharedProject": "Compartido con el equipo",
+    "noDueDate": "Sin fecha de vencimiento",
+    "dueToday": "Vence hoy",
+    "dueIn": "Vence en {{count}} {{unit}}",
+    "overdue": "Vencido hace {{count}} {{unit}}",
+    "day": "día",
+    "days": "días",
+    "sharedUser": "Usuario compartido",
+    "moreSharedUsers": "+{{count}} usuarios más"
   },
   "sort": {
     "due_date": "Fecha de Vencimiento",
@@ -449,6 +535,7 @@
     "title": "Título",
     "description": "Descripción",
     "dueDate": "Fecha de Vencimiento",
+    "deferUntil": "Defer until",
     "priority": "Prioridad",
     "status": "Estado",
     "assignedTo": "Asignado a",
@@ -479,6 +566,7 @@
         "status": "Estado",
         "priority": "Prioridad",
         "dueDate": "Fecha de Vencimiento",
+        "deferUntil": "Aplazar hasta",
         "note": "Nota",
         "recurrenceType": "Repetir",
         "recurrenceInterval": "Cada",
@@ -486,7 +574,8 @@
         "monthDay": "Día del mes",
         "weekOfMonth": "Semana del mes",
         "recurrenceEndDate": "Fecha de fin (opcional)",
-        "completionBased": "Repetir después de completar"
+        "completionBased": "Repetir después de completar",
+        "repeatOn": "Repetir en"
       },
       "projectSearchPlaceholder": "Buscar o crear un proyecto...",
       "noMatchingProjects": "No hay proyectos coincidentes",
@@ -507,7 +596,9 @@
         "short": "Intenta ser más específico sobre lo que necesita hacerse",
         "noVerb": "¿Qué acción específica necesitas tomar? Intenta comenzar con un verbo.",
         "vague": "Intenta comenzar con un verbo de acción como \"Llamar\", \"Escribir\", \"Programar\", o \"Investigar\""
-      }
+      },
+      "selectAtLeastOneDay": "Por favor, selecciona al menos un día",
+      "deferUntilPlaceholder": "Seleccione la fecha y hora hasta la cual aplazar"
     },
     "projectDescriptionPlaceholder": "Ingrese la descripción del proyecto"
   },
@@ -526,6 +617,7 @@
       "noName": "Estás viendo tareas para un proyecto específico. Utiliza este espacio para gestionar y seguir las tareas asociadas a este proyecto."
     },
     "today": "Estas son las tareas que vencen hoy o tareas que has programado para atención inmediata. Usa esta vista para concentrarte en lo que debe completarse hoy. Marca tareas como completadas, actualiza su estado o ajusta sus fechas de vencimiento si es necesario.",
+    "total": "Total",
     "inbox": "La bandeja de entrada es donde viven todas las tareas sin categorizar. Las tareas que no han sido asignadas a un proyecto o no tienen una fecha de vencimiento aparecerán aquí. Esta es tu área para \"volcar ideas\" donde puedes anotar rápidamente tareas y organizarlas más tarde.",
     "next": "Esta vista muestra todas las tareas que son accionables en un futuro cercano. Estas tareas están listas para ser trabajadas a continuación y no tienen plazos a largo plazo. Es un buen lugar para concentrarte cuando buscas hacer un progreso rápido en las tareas.",
     "upcoming": "Esta vista destaca las tareas programadas para la próxima semana. Te ayuda a prepararte y adelantarte a los plazos, dándote una visión general del trabajo que necesitas abordar en el futuro cercano. Las tareas con fechas de vencimiento dentro de los próximos 7 días aparecerán aquí.",
@@ -536,7 +628,8 @@
   "priority": {
     "low": "Baja",
     "medium": "Media",
-    "high": "Alta"
+    "high": "Alta",
+    "none": "Ninguno"
   },
   "status": {
     "notStarted": "No Iniciado",
@@ -552,12 +645,20 @@
   "project": {
     "name": "Nombre del Proyecto",
     "projectImage": "Imagen del Proyecto",
-    "uploadImageHint": "Sube una imagen para tu proyecto (máx. 5MB)",
+    "uploadImageHint": "Sube una imagen para tu proyecto (máx. 10MB)",
     "browseImage": "Examinar Imagen",
     "noNotes": "No hay notas para este proyecto.",
     "deleteProject": "Eliminar Proyecto",
     "showCompleted": "Mostrar Completados",
-    "createSuccess": "¡Proyecto creado exitosamente!"
+    "createSuccess": "¡Proyecto creado exitosamente!",
+    "createdAndAssigned": "Proyecto creado y asignado",
+    "createError": "Error al crear el proyecto",
+    "viewProject": "Ir al proyecto",
+    "editProject": "Editar proyecto",
+    "editBanner": "Editar banner del proyecto",
+    "currentBanner": "Banner actual",
+    "choosePreset": "Elige un banner preestablecido:",
+    "orUploadOwn": "O sube el tuyo propio:"
   },
   "task": {
     "labels": {
@@ -566,6 +667,7 @@
       "status": "Estado",
       "priority": "Prioridad",
       "dueDate": "Fecha de Vencimiento",
+      "deferUntil": "Defer until",
       "note": "Nota"
     },
     "create": "Crear",
@@ -601,12 +703,96 @@
     "subtasks": "Subtareas",
     "noSubtasks": "No hay subtareas aún",
     "recentActivity": "Actividad Reciente",
-    "noActivityYet": "No hay actividad aún"
+    "noActivityYet": "No hay actividad aún",
+    "thisTask": "Esta tarea",
+    "is": "es",
+    "and": "y",
+    "dueOn": "vencida",
+    "inProject": "del proyecto",
+    "lowPriority": "baja prioridad",
+    "mediumPriority": "prioridad media",
+    "highPriority": "alta prioridad",
+    "inDays": "en {{count}} días",
+    "daysAgo": "{{count}} días atrás",
+    "tagsUpdated": "Etiquetas actualizadas con éxito",
+    "tagsUpdateError": "Error al actualizar las etiquetas",
+    "recurrenceUpdated": "Recurrencia actualizada con éxito",
+    "recurrenceUpdateError": "Error al actualizar la recurrencia",
+    "dueDateUpdated": "Fecha de vencimiento actualizada con éxito",
+    "dueDateUpdateError": "Error al actualizar la fecha de vencimiento",
+    "titleUpdated": "Título de la tarea actualizado con éxito",
+    "titleUpdateError": "Error al actualizar el título de la tarea",
+    "contentUpdated": "Contenido de la tarea actualizado con éxito",
+    "contentUpdateError": "Error al actualizar el contenido de la tarea",
+    "subtasksUpdated": "Subtareas actualizadas con éxito",
+    "subtasksUpdateError": "Error al actualizar las subtareas",
+    "projectUpdated": "Proyecto actualizado con éxito",
+    "projectUpdateError": "Error al actualizar el proyecto",
+    "projectCleared": "Proyecto limpiado con éxito",
+    "projectClearError": "Error al limpiar el proyecto",
+    "priorityUpdated": "Prioridad actualizada con éxito",
+    "priorityUpdateError": "Error al actualizar la prioridad",
+    "status": {
+      "notStarted": "no iniciado",
+      "inProgress": "en progreso",
+      "done": "completado",
+      "archived": "archivado",
+      "unknown": "en curso",
+      "waiting": "Esperando",
+      "setAsDone": "Marcar como hecho"
+    },
+    "noSubtasksClickToAdd": "No hay subtareas aún, haz clic para agregar",
+    "project": "Proyecto",
+    "noProject": "Sin proyecto - Haz clic para asignar",
+    "tags": "Etiquetas",
+    "noTags": "Sin etiquetas",
+    "priority": "Prioridad",
+    "dueDate": "Fecha de vencimiento",
+    "deferUntil": "Aplazar hasta",
+    "recurringSetup": "Configuración recurrente",
+    "notRecurring": "Esta tarea aún no es recurrente.",
+    "clickToEditTitle": "Haz clic para editar el título",
+    "clickToEditContent": "Haz clic para editar el contenido",
+    "clickToAddContent": "Haz clic para agregar contenido",
+    "clickToEditSubtasks": "Haz clic para editar subtareas",
+    "clickToAddOrEditSubtasks": "Haz clic para agregar o editar subtareas",
+    "contentPlaceholder": "Agrega contenido aquí... (Markdown soportado)",
+    "contentEditHint": "Presiona Cmd/Ctrl+Enter para guardar, Esc para cancelar",
+    "noContentPreview": "No hay contenido para previsualizar. Cambia a modo de edición para agregar contenido.",
+    "deleteConfirmTitle": "Eliminar Tarea",
+    "deleteConfirmMessage": "¿Estás seguro de que deseas eliminar esta tarea? Esta acción no se puede deshacer.",
+    "noMoreIterations": "No hay más iteraciones programadas",
+    "nextOccurrences": "Próximas Ocurrencias",
+    "nextOccurrencesAfterThis": "Próximas Ocurrencias Después de Esto",
+    "noDueDate": "Sin fecha de vencimiento",
+    "instanceOf": "Esta es una instancia de una tarea recurrente",
+    "parentTask": "Tarea principal",
+    "includingToday": "incluyendo hoy",
+    "has": "tiene",
+    "fromProject": "del proyecto",
+    "noDeferUntil": "No aplazar hasta",
+    "deferUntilUpdated": "Aplazar hasta que se actualice correctamente",
+    "deferUntilUpdateError": "Error al actualizar el aplazamiento",
+    "showOverdueWarning": "Mostrar advertencia de vencimiento",
+    "dueDateInPastWarning": "Advertencia: Estás estableciendo una fecha de vencimiento en el pasado",
+    "overview": "Resumen",
+    "schedule": "Programar",
+    "attachments": "Adjuntos",
+    "attachmentsComingSoon": "Función de adjuntos próximamente",
+    "activity": "Actividad",
+    "lastUpdatedAt": "Última actualización en",
+    "statusUpdated": "Estado actualizado con éxito",
+    "statusUpdateError": "Error al actualizar el estado",
+    "updatedAt": "Actualizado en",
+    "upcoming": "próximo"
   },
   "dateIndicators": {
     "today": "HOY",
+    "total": "Total",
     "tomorrow": "MAÑANA",
-    "yesterday": "AYER"
+    "yesterday": "AYER",
+    "nextWeek": "la próxima semana",
+    "nextMonth": "el próximo mes"
   },
   "inbox": {
     "title": "Bandeja de Entrada",
@@ -708,7 +894,8 @@
     "taskUpdated": "¡Tarea actualizada con éxito!",
     "taskDeleted": "¡Tarea eliminada con éxito!",
     "nextActionAdded": "¡Próxima acción agregada con éxito!",
-    "noteDeleted": "¡Nota eliminada con éxito!"
+    "noteDeleted": "¡Nota eliminada con éxito!",
+    "bannerUpdated": "¡Banner actualizado con éxito!"
   },
   "recurrence": {
     "none": "Ninguna",
@@ -753,6 +940,7 @@
     "week": "Semana",
     "day": "Día",
     "today": "Hoy",
+    "total": "Total",
     "addEvent": "Agregar Evento",
     "weekView": "Vista Semanal",
     "dayView": "Vista Diaria",
@@ -776,6 +964,7 @@
     "title": "Título",
     "status": "Estado",
     "dueDate": "Fecha de Vencimiento",
+    "deferUntil": "Defer until",
     "priority": "Prioridad",
     "project": "Proyecto",
     "area": "Área",
@@ -802,9 +991,10 @@
     "staleTasksDesc": "Tareas no actualizadas en {{days}} días",
     "stuckProjects": "Proyectos Atascados",
     "stuckProjectsDesc": "Proyectos no actualizados recientemente",
-    "issuesFound": "Se encontraron {{count}} problema(s) de productividad que necesitan atención",
     "reviewItems": "Haga clic para revisar y mejorar su flujo de trabajo",
-    "suggestion": "Haga clic en cualquier elemento de arriba para abrirlo y hacer mejoras."
+    "suggestion": "Haga clic en cualquier elemento de arriba para abrirlo y hacer mejoras.",
+    "issuesFound_one": "1 problema de productividad necesita atención",
+    "issuesFound_other": "{{count}} problemas de productividad necesitan atención"
   },
   "pages": {
     "notFound": {
@@ -979,5 +1169,182 @@
     "noAvailableUsers": "No hay usuarios disponibles para compartir",
     "shared": "Compartido",
     "sharedWithTeam": "Compartido con el equipo"
+  },
+  "views": {
+    "title": "Vistas Inteligentes",
+    "loading": "Cargando vistas...",
+    "searchPlaceholder": "Buscar vistas...",
+    "noViewsFound": "No se encontraron vistas. Crea una vista realizando una búsqueda y haciendo clic en \"Guardar como Vista Inteligente\".",
+    "deleteView": "Eliminar Vista",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar la vista \"{{viewName}}\"?",
+    "pinView": "Anclar vista",
+    "unpinView": "Desanclar vista",
+    "searchCriteria": "Criterios de Búsqueda",
+    "entityTypes": "Tipos de Entidad",
+    "searchText": "Texto de Búsqueda",
+    "priority": "Prioridad",
+    "dueDate": "Fecha de Vencimiento",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "No se han establecido criterios específicos",
+    "priorityLabel": "Prioridad:",
+    "dueLabel": "Vence:",
+    "tags": "Etiquetas",
+    "recurring": "Recurrente"
+  },
+  "search": {
+    "placeholder": "Buscar tareas, proyectos, notas...",
+    "searchingFor": "Estás buscando",
+    "allItems": "todos los elementos",
+    "containingText": ", que contiene el texto",
+    "withPriority": ", con",
+    "priority": "prioridad",
+    "due": ", vencido",
+    "taggedWith": ", etiquetado con",
+    "and": "y",
+    "criteria": "Criterios de Búsqueda",
+    "metadataFilters": "Filtros de Metadatos",
+    "priorityFilter": "Prioridad",
+    "dueFilter": "Vencido",
+    "tagsFilter": "Etiquetas",
+    "saveAsSmartView": "Guardar como Vista Inteligente",
+    "viewName": "Nombre de la Vista",
+    "viewNameRequired": "El nombre de la vista es obligatorio",
+    "viewNamePlaceholder": "Ingresa el nombre de la vista",
+    "failedToSave": "Error al guardar la vista. Por favor, inténtalo de nuevo.",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "saveView": "Guardar Vista",
+    "startTyping": "Comienza a escribir para buscar o seleccionar filtros arriba",
+    "noResults": "No se encontraron resultados",
+    "entityTypes": {
+      "task": "tarea",
+      "project": "proyecto",
+      "area": "área",
+      "note": "nota"
+    },
+    "thatAre": ", que son",
+    "extras": "Extras",
+    "recurringFilter": {
+      "label": "Recurrente",
+      "recurring": "plantillas recurrentes",
+      "nonRecurring": "no recurrente",
+      "instances": "instancias recurrentes"
+    },
+    "deferUntilFilter": "Aplazar hasta",
+    "deferUntil": ", aplazar hasta",
+    "extrasFilter": {
+      "isRecurring": "es Recurrente",
+      "isOverdue": "está Vencido",
+      "hasContent": "tiene Contenido",
+      "isDeferred": "está Diferido",
+      "hasTags": "tiene Etiquetas",
+      "isAssignedToProject": "está Asignado al Proyecto"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Agregar una subtarea..."
+  },
+  "backup": {
+    "restore": "Restaurar",
+    "download": "Descargar",
+    "downloadSuccess": "¡Copia de seguridad descargada con éxito!",
+    "downloadError": "Error al descargar la copia de seguridad",
+    "confirmRestore": "Restaurar copia de seguridad",
+    "confirmRestoreMessage": "¿Está seguro de que desea restaurar esta copia de seguridad? Esto fusionará los datos respaldados con sus datos actuales.",
+    "restoreSuccess": "¡Copia de seguridad restaurada con éxito! Creado: {{tasks}} tareas, {{projects}} proyectos, {{notes}} notas",
+    "restoreError": "Error al restaurar la copia de seguridad",
+    "confirmDelete": "Eliminar copia de seguridad",
+    "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta copia de seguridad? Esta acción no se puede deshacer.",
+    "deleteSuccess": "¡Copia de seguridad eliminada con éxito!",
+    "deleteError": "Error al eliminar la copia de seguridad",
+    "importTitle": "Importar desde archivo",
+    "importDescription": "Suba un archivo de copia de seguridad para restaurar sus datos. Sus datos existentes se preservarán y se agregarán nuevos elementos de la copia de seguridad.",
+    "importNote": "Importante:",
+    "importNoteDescription": "La importación fusionará los datos con sus elementos existentes. Los elementos duplicados (mismo UID) serán omitidos.",
+    "selectFile": "Seleccionar archivo de copia de seguridad",
+    "clickToUpload": "Haga clic para buscar archivos",
+    "restoreBackup": "Restaurar copia de seguridad",
+    "importing": "Importando...",
+    "importSuccess": "¡Copia de seguridad importada con éxito! Creado: {{tasks}} tareas, {{projects}} proyectos, {{notes}} notas",
+    "importError": "Error al importar la copia de seguridad",
+    "backupContents": "Contenido de la copia de seguridad:",
+    "validationError": "El archivo seleccionado no es una copia de seguridad válida",
+    "validationErrors": "Errores de validación:",
+    "versionIncompatible": "Versión incompatible",
+    "backupVersion": "Versión de la copia de seguridad",
+    "title": "Copia de seguridad y restauración",
+    "description": "Crea copias de seguridad o restaura desde copias de seguridad anteriores. Tus últimas 5 copias de seguridad se guardan automáticamente.",
+    "createBackup": "Crear copia de seguridad",
+    "importFromFile": "Importar desde archivo",
+    "createNewBackup": "Crear nueva copia de seguridad",
+    "createDescription": "Crea una nueva copia de seguridad de todos tus datos. Las copias de seguridad se guardan en el servidor y puedes restaurarlas más tarde.",
+    "createBackupNow": "Crear copia de seguridad ahora",
+    "creating": "Creando copia de seguridad...",
+    "exportSuccess": "¡Copia de seguridad creada con éxito!",
+    "exportError": "Error al crear la copia de seguridad",
+    "savedBackups": "Copias de seguridad guardadas",
+    "noBackups": "No se encontraron copias de seguridad. Crea tu primera copia de seguridad arriba.",
+    "createdAt": "Creado",
+    "version": "Versión",
+    "currentVersion": "Versión actual",
+    "size": "Tamaño",
+    "contents": "Contenido",
+    "actions": "Acciones",
+    "restoreButton": "Restaurar"
+  },
+  "notifications": {
+    "table": {
+      "type": "Tipo de Notificación"
+    },
+    "channels": {
+      "inApp": "En la aplicación",
+      "email": "Correo Electrónico",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Tareas Vencidas",
+      "overdueTasks": "Tareas Atrasadas",
+      "deferUntil": "Aplazar Hasta",
+      "dueProjects": "Proyectos Vencidos",
+      "overdueProjects": "Proyectos Atrasados"
+    },
+    "descriptions": {
+      "dueTasks": "Tareas que vencen en 24 horas",
+      "overdueTasks": "Tareas que han pasado su fecha de vencimiento",
+      "deferUntil": "Tareas que ahora están disponibles para trabajar",
+      "dueProjects": "Proyectos que vencen en 24 horas",
+      "overdueProjects": "Proyectos que han pasado su fecha de vencimiento"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram No Configurado:",
+        "message": "Para recibir notificaciones de Telegram, por favor configura tu bot de Telegram en la pestaña de Telegram."
+      }
+    },
+    "test": {
+      "title": "Notificaciones de Prueba",
+      "description": "Envía una notificación de prueba para ver cómo aparece en la aplicación y en los canales habilitados (Telegram, etc.)",
+      "send": "Enviar prueba",
+      "sending": "Enviando..."
+    },
+    "info": {
+      "title": "Nota:",
+      "message": "Las notificaciones por correo electrónico y Push llegarán pronto. Las notificaciones en la aplicación y de Telegram están disponibles actualmente."
+    }
+  },
+  "projectStatus": {
+    "not_started": "No Iniciado",
+    "not_started_desc": "Capturado pero aún no iniciado",
+    "planned": "Planificado",
+    "planned_desc": "Definido y listo para comenzar",
+    "in_progress": "En Progreso",
+    "in_progress_desc": "Trabajo activo en curso",
+    "waiting": "Esperando",
+    "waiting_desc": "Esperando entrada externa",
+    "done": "Completado",
+    "done_desc": "Terminado y hecho",
+    "cancelled": "Cancelado",
+    "cancelled_desc": "No se completará"
   }
 }

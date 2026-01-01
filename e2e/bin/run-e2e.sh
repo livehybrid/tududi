@@ -2,46 +2,51 @@
 set -euo pipefail
 
 # Config
-APP_URL_DEFAULT="http://localhost:8080"
-BACKEND_URL="http://localhost:3002"
+FRONTEND_PORT="${FRONTEND_PORT:-4180}"
+FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
+BACKEND_PORT="${BACKEND_PORT:-3310}"
+BACKEND_HOST="${BACKEND_HOST:-127.0.0.1}"
+BACKEND_URL="${BACKEND_URL:-http://${BACKEND_HOST}:${BACKEND_PORT}}"
 BACKEND_HEALTH="${BACKEND_URL}/api/health"
+APP_URL_DEFAULT="http://${FRONTEND_HOST}:${FRONTEND_PORT}"
 FRONTEND_URL="${APP_URL:-$APP_URL_DEFAULT}"
+FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-$FRONTEND_URL}"
 
 # Colors
 red() { printf "\033[31m%s\033[0m\n" "$*"; }
 green() { printf "\033[32m%s\033[0m\n" "$*"; }
 yellow() { printf "\033[33m%s\033[0m\n" "$*"; }
 
-# Ensure dependencies in e2e/
+# Ensure dependencies in root
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 E2E_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ROOT_DIR="$(cd "$E2E_DIR/.." && pwd)"
 
-cd "$E2E_DIR"
-if [ ! -f package.json ]; then
-  red "e2e/package.json not found"
-  exit 1
-fi
+cd "$ROOT_DIR"
 
-# Install e2e deps and browsers
-if [ ! -d node_modules ]; then
-  yellow "Installing e2e dependencies..."
-  npm ci
-fi
-
+# Check if Playwright is installed
 if ! npx playwright --version >/dev/null 2>&1; then
   yellow "Installing Playwright browsers..."
-  npm run install-browsers
+  npx playwright install --with-deps
 fi
 
 # Start backend and frontend
 cd "$ROOT_DIR"
 
-yellow "Starting backend..."
+# Remove old test database to start fresh
+yellow "Removing old test database..."
+rm -f backend/db/test.sqlite3
+
+yellow "Starting backend with test database..."
+(cd backend && \
+NODE_ENV=test \
+PORT=$BACKEND_PORT \
+HOST=$BACKEND_HOST \
+DB_FILE=db/test.sqlite3 \
 TUDUDI_USER_EMAIL="${E2E_EMAIL:-test@tududi.com}" \
 TUDUDI_USER_PASSWORD="${E2E_PASSWORD:-password123}" \
 SEQUELIZE_LOGGING=false \
-npm run backend:start >/dev/null 2>&1 &
+./cmd/start.sh) >/dev/null 2>&1 &
 BACKEND_PID=$!
 
 cleanup() {
@@ -52,8 +57,8 @@ cleanup() {
 
   # Kill by known ports (best-effort)
   if command -v lsof >/dev/null 2>&1; then
-    FRONTEND_PIDS_KILL=$(lsof -ti tcp:8080 || true)
-    BACKEND_PIDS_KILL=$(lsof -ti tcp:3002 || true)
+    FRONTEND_PIDS_KILL=$(lsof -ti tcp:${FRONTEND_PORT} || true)
+    BACKEND_PIDS_KILL=$(lsof -ti tcp:${BACKEND_PORT} || true)
     if [ -n "${FRONTEND_PIDS_KILL:-}" ]; then kill ${FRONTEND_PIDS_KILL} >/dev/null 2>&1 || true; fi
     if [ -n "${BACKEND_PIDS_KILL:-}" ]; then kill ${BACKEND_PIDS_KILL} >/dev/null 2>&1 || true; fi
   fi
@@ -61,6 +66,10 @@ cleanup() {
   # Direct child processes as fallback
   if [ -n "${FRONTEND_PID:-}" ] && ps -p $FRONTEND_PID >/dev/null 2>&1; then kill $FRONTEND_PID || true; fi
   if [ -n "${BACKEND_PID:-}" ] && ps -p $BACKEND_PID >/dev/null 2>&1; then kill $BACKEND_PID || true; fi
+
+  # Remove test database
+  yellow "Cleaning up test database..."
+  rm -f "$ROOT_DIR/backend/db/test.sqlite3"
 }
 trap cleanup EXIT INT TERM
 
@@ -79,6 +88,10 @@ for i in {1..60}; do
 done
 
 yellow "Starting frontend dev server..."
+BACKEND_URL="$BACKEND_URL" \
+FRONTEND_PORT="$FRONTEND_PORT" \
+FRONTEND_HOST="$FRONTEND_HOST" \
+FRONTEND_ORIGIN="$FRONTEND_ORIGIN" \
 npm run frontend:dev >/dev/null 2>&1 &
 FRONTEND_PID=$!
 
@@ -96,8 +109,8 @@ for i in {1..60}; do
   fi
 done
 
-# Run tests
-cd "$E2E_DIR"
+# Run tests (specify config file since we're running from root)
+cd "$ROOT_DIR"
 
 yellow "Running Playwright tests..."
 APP_URL="$FRONTEND_URL" \
@@ -105,11 +118,11 @@ E2E_EMAIL="${E2E_EMAIL:-test@tududi.com}" \
 E2E_PASSWORD="${E2E_PASSWORD:-password123}" \
 bash -c '
   if [ "${E2E_MODE:-}" = "ui" ]; then
-    npm run test:ui
+    npx playwright test --ui --config=e2e/playwright.config.ts
   elif [ "${E2E_MODE:-}" = "headed" ]; then
-    # Respect E2E_SLOWMO and run only Firefox sequentially
-    npx playwright test --headed --project=Firefox --workers=1
+    # Respect E2E_SLOWMO and run only Chromium sequentially
+    npx playwright test --headed --project=Chromium --workers=1 --config=e2e/playwright.config.ts
   else
-    npx playwright test --workers=10
+    npx playwright test --config=e2e/playwright.config.ts
   fi
 '

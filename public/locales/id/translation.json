@@ -18,7 +18,13 @@
     "status": "Status",
     "saving": "Menyimpan...",
     "settings": "Pengaturan",
-    "none": "Tidak ada"
+    "none": "Tidak ada",
+    "discardChanges": "Buang perubahan?",
+    "discardChangesMessage": "Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin membuangnya?",
+    "no": "Tidak, lanjutkan mengedit",
+    "yesDiscard": "Ya, buang",
+    "uploading": "Mengunggah...",
+    "refresh": "Segarkan"
   },
   "sidebar": {
     "dashboard": "Dasbor",
@@ -34,6 +40,7 @@
     "addTagAriaLabel": "Tambahkan Tag",
     "addTagTitle": "Tambahkan Tag",
     "today": "Hari Ini",
+    "total": "Total",
     "upcoming": "Akan Datang",
     "nextActions": "Tindakan Selanjutnya",
     "inbox": "Kotak Masuk",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Tambahkan Proyek",
     "addNoteAriaLabel": "Tambahkan Catatan",
     "addNoteTitle": "Tambahkan Catatan",
-    "createNew": "Buat Baru"
+    "createNew": "Buat Baru",
+    "views": "Tampilan",
+    "unpinView": "Lepaskan tampilan",
+    "pinView": "Sematkan tampilan"
   },
   "navigation": {
     "home": "Beranda",
@@ -54,7 +64,8 @@
     "profileSettings": "Pengaturan Profil",
     "settings": "Pengaturan",
     "about": "Tentang",
-    "logout": "Keluar"
+    "logout": "Keluar",
+    "backupRestore": "Cadangkan & Pulihkan"
   },
   "settings": {
     "todayPageSettings": "Pengaturan Halaman Hari Ini",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Tugas",
     "today": "Hari Ini",
+    "total": "Total",
     "backlog": "Backlog",
     "inProgress": "Dalam Proses",
     "dueToday": "Jatuh Tempo Hari Ini",
@@ -115,7 +127,33 @@
     "showSubtasks": "Tampilkan subtugas",
     "hideSubtasks": "Sembunyikan subtugas",
     "edit": "Edit tugas",
-    "delete": "Hapus tugas"
+    "delete": "Hapus tugas",
+    "sortTasks": "Urutkan tugas",
+    "sortBy": "Urutkan berdasarkan",
+    "direction": "Arah",
+    "ascending": "Menaik",
+    "descending": "Menurun",
+    "groupBy": "Kelompokkan berdasarkan",
+    "groupByProject": "Proyek",
+    "grouping": {
+      "none": "Tidak ada"
+    },
+    "show": "Tampilkan",
+    "all": "Semua",
+    "completedOnly": "Hanya selesai",
+    "notCompleted": "Belum selesai",
+    "noProject": "Tanpa proyek",
+    "unknownProject": "Proyek tidak dikenal",
+    "tasks": "tugas",
+    "showingItems": "Menampilkan {{current}} dari {{total}} tugas",
+    "overdue": "Terlambat",
+    "planned": "Direncanakan",
+    "open": "Buka",
+    "completed": "Selesai",
+    "noCompletedTasksToday": "Tidak ada tugas yang diselesaikan hari ini.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Belum Dimulai",
+    "done": "Selesai"
   },
   "timeline": {
     "activityTimeline": "Garis Waktu Aktivitas",
@@ -128,6 +166,7 @@
       "statusChanged": "Status diubah",
       "priorityChanged": "Prioritas diubah",
       "dueDateChanged": "Tanggal jatuh tempo diubah",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Nama diperbarui",
       "descriptionUpdated": "Deskripsi diperbarui",
       "noteUpdated": "Catatan diperbarui",
@@ -138,11 +177,19 @@
       "status": "Status",
       "priority": "Prioritas",
       "dueDate": "Tanggal jatuh tempo",
+      "deferUntil": "Defer until",
       "none": "Tidak ada",
       "recurrenceEndDateChanged": "Tanggal akhir pengulangan telah diubah",
       "recurrenceEndDate": "Tanggal akhir pengulangan",
       "recurrence_type_changed": "Tipe pengulangan berubah",
-      "recurrence_interval_changed": "Interval pengulangan berubah"
+      "recurrence_interval_changed": "Interval pengulangan berubah",
+      "completionBasedChanged": "Perulangan berbasis penyelesaian diubah",
+      "projectIdChanged": "Ditugaskan ke proyek",
+      "recurrenceType": "Jenis perulangan",
+      "recurrenceTypeChanged": "Jenis perulangan diubah",
+      "recurrence_weekday_changed": "Hari ulang tahun berubah",
+      "recurrence_month_day_changed": "Hari bulan ulang tahun berubah",
+      "recurrence_week_of_month_changed": "Minggu bulan ulang tahun berubah"
     },
     "justNow": "Baru saja",
     "minutesAgo": "{{minutes}}m yang lalu",
@@ -265,7 +312,8 @@
       "security": "Keamanan",
       "productivity": "Produktivitas",
       "telegram": "Telegram",
-      "ai": "Fitur AI"
+      "ai": "Fitur AI",
+      "notifications": "Preferensi Notifikasi"
     },
     "security": "Pengaturan Keamanan",
     "changePassword": "Ubah Kata Sandi",
@@ -283,7 +331,6 @@
     "passwordChangeSuccess": "Kata sandi berhasil diubah!",
     "changingPassword": "Mengubah kata sandi...",
     "accountSettings": "Akun & Preferensi",
-    "aiProductivityFeatures": "Fitur AI & Produktivitas",
     "botSetup": "Pengaturan Bot",
     "passwordChangeNote": "Perubahan kata sandi akan disimpan ketika Anda mengklik \"Simpan Perubahan\" di bagian bawah formulir.",
     "passwordChangeOptional": "Biarkan kolom kata sandi kosong untuk memperbarui pengaturan lain tanpa mengubah kata sandi Anda.",
@@ -294,7 +341,23 @@
     "polish": "Polandia",
     "slovenian": "Slovenia",
     "swedish": "Swedia",
-    "firstDayOfWeek": "Hari pertama dalam minggu"
+    "firstDayOfWeek": "Hari pertama dalam minggu",
+    "name": "Nama",
+    "surname": "Nama Belakang",
+    "enterName": "Masukkan nama Anda",
+    "enterSurname": "Masukkan nama belakang Anda",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Pilih bagaimana Anda ingin diberi tahu tentang peristiwa penting.",
+    "aiFeatures": "Fitur AI"
   },
   "productivity": {
     "stalledProjects": "Proyek Terhenti",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Tugas yang tidak diperbarui dalam {{days}} hari",
     "stuckProjects": "Proyek Terjebak",
     "stuckProjectsDesc": "Proyek yang tidak diperbarui baru-baru ini",
-    "issuesFound": "Ditemukan {{count}} masalah produktivitas yang memerlukan perhatian",
     "reviewItems": "Klik untuk meninjau dan meningkatkan alur kerja Anda",
-    "suggestion": "Klik pada item mana pun di atas untuk membukanya dan melakukan perbaikan."
+    "suggestion": "Klik pada item mana pun di atas untuk membukanya dan melakukan perbaikan.",
+    "issuesFound_other": "{{count}} masalah produktivitas memerlukan perhatian",
+    "issuesFound_one": "1 masalah produktivitas membutuhkan perhatian"
   },
   "nextTask": {
     "suggestion": "Karena tidak ada yang sedang berlangsung, bagaimana jika mulai dengan",
@@ -365,6 +429,7 @@
     "title": "Judul",
     "description": "Deskripsi",
     "dueDate": "Tanggal Jatuh Tempo",
+    "deferUntil": "Defer until",
     "priority": "Prioritas",
     "status": "Status",
     "assignedTo": "Ditetapkan Untuk",
@@ -382,6 +447,7 @@
         "status": "Status",
         "priority": "Prioritas",
         "dueDate": "Tanggal Jatuh Tempo",
+        "deferUntil": "Tunda Hingga",
         "note": "Catatan",
         "recurrenceType": "Ulangi",
         "recurrenceInterval": "Setiap",
@@ -389,7 +455,8 @@
         "monthDay": "Hari dalam bulan",
         "weekOfMonth": "Minggu dalam bulan",
         "recurrenceEndDate": "Tanggal akhir (opsional)",
-        "completionBased": "Ulangi setelah penyelesaian"
+        "completionBased": "Ulangi setelah penyelesaian",
+        "repeatOn": "Ulangi pada"
       },
       "projectSearchPlaceholder": "Cari atau buat proyek...",
       "noMatchingProjects": "Tidak ada proyek yang cocok",
@@ -410,7 +477,9 @@
         "short": "Cobalah untuk lebih spesifik tentang apa yang perlu dilakukan",
         "noVerb": "Tindakan spesifik apa yang perlu Anda ambil? Cobalah mulai dengan kata kerja.",
         "vague": "Cobalah mulai dengan kata kerja aksi seperti \"Hubungi\", \"Tulis\", \"Jadwalkan\", atau \"Teliti\""
-      }
+      },
+      "selectAtLeastOneDay": "Silakan pilih setidaknya satu hari",
+      "deferUntilPlaceholder": "Pilih tanggal dan waktu tunda hingga"
     },
     "noteTitle": "Judul Catatan",
     "noteContent": "Konten Catatan",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Rendah",
     "medium": "Sedang",
-    "high": "Tinggi"
+    "high": "Tinggi",
+    "none": "Tidak ada"
   },
   "status": {
     "notStarted": "Belum Dimulai",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Nama Proyek",
     "projectImage": "Gambar Proyek",
-    "uploadImageHint": "Unggah gambar untuk proyek Anda (maks 5MB)",
+    "uploadImageHint": "Unggah gambar untuk proyek Anda (maks 10MB)",
     "browseImage": "Telusuri Gambar",
     "noNotes": "Tidak ada catatan untuk proyek ini.",
     "deleteProject": "Hapus Proyek",
-    "createSuccess": "Proyek berhasil dibuat!"
+    "createSuccess": "Proyek berhasil dibuat!",
+    "createdAndAssigned": "Proyek dibuat dan ditugaskan",
+    "createError": "Gagal membuat proyek",
+    "viewProject": "Pergi ke proyek",
+    "editProject": "Edit proyek",
+    "editBanner": "Edit spanduk proyek",
+    "currentBanner": "Spanduk saat ini",
+    "choosePreset": "Pilih spanduk preset:",
+    "orUploadOwn": "Atau unggah milik Anda sendiri:"
   },
   "errors": {
     "required": "Kolom ini diperlukan",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Nama tag diperlukan.",
     "failedToSaveTag": "Gagal untuk menyimpan tag.",
     "projectNameRequired": "Nama proyek diperlukan.",
-    "projectSaveFailed": "Gagal untuk menyimpan proyek."
+    "projectSaveFailed": "Gagal untuk menyimpan proyek.",
+    "projectImageTooLarge": "Gambar terlalu besar. Silakan pilih file di bawah 10MB.",
+    "projectImageUpload": "Gagal mengunggah gambar. Silakan coba file yang lebih kecil atau format yang berbeda.",
+    "bannerSaveFailed": "Gagal menyimpan spanduk"
   },
   "inbox": {
     "title": "Kotak Masuk",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "HARI INI",
+    "total": "Total",
     "tomorrow": "ESOK",
-    "yesterday": "KEMARIN"
+    "yesterday": "KEMARIN",
+    "nextWeek": "minggu depan",
+    "nextMonth": "bulan depan"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Anda sedang melihat tugas untuk proyek tertentu. Gunakan ruang ini untuk mengelola dan melacak tugas yang terkait dengan proyek ini."
     },
     "today": "Ini adalah tugas yang jatuh tempo hari ini atau tugas yang telah Anda jadwalkan untuk perhatian segera. Gunakan tampilan ini untuk fokus pada apa yang perlu diselesaikan hari ini. Tandai tugas sebagai selesai, perbarui statusnya, atau sesuaikan tanggal jatuh temponya jika perlu.",
+    "total": "Total",
     "inbox": "Kotak masuk adalah tempat semua tugas yang tidak terkategori berada. Tugas yang belum ditugaskan ke proyek atau diberikan tanggal jatuh tempo akan muncul di sini. Ini adalah area \"brain dump\" Anda di mana Anda dapat dengan cepat mencatat tugas dan mengorganisirnya nanti.",
     "next": "Tampilan ini menunjukkan semua tugas yang dapat dikerjakan dalam waktu dekat. Tugas-tugas ini siap untuk dikerjakan selanjutnya dan tidak memiliki tenggat waktu jangka panjang. Ini adalah tempat yang baik untuk fokus ketika Anda ingin membuat kemajuan cepat pada tugas.",
     "upcoming": "Tampilan ini menyoroti tugas yang dijadwalkan untuk minggu mendatang. Ini membantu Anda mempersiapkan dan tetap di depan tenggat waktu dengan memberikan gambaran umum tentang pekerjaan yang perlu Anda tangani dalam waktu dekat. Tugas dengan tanggal jatuh tempo dalam 7 hari ke depan akan muncul di sini.",
@@ -584,7 +669,8 @@
     "taskCreated": "Tugas berhasil dibuat!",
     "taskUpdated": "Tugas berhasil diperbarui!",
     "taskDeleted": "Tugas berhasil dihapus!",
-    "noteDeleted": "Catatan berhasil dihapus!"
+    "noteDeleted": "Catatan berhasil dihapus!",
+    "bannerUpdated": "Spanduk berhasil diperbarui!"
   },
   "note": {
     "title": "Judul",
@@ -602,6 +688,7 @@
       "status": "Status",
       "priority": "Prioritas",
       "dueDate": "Tanggal Jatuh Tempo",
+      "deferUntil": "Defer until",
       "note": "Catatan"
     },
     "create": "Buat",
@@ -637,7 +724,88 @@
     "subtasks": "Subtugas",
     "noSubtasks": "Belum ada subtugas",
     "recentActivity": "Aktivitas Terbaru",
-    "noActivityYet": "Belum ada aktivitas"
+    "noActivityYet": "Belum ada aktivitas",
+    "thisTask": "Tugas ini",
+    "is": "adalah",
+    "and": "dan",
+    "dueOn": "jatuh tempo",
+    "inProject": "dari proyek",
+    "lowPriority": "prioritas rendah",
+    "mediumPriority": "prioritas sedang",
+    "highPriority": "prioritas tinggi",
+    "inDays": "dalam {{count}} hari",
+    "daysAgo": "{{count}} hari yang lalu",
+    "tagsUpdated": "Tag berhasil diperbarui",
+    "tagsUpdateError": "Gagal memperbarui tag",
+    "recurrenceUpdated": "Perulangan berhasil diperbarui",
+    "recurrenceUpdateError": "Gagal memperbarui perulangan",
+    "dueDateUpdated": "Tanggal jatuh tempo berhasil diperbarui",
+    "dueDateUpdateError": "Gagal memperbarui tanggal jatuh tempo",
+    "titleUpdated": "Judul tugas berhasil diperbarui",
+    "titleUpdateError": "Gagal memperbarui judul tugas",
+    "contentUpdated": "Konten tugas berhasil diperbarui",
+    "contentUpdateError": "Gagal memperbarui konten tugas",
+    "subtasksUpdated": "Subtugas berhasil diperbarui",
+    "subtasksUpdateError": "Gagal memperbarui subtugas",
+    "projectUpdated": "Proyek berhasil diperbarui",
+    "projectUpdateError": "Gagal memperbarui proyek",
+    "projectCleared": "Proyek berhasil dibersihkan",
+    "projectClearError": "Gagal membersihkan proyek",
+    "priorityUpdated": "Prioritas berhasil diperbarui",
+    "priorityUpdateError": "Gagal memperbarui prioritas",
+    "status": {
+      "notStarted": "belum dimulai",
+      "inProgress": "sedang berlangsung",
+      "done": "selesai",
+      "archived": "diarsipkan",
+      "unknown": "berlangsung",
+      "waiting": "Menunggu",
+      "setAsDone": "Tandai sebagai selesai"
+    },
+    "noSubtasksClickToAdd": "Belum ada subtugas, klik untuk menambah",
+    "project": "Proyek",
+    "noProject": "Tidak ada proyek - Klik untuk menugaskan",
+    "tags": "Tag",
+    "noTags": "Tidak ada tag",
+    "priority": "Prioritas",
+    "dueDate": "Tanggal Jatuh Tempo",
+    "deferUntil": "Tunda Hingga",
+    "recurringSetup": "Pengaturan Berulang",
+    "notRecurring": "Tugas ini belum berulang.",
+    "clickToEditTitle": "Klik untuk mengedit judul",
+    "clickToEditContent": "Klik untuk mengedit konten",
+    "clickToAddContent": "Klik untuk menambah konten",
+    "clickToEditSubtasks": "Klik untuk mengedit subtugas",
+    "clickToAddOrEditSubtasks": "Klik untuk menambah atau mengedit subtugas",
+    "contentPlaceholder": "Tambahkan konten di sini... (Markdown didukung)",
+    "contentEditHint": "Tekan Cmd/Ctrl+Enter untuk menyimpan, Esc untuk membatalkan",
+    "noContentPreview": "Tidak ada konten untuk ditampilkan. Beralih ke mode Edit untuk menambahkan konten.",
+    "deleteConfirmTitle": "Hapus Tugas",
+    "deleteConfirmMessage": "Apakah Anda yakin ingin menghapus tugas ini? Tindakan ini tidak dapat dibatalkan.",
+    "noMoreIterations": "Tidak ada iterasi lain yang dijadwalkan",
+    "nextOccurrences": "Kejadian Berikutnya",
+    "nextOccurrencesAfterThis": "Kejadian Berikutnya Setelah Ini",
+    "noDueDate": "Tidak ada tanggal jatuh tempo",
+    "instanceOf": "Ini adalah instance dari tugas berulang",
+    "parentTask": "Tugas Induk",
+    "includingToday": "termasuk hari ini",
+    "has": "memiliki",
+    "fromProject": "dari proyek",
+    "noDeferUntil": "Tidak ada tunda hingga",
+    "deferUntilUpdated": "Tunda hingga diperbarui dengan sukses",
+    "deferUntilUpdateError": "Gagal memperbarui tunda hingga",
+    "showOverdueWarning": "Tampilkan peringatan keterlambatan",
+    "dueDateInPastWarning": "Peringatan: Anda sedang menetapkan tanggal jatuh tempo di masa lalu",
+    "overview": "Ikhtisar",
+    "schedule": "Jadwal",
+    "attachments": "Lampiran",
+    "attachmentsComingSoon": "Fitur lampiran akan segera hadir",
+    "activity": "Aktivitas",
+    "lastUpdatedAt": "Terakhir diperbarui pada",
+    "statusUpdated": "Status berhasil diperbarui",
+    "statusUpdateError": "Gagal memperbarui status",
+    "updatedAt": "Diperbarui pada",
+    "upcoming": "mendatang"
   },
   "projects": {
     "loading": "Memuat proyek...",
@@ -654,7 +822,8 @@
       "active": "Aktif",
       "inactive": "Tidak Aktif",
       "all": "Semua",
-      "allAreas": "Semua Area"
+      "allAreas": "Semua Area",
+      "notCompleted": "Belum Selesai"
     },
     "selectState": "Pilih Status",
     "state": "Status Proyek",
@@ -668,8 +837,33 @@
       "planned_desc": "Sudah ditentukan dan siap untuk dimulai",
       "in_progress_desc": "Pekerjaan aktif sedang berlangsung",
       "blocked_desc": "Sementara terhenti atau terjebak",
-      "completed_desc": "Selesai dan selesai"
-    }
+      "completed_desc": "Selesai dan selesai",
+      "active": "Sedang Berlangsung",
+      "active_desc": "Pekerjaan aktif sedang berlangsung"
+    },
+    "showMetrics": "Tampilkan metrik",
+    "hideMetrics": "Sembunyikan metrik",
+    "progress": "Kemajuan",
+    "taskMomentum": "Momentum tugas",
+    "activeTasks": "Tugas aktif",
+    "dueSchedule": "Jadwal jatuh tempo",
+    "next14Days": "14 hari ke depan",
+    "noUpcomingDue": "Tidak ada tanggal jatuh tempo dalam 14 hari ke depan.",
+    "peakDay": "Puncak",
+    "none": "Tidak ada",
+    "next3days": "3 hari ke depan",
+    "nextWeek": "7 hari ke depan",
+    "recentCompletion": "Penyelesaian terkini",
+    "last7And30": "7 & 30 hari terakhir",
+    "weeklyPace": "Kecepatan mingguan",
+    "prevWeekCompleted": "{{count}} minggu sebelumnya",
+    "vsPrevWeek": "vs minggu sebelumnya",
+    "monthlyCompletion": "Penyelesaian 30 hari",
+    "last30Days": "30 hari terakhir",
+    "nextUp": "Tindakan terbaik selanjutnya",
+    "focusTask": "Tugas paling berdampak",
+    "focusHint": "Memindahkan tugas ini ke sedang berlangsung dan hari ini",
+    "noNextAction": "Semua bersih—tidak ada tugas tertunda."
   },
   "projectItem": {
     "edit": "Sunting",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Alihkan menu dropdown",
     "projectInitials": "Inisial proyek",
     "share": "Bagikan",
-    "sharedProject": "Dibagikan dengan tim"
+    "sharedProject": "Dibagikan dengan tim",
+    "noDueDate": "Tidak ada tanggal jatuh tempo",
+    "dueToday": "Jatuh tempo hari ini",
+    "dueIn": "Jatuh tempo dalam {{count}} {{unit}}",
+    "overdue": "Terlambat {{count}} {{unit}}",
+    "day": "hari",
+    "days": "hari",
+    "sharedUser": "Pengguna bersama",
+    "moreSharedUsers": "+{{count}} pengguna lagi"
   },
   "areas": {
     "title": "Area",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Anda sedang mengedit pengaturan pengulangan tugas induk. Perubahan akan mempengaruhi semua instance masa depan dari tugas berulang ini."
   },
   "weekdays": {
-    "sunday": "Minggu",
-    "monday": "Senin",
-    "tuesday": "Selasa",
-    "wednesday": "Rabu",
-    "thursday": "Kamis",
-    "friday": "Jumat",
-    "saturday": "Sabtu"
+    "sunday": "Min",
+    "monday": "Sen",
+    "tuesday": "Sel",
+    "wednesday": "Rab",
+    "thursday": "Kam",
+    "friday": "Jum",
+    "saturday": "Sab"
   },
   "pomodoro": {
     "play": "Main",
@@ -769,6 +971,7 @@
     "week": "Minggu",
     "day": "Hari",
     "today": "Hari Ini",
+    "total": "Total",
     "addEvent": "Tambah Acara",
     "weekView": "Tampilan Minggu",
     "dayView": "Tampilan Hari",
@@ -792,6 +995,7 @@
     "title": "Judul",
     "status": "Status",
     "dueDate": "Tanggal Jatuh Tempo",
+    "deferUntil": "Defer until",
     "priority": "Prioritas",
     "project": "Proyek",
     "area": "Area",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Tidak ada pengguna yang tersedia untuk dibagikan",
     "shared": "Dibagikan",
     "sharedWithTeam": "Dibagikan dengan tim"
+  },
+  "views": {
+    "title": "Tampilan Cerdas",
+    "loading": "Memuat tampilan...",
+    "searchPlaceholder": "Cari tampilan...",
+    "noViewsFound": "Tidak ada tampilan yang ditemukan. Buat tampilan dengan melakukan pencarian dan mengklik \"Simpan sebagai Tampilan Cerdas\".",
+    "deleteView": "Hapus Tampilan",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus tampilan \"{{viewName}}\"?",
+    "pinView": "Sematkan tampilan",
+    "unpinView": "Lepaskan tampilan",
+    "searchCriteria": "Kriteria Pencarian",
+    "entityTypes": "Jenis Entitas",
+    "searchText": "Teks Pencarian",
+    "priority": "Prioritas",
+    "dueDate": "Tanggal Jatuh Tempo",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Tidak ada kriteria spesifik yang ditetapkan",
+    "priorityLabel": "Prioritas:",
+    "dueLabel": "Jatuh Tempo:",
+    "tags": "Tag",
+    "recurring": "Berulang"
+  },
+  "search": {
+    "placeholder": "Cari tugas, proyek, catatan...",
+    "searchingFor": "Anda sedang mencari",
+    "allItems": "semua item",
+    "containingText": ", yang mengandung teks",
+    "withPriority": ", dengan",
+    "priority": "prioritas",
+    "due": ", jatuh tempo",
+    "taggedWith": ", ditandai dengan",
+    "and": "dan",
+    "criteria": "Kriteria Pencarian",
+    "metadataFilters": "Filter Metadata",
+    "priorityFilter": "Prioritas",
+    "dueFilter": "Jatuh Tempo",
+    "tagsFilter": "Tag",
+    "saveAsSmartView": "Simpan sebagai Tampilan Cerdas",
+    "viewName": "Nama Tampilan",
+    "viewNameRequired": "Nama tampilan diperlukan",
+    "viewNamePlaceholder": "Masukkan nama tampilan",
+    "failedToSave": "Gagal menyimpan tampilan. Silakan coba lagi.",
+    "cancel": "Batal",
+    "saving": "Menyimpan...",
+    "saveView": "Simpan Tampilan",
+    "startTyping": "Mulai mengetik untuk mencari atau pilih filter di atas",
+    "noResults": "Tidak ada hasil yang ditemukan",
+    "entityTypes": {
+      "task": "tugas",
+      "project": "proyek",
+      "area": "area",
+      "note": "catatan"
+    },
+    "thatAre": ", yang adalah",
+    "extras": "Ekstra",
+    "recurringFilter": {
+      "label": "Berulang",
+      "recurring": "template berulang",
+      "nonRecurring": "tidak berulang",
+      "instances": "instansi berulang"
+    },
+    "deferUntilFilter": "Tunda Hingga",
+    "deferUntil": ", tunda hingga",
+    "extrasFilter": {
+      "isRecurring": "adalah Berulang",
+      "isOverdue": "adalah Terlambat",
+      "hasContent": "memiliki Konten",
+      "isDeferred": "adalah Ditunda",
+      "hasTags": "memiliki Tag",
+      "isAssignedToProject": "adalah Ditugaskan ke Proyek"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Tambahkan subtugas..."
+  },
+  "backup": {
+    "title": "Cadangkan & Pulihkan",
+    "description": "Buat cadangan atau pulihkan dari cadangan sebelumnya. 5 cadangan terakhir Anda disimpan secara otomatis.",
+    "createBackup": "Buat Cadangan",
+    "importFromFile": "Impor dari Berkas",
+    "createNewBackup": "Buat Cadangan Baru",
+    "createDescription": "Buat cadangan baru dari semua data Anda. Cadangan disimpan di server dan Anda dapat memulihkannya nanti.",
+    "createBackupNow": "Buat Cadangan Sekarang",
+    "creating": "Membuat cadangan...",
+    "exportSuccess": "Cadangan berhasil dibuat!",
+    "exportError": "Gagal membuat cadangan",
+    "savedBackups": "Cadangan yang Disimpan",
+    "noBackups": "Tidak ada cadangan yang ditemukan. Buat cadangan pertama Anda di atas.",
+    "createdAt": "Dibuat",
+    "version": "Versi",
+    "currentVersion": "Versi saat ini",
+    "size": "Ukuran",
+    "contents": "Isi",
+    "actions": "Tindakan",
+    "restore": "Pulihkan",
+    "download": "Unduh",
+    "downloadSuccess": "Cadangan berhasil diunduh!",
+    "downloadError": "Gagal mengunduh cadangan",
+    "confirmRestore": "Pulihkan Cadangan",
+    "confirmRestoreMessage": "Apakah Anda yakin ingin memulihkan cadangan ini? Ini akan menggabungkan data yang dicadangkan dengan data Anda saat ini.",
+    "restoreSuccess": "Cadangan berhasil dipulihkan! Dibuat: {{tasks}} tugas, {{projects}} proyek, {{notes}} catatan",
+    "restoreError": "Gagal memulihkan cadangan",
+    "confirmDelete": "Hapus Cadangan",
+    "confirmDeleteMessage": "Apakah Anda yakin ingin menghapus cadangan ini? Tindakan ini tidak dapat dibatalkan.",
+    "deleteSuccess": "Cadangan berhasil dihapus!",
+    "deleteError": "Gagal menghapus cadangan",
+    "importTitle": "Impor dari File",
+    "importDescription": "Unggah file cadangan untuk memulihkan data Anda. Data Anda yang ada akan dilestarikan, dan item baru dari cadangan akan ditambahkan.",
+    "importNote": "Penting:",
+    "importNoteDescription": "Impor akan menggabungkan data dengan item Anda yang ada. Item duplikat (UID yang sama) akan dilewati.",
+    "selectFile": "Pilih File Cadangan",
+    "clickToUpload": "Klik untuk menjelajahi file",
+    "restoreBackup": "Pulihkan Cadangan",
+    "importing": "Mengimpor...",
+    "importSuccess": "Cadangan berhasil diimpor! Dibuat: {{tasks}} tugas, {{projects}} proyek, {{notes}} catatan",
+    "importError": "Gagal mengimpor cadangan",
+    "backupContents": "Isi cadangan:",
+    "validationError": "File yang dipilih bukan cadangan yang valid",
+    "validationErrors": "Kesalahan validasi:",
+    "versionIncompatible": "Versi Tidak Kompatibel",
+    "backupVersion": "Versi cadangan",
+    "restoreButton": "Pulihkan"
+  },
+  "notifications": {
+    "table": {
+      "type": "Jenis Notifikasi"
+    },
+    "channels": {
+      "inApp": "Dalam aplikasi",
+      "email": "Email",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Tugas Jatuh Tempo",
+      "overdueTasks": "Tugas Terlambat",
+      "deferUntil": "Tunda Hingga",
+      "dueProjects": "Proyek Jatuh Tempo",
+      "overdueProjects": "Proyek Terlambat"
+    },
+    "descriptions": {
+      "dueTasks": "Tugas yang jatuh tempo dalam 24 jam",
+      "overdueTasks": "Tugas yang telah melewati tanggal jatuh tempo",
+      "deferUntil": "Tugas yang sekarang tersedia untuk dikerjakan",
+      "dueProjects": "Proyek yang jatuh tempo dalam 24 jam",
+      "overdueProjects": "Proyek yang telah melewati tanggal jatuh tempo"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram Tidak Dikonfigurasi:",
+        "message": "Untuk menerima notifikasi Telegram, silakan konfigurasikan bot Telegram Anda di tab Telegram."
+      }
+    },
+    "test": {
+      "title": "Notifikasi Uji",
+      "description": "Kirim notifikasi percobaan untuk melihat bagaimana tampilannya di dalam aplikasi dan di saluran yang diaktifkan (Telegram, dll.)",
+      "send": "Kirim Percobaan",
+      "sending": "Mengirim..."
+    },
+    "info": {
+      "title": "Catatan:",
+      "message": "Notifikasi Email dan Push akan segera hadir. Notifikasi di dalam aplikasi dan Telegram saat ini tersedia."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Belum Dimulai",
+    "not_started_desc": "Tercatat tetapi belum dimulai",
+    "planned": "Direncanakan",
+    "planned_desc": "Sudah ditentukan dan siap untuk dimulai",
+    "in_progress": "Sedang Berlangsung",
+    "in_progress_desc": "Pekerjaan aktif sedang berlangsung",
+    "waiting": "Menunggu",
+    "waiting_desc": "Menunggu masukan eksternal",
+    "done": "Selesai",
+    "done_desc": "Telah selesai dan selesai",
+    "cancelled": "Dibatalkan",
+    "cancelled_desc": "Tidak akan diselesaikan"
   }
 }

@@ -4,14 +4,16 @@ import ProjectDropdown from '../../Shared/ProjectDropdown';
 
 interface TaskProjectSectionProps {
     newProjectName: string;
-    onProjectSearch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onProjectSearch: (query: string) => void;
     dropdownOpen: boolean;
     filteredProjects: Project[];
     onProjectSelection: (project: Project) => void;
-    onCreateProject: () => void;
+    onCreateProject: (name: string) => void | Promise<void>;
     isCreatingProject: boolean;
     onShowAllProjects: () => void;
     allProjects: Project[];
+    selectedProject?: Project | null;
+    onClearProject?: () => void;
 }
 
 const TaskProjectSection: React.FC<TaskProjectSectionProps> = ({
@@ -24,6 +26,8 @@ const TaskProjectSection: React.FC<TaskProjectSectionProps> = ({
     isCreatingProject,
     onShowAllProjects,
     allProjects,
+    selectedProject,
+    onClearProject,
 }) => {
     return (
         <ProjectDropdown
@@ -36,6 +40,8 @@ const TaskProjectSection: React.FC<TaskProjectSectionProps> = ({
             isCreatingProject={isCreatingProject}
             onShowAllProjects={onShowAllProjects}
             allProjects={allProjects}
+            selectedProject={selectedProject}
+            onClearProject={onClearProject}
         />
     );
 };

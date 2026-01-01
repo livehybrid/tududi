@@ -18,7 +18,13 @@
     "status": "Stare",
     "saving": "Se salvează...",
     "settings": "Setări",
-    "none": "Niciunul"
+    "none": "Niciunul",
+    "discardChanges": "Renunți la modificări?",
+    "discardChangesMessage": "Ai modificări nesalvate. Ești sigur că vrei să le renunți?",
+    "no": "Nu, continuă editarea",
+    "yesDiscard": "Da, renunță",
+    "uploading": "Se încarcă...",
+    "refresh": "Reîmprospătare"
   },
   "sidebar": {
     "dashboard": "Tabloul de bord",
@@ -34,6 +40,7 @@
     "addTagAriaLabel": "Adaugă Etichetă",
     "addTagTitle": "Adaugă Etichetă",
     "today": "Astăzi",
+    "total": "Total",
     "upcoming": "Următoarele",
     "nextActions": "Acțiuni Următoare",
     "inbox": "Inbox",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Adaugă Proiect",
     "addNoteAriaLabel": "Adaugă Notă",
     "addNoteTitle": "Adaugă Notă",
-    "createNew": "Creează Nou"
+    "createNew": "Creează Nou",
+    "views": "Vizualizări",
+    "unpinView": "Deblochează vizualizarea",
+    "pinView": "Fixează vizualizarea"
   },
   "navigation": {
     "home": "Acasă",
@@ -54,7 +64,8 @@
     "profileSettings": "Setări Profil",
     "settings": "Setări",
     "about": "Despre",
-    "logout": "Deconectare"
+    "logout": "Deconectare",
+    "backupRestore": "Backup și Restaurare"
   },
   "settings": {
     "todayPageSettings": "Setări Pagina de Azi",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Sarcini",
     "today": "Astăzi",
+    "total": "Total",
     "backlog": "Întârziere",
     "inProgress": "În desfășurare",
     "dueToday": "Terminat Astăzi",
@@ -115,7 +127,33 @@
     "showSubtasks": "Arată subtask-uri",
     "hideSubtasks": "Ascunde subtask-uri",
     "edit": "Editează task-ul",
-    "delete": "Șterge task-ul"
+    "delete": "Șterge task-ul",
+    "sortTasks": "Sortează sarcini",
+    "sortBy": "Sortează după",
+    "direction": "Direcție",
+    "ascending": "Crescător",
+    "descending": "Descrescător",
+    "groupBy": "Grupează după",
+    "groupByProject": "Proiect",
+    "grouping": {
+      "none": "Niciunul"
+    },
+    "show": "Afișează",
+    "all": "Toate",
+    "completedOnly": "Doar finalizate",
+    "notCompleted": "Nefinalizate",
+    "noProject": "Fără proiect",
+    "unknownProject": "Proiect necunoscut",
+    "tasks": "sarcini",
+    "showingItems": "Se afișează {{current}} din {{total}} sarcini",
+    "overdue": "Întârziat",
+    "planned": "Planificat",
+    "open": "Deschide",
+    "completed": "Finalizat",
+    "noCompletedTasksToday": "Nicio sarcină finalizată astăzi.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Nefăcut",
+    "done": "Finalizat"
   },
   "timeline": {
     "activityTimeline": "Cronologia activităților",
@@ -128,6 +166,7 @@
       "statusChanged": "Status schimbat",
       "priorityChanged": "Prioritate schimbată",
       "dueDateChanged": "Data limită schimbată",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Nume actualizat",
       "descriptionUpdated": "Descriere actualizată",
       "noteUpdated": "Notă actualizată",
@@ -138,11 +177,19 @@
       "status": "Status",
       "priority": "Prioritate",
       "dueDate": "Data limită",
+      "deferUntil": "Defer until",
       "none": "Niciunul",
       "recurrenceEndDateChanged": "Data de încheiere a recurenței a fost modificată",
       "recurrenceEndDate": "Data de încheiere a recurenței",
       "recurrence_type_changed": "Tipul de recurență s-a schimbat",
-      "recurrence_interval_changed": "Intervalul de recurență s-a schimbat"
+      "recurrence_interval_changed": "Intervalul de recurență s-a schimbat",
+      "completionBasedChanged": "Recurrence bazată pe finalizare modificată",
+      "projectIdChanged": "Atribuit unui proiect",
+      "recurrenceType": "Tip de recurență",
+      "recurrenceTypeChanged": "Tip de recurență modificat",
+      "recurrence_weekday_changed": "Ziua săptămânii pentru recurență a fost schimbată",
+      "recurrence_month_day_changed": "Ziua lunii pentru recurență a fost schimbată",
+      "recurrence_week_of_month_changed": "Săptămâna lunii pentru recurență a fost schimbată"
     },
     "justNow": "Chiar acum",
     "minutesAgo": "{{minutes}}m în urmă",
@@ -265,7 +312,8 @@
       "security": "Securitate",
       "productivity": "Productivitate",
       "telegram": "Telegram",
-      "ai": "Funcții AI"
+      "ai": "Funcții AI",
+      "notifications": "Preferințe de Notificare"
     },
     "security": "Setări de Securitate",
     "changePassword": "Schimbă Parola",
@@ -283,7 +331,6 @@
     "passwordChangeSuccess": "Parola a fost schimbată cu succes!",
     "changingPassword": "Se schimbă parola...",
     "accountSettings": "Cont și Preferințe",
-    "aiProductivityFeatures": "Funcții AI și de Productivitate",
     "botSetup": "Configurare Bot",
     "passwordChangeNote": "Schimbările de parolă vor fi salvate când faceți clic pe \"Salvați modificările\" la baza formularului.",
     "passwordChangeOptional": "Lăsați câmpurile pentru parolă goale pentru a actualiza alte setări fără a schimba parola.",
@@ -294,7 +341,23 @@
     "polish": "Poloneză",
     "slovenian": "Slovenă",
     "swedish": "Suedeză",
-    "firstDayOfWeek": "Prima zi a săptămânii"
+    "firstDayOfWeek": "Prima zi a săptămânii",
+    "name": "Nume",
+    "surname": "Prenume",
+    "enterName": "Introduceți numele dvs.",
+    "enterSurname": "Introduceți prenumele dvs.",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Alege cum dorești să fii notificat despre evenimente importante.",
+    "aiFeatures": "Funcții AI"
   },
   "productivity": {
     "stalledProjects": "Proiecte Blocate",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Sarcini neactualizate în {{days}} zile",
     "stuckProjects": "Proiecte Blocate",
     "stuckProjectsDesc": "Proiecte neactualizate recent",
-    "issuesFound": "Am găsit {{count}} problemă(e) de productivitate care necesită atenție",
     "reviewItems": "Faceți clic pentru a revizui și îmbunătăți fluxul de lucru",
-    "suggestion": "Faceți clic pe orice element de mai sus pentru a-l deschide și a face îmbunătățiri."
+    "suggestion": "Faceți clic pe orice element de mai sus pentru a-l deschide și a face îmbunătățiri.",
+    "issuesFound_one": "1 problemă de productivitate necesită atenție",
+    "issuesFound_other": "{{count}} probleme de productivitate necesită atenție"
   },
   "nextTask": {
     "suggestion": "Deoarece nu există nimic în desfășurare, ce părere ai despre a începe cu",
@@ -365,6 +429,7 @@
     "title": "Titlu",
     "description": "Descriere",
     "dueDate": "Data Limită",
+    "deferUntil": "Defer until",
     "priority": "Prioritate",
     "status": "Stare",
     "assignedTo": "Atribuit Către",
@@ -382,6 +447,7 @@
         "status": "Stare",
         "priority": "Prioritate",
         "dueDate": "Data limită",
+        "deferUntil": "Amână până la",
         "note": "Notă",
         "recurrenceType": "Repetare",
         "recurrenceInterval": "Fiecare",
@@ -389,7 +455,8 @@
         "monthDay": "Ziua lunii",
         "weekOfMonth": "Săptămâna lunii",
         "recurrenceEndDate": "Data de sfârșit (opțional)",
-        "completionBased": "Repetare după finalizare"
+        "completionBased": "Repetare după finalizare",
+        "repeatOn": "Repetă pe"
       },
       "projectSearchPlaceholder": "Caută sau creează un proiect...",
       "noMatchingProjects": "Niciun proiect corespunzător",
@@ -410,7 +477,9 @@
         "short": "Încercați să fiți mai specifici cu privire la ceea ce trebuie făcut",
         "noVerb": "Ce acțiune specifică trebuie să întreprinzi? Încercați să începeți cu un verb.",
         "vague": "Încercați să începeți cu un verb de acțiune, cum ar fi \"Sună\", \"Scrie\", \"Programează\" sau \"Cercetează\""
-      }
+      },
+      "selectAtLeastOneDay": "Te rugăm să selectezi cel puțin o zi",
+      "deferUntilPlaceholder": "Selectați data și ora până la care să amânați"
     },
     "noteTitle": "Titlul notei",
     "noteContent": "Conținutul notei",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Scăzut",
     "medium": "Medie",
-    "high": "Ridicat"
+    "high": "Ridicat",
+    "none": "Niciuna"
   },
   "status": {
     "notStarted": "Nefăcut",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Numele Proiectului",
     "projectImage": "Imaginea Proiectului",
-    "uploadImageHint": "Încărcați o imagine pentru proiectul dvs. (max 5MB)",
+    "uploadImageHint": "Încărcați o imagine pentru proiectul dvs. (max 10MB)",
     "browseImage": "Răsfoiți Imaginea",
     "noNotes": "Nu există note pentru acest proiect.",
     "deleteProject": "Șterge Proiectul",
-    "createSuccess": "Proiect creat cu succes!"
+    "createSuccess": "Proiect creat cu succes!",
+    "createdAndAssigned": "Proiect creat și atribuit",
+    "createError": "Crearea proiectului a eșuat",
+    "viewProject": "Accesează proiectul",
+    "editProject": "Editează proiectul",
+    "editBanner": "Editează bannerul proiectului",
+    "currentBanner": "Bannerul curent",
+    "choosePreset": "Alege un banner presetat:",
+    "orUploadOwn": "Sau încarcă propriul tău:"
   },
   "errors": {
     "required": "Acest câmp este obligatoriu",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Numele etichetei este obligatoriu.",
     "failedToSaveTag": "Nu s-a putut salva eticheta.",
     "projectNameRequired": "Numele proiectului este obligatoriu.",
-    "projectSaveFailed": "Nu s-a putut salva proiectul."
+    "projectSaveFailed": "Nu s-a putut salva proiectul.",
+    "projectImageTooLarge": "Imaginea este prea mare. Te rugăm să alegi un fișier de sub 10MB.",
+    "projectImageUpload": "Încărcarea imaginii a eșuat. Te rugăm să încerci un fișier mai mic sau un format diferit.",
+    "bannerSaveFailed": "Salvarea bannerului a eșuat"
   },
   "inbox": {
     "title": "Căsuța de primire",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "ASTĂZI",
+    "total": "Total",
     "tomorrow": "MÂINE",
-    "yesterday": "IERI"
+    "yesterday": "IERI",
+    "nextWeek": "săptămâna viitoare",
+    "nextMonth": "luna viitoare"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Vizualizați sarcinile pentru un proiect specific. Folosiți acest spațiu pentru a gestiona și urmări sarcinile asociate cu acest proiect."
     },
     "today": "Acestea sunt sarcinile care sunt programate pentru astăzi sau sarcinile pe care le-ați planificat pentru atenție imediată. Folosiți această vizualizare pentru a vă concentra asupra a ceea ce trebuie finalizat astăzi. Marcați sarcinile ca fiind finalizate, actualizați-le starea sau ajustați datele limită dacă este necesar.",
+    "total": "Total",
     "inbox": "Inbox-ul este locul unde se află toate sarcinile neclasificate. Sarcinile care nu au fost atribuite unui proiect sau nu au o dată limită vor apărea aici. Acesta este spațiul dumneavoastră de „brain dump” unde puteți nota rapid sarcinile și să le organizați mai târziu.",
     "next": "Această vizualizare arată toate sarcinile care sunt acționabile în viitorul apropiat. Aceste sarcini sunt gata să fie lucrate următoarele și nu au termene limită pe termen lung. Este un loc bun pentru a vă concentra atunci când doriți să faceți progrese rapide în sarcini.",
     "upcoming": "Această vizualizare evidențiază sarcinile care sunt programate pentru săptămâna următoare. Vă ajută să vă pregătiți și să rămâneți cu un pas înaintea termenelor limită, oferindu-vă o imagine de ansamblu asupra muncii pe care trebuie să o abordați în viitorul apropiat. Sarcinile cu date limită în următoarele 7 zile vor apărea aici.",
@@ -584,7 +669,8 @@
     "taskCreated": "Sarcină creată cu succes!",
     "taskUpdated": "Sarcină actualizată cu succes!",
     "taskDeleted": "Sarcină ștearsă cu succes!",
-    "noteDeleted": "Notă ștearsă cu succes!"
+    "noteDeleted": "Notă ștearsă cu succes!",
+    "bannerUpdated": "Bannerul a fost actualizat cu succes!"
   },
   "note": {
     "title": "Titlu",
@@ -602,6 +688,7 @@
       "status": "Status",
       "priority": "Prioritate",
       "dueDate": "Data limită",
+      "deferUntil": "Defer until",
       "note": "Notă"
     },
     "create": "Creează",
@@ -637,7 +724,88 @@
     "subtasks": "Subsarci",
     "noSubtasks": "Nu există subsarci încă",
     "recentActivity": "Activitate recentă",
-    "noActivityYet": "Nicio activitate încă"
+    "noActivityYet": "Nicio activitate încă",
+    "project": "Proiect",
+    "noProject": "Niciun proiect - Fă clic pentru a atribui",
+    "tags": "Etichete",
+    "noTags": "Niciună etichetă",
+    "priority": "Prioritate",
+    "dueDate": "Data limită",
+    "deferUntil": "Amână până la",
+    "recurringSetup": "Configurare recurentă",
+    "notRecurring": "Această sarcină nu este încă recurentă.",
+    "clickToEditTitle": "Fă clic pentru a edita titlul",
+    "clickToEditContent": "Fă clic pentru a edita conținutul",
+    "clickToAddContent": "Fă clic pentru a adăuga conținut",
+    "clickToEditSubtasks": "Fă clic pentru a edita subtasks",
+    "clickToAddOrEditSubtasks": "Fă clic pentru a adăuga sau edita subtasks",
+    "contentPlaceholder": "Adăugați conținut aici... (Markdown acceptat)",
+    "contentEditHint": "Apăsați Cmd/Ctrl+Enter pentru a salva, Esc pentru a anula",
+    "noContentPreview": "Nu există conținut de previzualizat. Schimbați în modul Editare pentru a adăuga conținut.",
+    "deleteConfirmTitle": "Ștergeți Sarcina",
+    "deleteConfirmMessage": "Sunteți sigur că doriți să ștergeți această sarcină? Această acțiune nu poate fi anulată.",
+    "noMoreIterations": "Nu mai sunt programate iterații",
+    "nextOccurrences": "Următoarele Apariții",
+    "nextOccurrencesAfterThis": "Următoarele Apariții După Aceasta",
+    "thisTask": "Această sarcină",
+    "is": "este",
+    "and": "și",
+    "dueOn": "scadent",
+    "inProject": "din proiect",
+    "lowPriority": "prioritate scăzută",
+    "mediumPriority": "prioritate medie",
+    "highPriority": "prioritate ridicată",
+    "inDays": "în {{count}} zile",
+    "daysAgo": "{{count}} zile în urmă",
+    "tagsUpdated": "Etichetele au fost actualizate cu succes",
+    "tagsUpdateError": "Actualizarea etichetelor a eșuat",
+    "recurrenceUpdated": "Recurența actualizată cu succes",
+    "recurrenceUpdateError": "Eșec la actualizarea recurenței",
+    "dueDateUpdated": "Data limită actualizată cu succes",
+    "dueDateUpdateError": "Eșec la actualizarea datei limită",
+    "titleUpdated": "Titlul sarcinii actualizat cu succes",
+    "titleUpdateError": "Eșec la actualizarea titlului sarcinii",
+    "contentUpdated": "Conținutul sarcinii actualizat cu succes",
+    "contentUpdateError": "Eșec la actualizarea conținutului sarcinii",
+    "subtasksUpdated": "Subtask-urile actualizate cu succes",
+    "subtasksUpdateError": "Eșec la actualizarea subtask-urilor",
+    "projectUpdated": "Proiectul actualizat cu succes",
+    "projectUpdateError": "Eșec la actualizarea proiectului",
+    "projectCleared": "Proiectul șters cu succes",
+    "projectClearError": "Eșec la ștergerea proiectului",
+    "priorityUpdated": "Prioritatea actualizată cu succes",
+    "priorityUpdateError": "Eșec la actualizarea priorității",
+    "status": {
+      "notStarted": "neînceput",
+      "inProgress": "în desfășurare",
+      "done": "finalizat",
+      "archived": "archivat",
+      "unknown": "în desfășurare",
+      "waiting": "Așteptare",
+      "setAsDone": "Marchează ca finalizat"
+    },
+    "noSubtasksClickToAdd": "Nu există subtasks încă, dă click pentru a adăuga",
+    "noDueDate": "Fără dată limită",
+    "instanceOf": "Aceasta este o instanță a unei sarcini recurente",
+    "parentTask": "Sarcina Părinte",
+    "includingToday": "inclusiv astăzi",
+    "has": "are",
+    "fromProject": "din proiect",
+    "noDeferUntil": "Nicio amânare până la",
+    "deferUntilUpdated": "Amânare până la actualizare cu succes",
+    "deferUntilUpdateError": "Actualizarea amânării până la a eșuat",
+    "showOverdueWarning": "Afișează avertismentul de întârziere",
+    "dueDateInPastWarning": "Avertisment: Setezi o dată limită în trecut",
+    "overview": "Prezentare generală",
+    "schedule": "Program",
+    "attachments": "Atașamente",
+    "attachmentsComingSoon": "Funcția de atașamente va fi disponibilă în curând",
+    "activity": "Activitate",
+    "lastUpdatedAt": "Ultima actualizare la",
+    "statusUpdated": "Starea a fost actualizată cu succes",
+    "statusUpdateError": "Actualizarea stării a eșuat",
+    "updatedAt": "Actualizat la",
+    "upcoming": "viitor"
   },
   "projects": {
     "loading": "Se încarcă proiectele...",
@@ -654,7 +822,8 @@
       "active": "Activ",
       "inactive": "Inactiv",
       "all": "Toate",
-      "allAreas": "Toate zonele"
+      "allAreas": "Toate zonele",
+      "notCompleted": "Nefinalizat"
     },
     "selectState": "Selectați Starea",
     "state": "Starea Proiectului",
@@ -668,8 +837,33 @@
       "planned_desc": "Definit și gata de început",
       "in_progress_desc": "Lucru activ în desfășurare",
       "blocked_desc": "Pauză temporară sau blocat",
-      "completed_desc": "Finalizat și terminat"
-    }
+      "completed_desc": "Finalizat și terminat",
+      "active": "În desfășurare",
+      "active_desc": "Lucrări active în desfășurare"
+    },
+    "showMetrics": "Arată metrici",
+    "hideMetrics": "Ascunde metrici",
+    "progress": "Progres",
+    "taskMomentum": "Dinamica sarcinilor",
+    "activeTasks": "Sarcini active",
+    "dueSchedule": "Program termene",
+    "next14Days": "Următoarele 14 zile",
+    "noUpcomingDue": "Niciun termen în următoarele 14 zile.",
+    "peakDay": "Vârf",
+    "none": "Niciuna",
+    "next3days": "Următoarele 3 zile",
+    "nextWeek": "Următoarele 7 zile",
+    "recentCompletion": "Finalizare recentă",
+    "last7And30": "Ultimele 7 & 30 zile",
+    "weeklyPace": "Ritm săptămânal",
+    "prevWeekCompleted": "{{count}} săptămâna anterioară",
+    "vsPrevWeek": "vs săptămâna anterioară",
+    "monthlyCompletion": "Finalizări pe 30 zile",
+    "last30Days": "Ultimele 30 zile",
+    "nextUp": "Următoarea cea mai bună acțiune",
+    "focusTask": "Sarcina cu cel mai mare impact",
+    "focusHint": "Mută această sarcină la în progres și astăzi",
+    "noNextAction": "Totul în regulă - nicio sarcină în așteptare."
   },
   "projectItem": {
     "edit": "Editează",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Comută meniul derulant",
     "projectInitials": "Inițialele proiectului",
     "share": "Partajează",
-    "sharedProject": "Partajat cu echipa"
+    "sharedProject": "Partajat cu echipa",
+    "noDueDate": "Fără termen limită",
+    "dueToday": "Scade astăzi",
+    "dueIn": "Scade în {{count}} {{unit}}",
+    "overdue": "Expirat cu {{count}} {{unit}} în urmă",
+    "day": "zi",
+    "days": "zile",
+    "sharedUser": "Utilizator partajat",
+    "moreSharedUsers": "+{{count}} utilizatori în plus"
   },
   "areas": {
     "title": "Arii",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Editezi setările de recurență ale sarcinii părinte. Modificările vor afecta toate instanțele viitoare ale acestei sarcini recurente."
   },
   "weekdays": {
-    "sunday": "Duminică",
-    "monday": "Luni",
-    "tuesday": "Marți",
-    "wednesday": "Miercuri",
+    "sunday": "Dum",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mie",
     "thursday": "Joi",
-    "friday": "Vineri",
-    "saturday": "Sâmbătă"
+    "friday": "Vin",
+    "saturday": "Sâm"
   },
   "pomodoro": {
     "play": "Joacă",
@@ -769,6 +971,7 @@
     "week": "Săptămână",
     "day": "Zi",
     "today": "Astăzi",
+    "total": "Total",
     "addEvent": "Adaugă Eveniment",
     "weekView": "Vizualizare Săptămână",
     "dayView": "Vizualizare Zi",
@@ -792,6 +995,7 @@
     "title": "Titlu",
     "status": "Stare",
     "dueDate": "Data Limită",
+    "deferUntil": "Defer until",
     "priority": "Prioritate",
     "project": "Proiect",
     "area": "Domeniu",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Nu sunt utilizatori disponibili pentru a partaja",
     "shared": "Partajat",
     "sharedWithTeam": "Partajat cu echipa"
+  },
+  "views": {
+    "title": "Vizualizări inteligente",
+    "loading": "Se încarcă vizualizările...",
+    "searchPlaceholder": "Caută vizualizări...",
+    "noViewsFound": "Nu au fost găsite vizualizări. Creează o vizualizare efectuând o căutare și făcând clic pe \"Salvează ca Vizualizare Inteligentă\".",
+    "deleteView": "Șterge Vizualizarea",
+    "confirmDelete": "Ești sigur că vrei să ștergi vizualizarea \"{{viewName}}\"?",
+    "pinView": "Fixează vizualizarea",
+    "unpinView": "Deblochează vizualizarea",
+    "searchCriteria": "Criterii de căutare",
+    "entityTypes": "Tipuri de entitate",
+    "searchText": "Text de căutare",
+    "priority": "Prioritate",
+    "dueDate": "Data limită",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Niciun criteriu specific setat",
+    "priorityLabel": "Prioritate:",
+    "dueLabel": "Termen:",
+    "tags": "Etichete",
+    "recurring": "Recurent"
+  },
+  "search": {
+    "placeholder": "Caută sarcini, proiecte, note...",
+    "searchingFor": "Cauți",
+    "allItems": "toate elementele",
+    "containingText": ", conținând textul",
+    "withPriority": ", cu",
+    "priority": "prioritate",
+    "due": ", scadent",
+    "taggedWith": ", etichetat cu",
+    "and": "și",
+    "criteria": "Criterii de căutare",
+    "metadataFilters": "Filtre de metadate",
+    "priorityFilter": "Prioritate",
+    "dueFilter": "Scadent",
+    "tagsFilter": "Etichete",
+    "saveAsSmartView": "Salvează ca Vedere Inteligentă",
+    "viewName": "Numele Vederii",
+    "viewNameRequired": "Numele vederii este necesar",
+    "viewNamePlaceholder": "Introdu numele vederii",
+    "failedToSave": "Salvarea vederii a eșuat. Vă rugăm să încercați din nou.",
+    "cancel": "Anulare",
+    "saving": "Se salvează...",
+    "saveView": "Salvează Vederea",
+    "startTyping": "Începeți să tastați pentru a căuta sau selectați filtrele de mai sus",
+    "noResults": "Nu au fost găsite rezultate",
+    "entityTypes": {
+      "task": "task",
+      "project": "proiect",
+      "area": "zonă",
+      "note": "notă"
+    },
+    "thatAre": ", care sunt",
+    "extras": "Extra",
+    "recurringFilter": {
+      "label": "Recurent",
+      "recurring": "șabloane recurente",
+      "nonRecurring": "non-recurent",
+      "instances": "instanțe recurente"
+    },
+    "deferUntilFilter": "Amână până la",
+    "deferUntil": ", amână până la",
+    "extrasFilter": {
+      "isRecurring": "este Recurent",
+      "isOverdue": "este Întârziat",
+      "hasContent": "are Conținut",
+      "isDeferred": "este Amânat",
+      "hasTags": "are Etichete",
+      "isAssignedToProject": "este Atribuit Proiectului"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Adaugă o subtask..."
+  },
+  "backup": {
+    "title": "Backup și Restaurare",
+    "description": "Creează backup-uri sau restaurează din backup-uri anterioare. Ultimele 5 backup-uri sunt salvate automat.",
+    "createBackup": "Creează Backup",
+    "importFromFile": "Importă din Fișier",
+    "createNewBackup": "Creează Backup Nou",
+    "createDescription": "Creează un nou backup al tuturor datelor tale. Backup-urile sunt salvate pe server și le poți restaura mai târziu.",
+    "createBackupNow": "Creează Backup Acum",
+    "creating": "Se creează backup...",
+    "exportSuccess": "Backup creat cu succes!",
+    "exportError": "Crearea backup-ului a eșuat",
+    "savedBackups": "Backup-uri Salvate",
+    "noBackups": "Nu au fost găsite backup-uri. Creează primul tău backup mai sus.",
+    "createdAt": "Creat",
+    "version": "Versiune",
+    "currentVersion": "Versiunea curentă",
+    "size": "Dimensiune",
+    "contents": "Conținut",
+    "actions": "Acțiuni",
+    "importSuccess": "Backup importat cu succes! Creat: {{tasks}} sarcini, {{projects}} proiecte, {{notes}} note",
+    "importError": "Importul backup-ului a eșuat",
+    "backupContents": "Conținutul backup-ului:",
+    "validationError": "Fișierul selectat nu este un backup valid",
+    "validationErrors": "Erori de validare:",
+    "versionIncompatible": "Versiune incompatibilă",
+    "backupVersion": "Versiunea backup-ului",
+    "restore": "Restaurare",
+    "download": "Descarcă",
+    "downloadSuccess": "Backup descărcat cu succes!",
+    "downloadError": "Eșec la descărcarea backup-ului",
+    "confirmRestore": "Restaurare Backup",
+    "confirmRestoreMessage": "Ești sigur că vrei să restaurezi acest backup? Aceasta va combina datele salvate cu datele tale curente.",
+    "restoreSuccess": "Backup restaurat cu succes! Creat: {{tasks}} sarcini, {{projects}} proiecte, {{notes}} note",
+    "restoreError": "Eșec la restaurarea backup-ului",
+    "confirmDelete": "Șterge Backup",
+    "confirmDeleteMessage": "Ești sigur că vrei să ștergi acest backup? Această acțiune nu poate fi anulată.",
+    "deleteSuccess": "Backup șters cu succes!",
+    "deleteError": "Eșec la ștergerea backup-ului",
+    "importTitle": "Import din Fișier",
+    "importDescription": "Încarcă un fișier de backup pentru a-ți restaura datele. Datele tale existente vor fi păstrate, iar elementele noi din backup vor fi adăugate.",
+    "importNote": "Important:",
+    "importNoteDescription": "Importul va combina datele cu elementele tale existente. Elementele duplicate (același UID) vor fi omise.",
+    "selectFile": "Selectează Fișierul de Backup",
+    "clickToUpload": "Click pentru a naviga la fișiere",
+    "restoreBackup": "Restaurare Backup",
+    "importing": "Importare...",
+    "restoreButton": "Restaurare"
+  },
+  "notifications": {
+    "table": {
+      "type": "Tip de Notificare"
+    },
+    "channels": {
+      "inApp": "În aplicație",
+      "email": "Email",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Sarcini Scadente",
+      "overdueTasks": "Sarcini Întârziate",
+      "deferUntil": "Amână Până La",
+      "dueProjects": "Proiecte Scadente",
+      "overdueProjects": "Proiecte Întârziate"
+    },
+    "descriptions": {
+      "dueTasks": "Sarcini care sunt scadente în următoarele 24 de ore",
+      "overdueTasks": "Sarcini care au depășit data limită",
+      "deferUntil": "Sarcini care sunt acum disponibile pentru a fi lucrate",
+      "dueProjects": "Proiecte care sunt scadente în următoarele 24 de ore",
+      "overdueProjects": "Proiecte care au depășit data limită"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram Neconfigurat:",
+        "message": "Pentru a primi notificări pe Telegram, te rugăm să configurezi botul tău Telegram în tab-ul Telegram."
+      }
+    },
+    "test": {
+      "title": "Test Notificări",
+      "description": "Trimite o notificare de test pentru a vedea cum apare în aplicație și pe canalele activate (Telegram, etc.)",
+      "send": "Trimite Test",
+      "sending": "Se trimite..."
+    },
+    "info": {
+      "title": "Notă:",
+      "message": "Notificările prin Email și Push vor fi disponibile în curând. Notificările în aplicație și pe Telegram sunt disponibile în prezent."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Nefăcut",
+    "not_started_desc": "Capturat, dar încă nefăcut",
+    "planned": "Planificat",
+    "planned_desc": "Definit și gata de început",
+    "in_progress": "În desfășurare",
+    "in_progress_desc": "Lucrări active în desfășurare",
+    "waiting": "Așteptând",
+    "waiting_desc": "Așteptând input extern",
+    "done": "Finalizat",
+    "done_desc": "Terminată și finalizată",
+    "cancelled": "Anulat",
+    "cancelled_desc": "Nu va fi finalizat"
   }
 }

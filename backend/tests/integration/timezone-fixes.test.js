@@ -112,6 +112,52 @@ describe('Timezone Fixes Integration Tests', () => {
             expect(taskNames).not.toContain('Due Next Week');
         });
 
+        it('should return tasks with defer_until within 7 days in user timezone', async () => {
+            const userTimezone = 'America/New_York';
+            await testUser.update({ timezone: userTimezone });
+
+            // Create tasks with different defer_until dates
+            const tomorrow = moment
+                .tz(userTimezone)
+                .add(1, 'day')
+                .format('YYYY-MM-DDTHH:mm:ss');
+            const in5Days = moment
+                .tz(userTimezone)
+                .add(5, 'days')
+                .format('YYYY-MM-DDTHH:mm:ss');
+            const in10Days = moment
+                .tz(userTimezone)
+                .add(10, 'days')
+                .format('YYYY-MM-DDTHH:mm:ss');
+
+            // Create tasks with defer_until dates (no due_date)
+            await agent
+                .post('/api/task')
+                .send({ name: 'Deferred Tomorrow', defer_until: tomorrow });
+
+            await agent
+                .post('/api/task')
+                .send({ name: 'Deferred 5 Days', defer_until: in5Days });
+
+            await agent
+                .post('/api/task')
+                .send({ name: 'Deferred 10 Days', defer_until: in10Days });
+
+            // Fetch upcoming tasks
+            const upcomingRes = await agent.get('/api/tasks?type=upcoming');
+
+            expect(upcomingRes.statusCode).toBe(200);
+
+            const upcomingTasks = upcomingRes.body.tasks;
+            const taskNames = upcomingTasks.map((task) => task.name);
+
+            // Should include tasks with defer_until in next 7 days
+            expect(taskNames).toContain('Deferred Tomorrow');
+            expect(taskNames).toContain('Deferred 5 Days');
+            // Should NOT include task with defer_until beyond 7 days
+            expect(taskNames).not.toContain('Deferred 10 Days');
+        });
+
         it('should handle DST transitions correctly', async () => {
             await testUser.update({ timezone: 'America/New_York' });
 
@@ -141,10 +187,11 @@ describe('Timezone Fixes Integration Tests', () => {
                 .send({ name: 'Update Test Task', due_date: '2024-01-15' });
 
             const taskId = createRes.body.id;
+            const taskUid = createRes.body.uid;
 
             // Update due date
             const updateRes = await agent
-                .patch(`/api/task/${taskId}`)
+                .patch(`/api/task/${taskUid}`)
                 .send({ due_date: '2024-01-20' });
 
             expect(updateRes.statusCode).toBe(200);
@@ -168,10 +215,11 @@ describe('Timezone Fixes Integration Tests', () => {
                 .send({ name: 'Clear Date Task', due_date: '2024-01-15' });
 
             const taskId = createRes.body.id;
+            const taskUid = createRes.body.uid;
 
             // Clear due date by sending empty string
             const updateRes = await agent
-                .patch(`/api/task/${taskId}`)
+                .patch(`/api/task/${taskUid}`)
                 .send({ due_date: '' });
 
             expect(updateRes.statusCode).toBe(200);
@@ -216,18 +264,29 @@ describe('Timezone Fixes Integration Tests', () => {
                 .post('/api/task')
                 .send({ name: 'Yesterday Task', due_date: yesterdayInEST });
 
-            // Fetch tasks with metrics
-            const tasksRes = await agent.get('/api/tasks');
+            // Fetch tasks with dashboard lists
+            const tasksRes = await agent.get(
+                '/api/tasks?type=today&include_lists=true'
+            );
 
             expect(tasksRes.statusCode).toBe(200);
 
-            // Both tasks should appear in tasks_due_today since they're overdue
-            const { metrics } = tasksRes.body;
-            expect(metrics.tasks_due_today.length).toBeGreaterThanOrEqual(2);
+            expect(tasksRes.body.tasks_due_today.length).toBeGreaterThanOrEqual(
+                1
+            );
 
-            const taskNames = metrics.tasks_due_today.map((task) => task.name);
-            expect(taskNames).toContain('Today Task');
-            expect(taskNames).toContain('Yesterday Task');
+            const dueTodayNames = tasksRes.body.tasks_due_today.map(
+                (task) => task.name
+            );
+            expect(dueTodayNames).toContain('Today Task');
+            expect(tasksRes.body.tasks_overdue.length).toBeGreaterThanOrEqual(
+                1
+            );
+
+            const overdueNames = tasksRes.body.tasks_overdue.map(
+                (task) => task.name
+            );
+            expect(overdueNames).toContain('Yesterday Task');
         });
     });
 

@@ -172,6 +172,80 @@ module.exports = (sequelize) => {
                     showDailyQuote: true,
                 },
             },
+            sidebar_settings: {
+                type: DataTypes.JSON,
+                allowNull: true,
+                defaultValue: {
+                    pinnedViewsOrder: [],
+                },
+            },
+            ui_settings: {
+                type: DataTypes.JSON,
+                allowNull: true,
+                defaultValue: {
+                    project: {
+                        details: {
+                            showMetrics: true,
+                        },
+                    },
+                },
+            },
+            notification_preferences: {
+                type: DataTypes.JSON,
+                allowNull: true,
+                defaultValue: {
+                    dueTasks: {
+                        inApp: true,
+                        email: false,
+                        push: false,
+                        telegram: false,
+                    },
+                    overdueTasks: {
+                        inApp: true,
+                        email: false,
+                        push: false,
+                        telegram: false,
+                    },
+                    dueProjects: {
+                        inApp: true,
+                        email: false,
+                        push: false,
+                        telegram: false,
+                    },
+                    overdueProjects: {
+                        inApp: true,
+                        email: false,
+                        push: false,
+                        telegram: false,
+                    },
+                    deferUntil: {
+                        inApp: true,
+                        email: false,
+                        push: false,
+                        telegram: false,
+                    },
+                },
+            },
+            keyboard_shortcuts: {
+                type: DataTypes.JSON,
+                allowNull: true,
+                defaultValue: null,
+                comment:
+                    'User-configurable keyboard shortcuts for quick actions',
+            },
+            email_verified: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: true,
+            },
+            email_verification_token: {
+                type: DataTypes.STRING,
+                allowNull: true,
+            },
+            email_verification_token_expires_at: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
         },
         {
             tableName: 'users',
@@ -183,6 +257,27 @@ module.exports = (sequelize) => {
                             10
                         );
                     }
+                },
+                afterCreate: async (user, options) => {
+                    // Automatically create a role for every new user
+                    const { Role } = require('./index');
+
+                    // Check if any admin users exist
+                    const adminCount = await Role.count({
+                        where: { is_admin: true },
+                        transaction: options.transaction,
+                    });
+
+                    // First user becomes admin
+                    const isFirstUser = adminCount === 0;
+
+                    await Role.create(
+                        {
+                            user_id: user.id,
+                            is_admin: isFirstUser,
+                        },
+                        { transaction: options.transaction }
+                    );
                 },
             },
         }

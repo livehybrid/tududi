@@ -6,22 +6,26 @@ import {
     BoltIcon,
     InboxIcon,
 } from '@heroicons/react/24/solid';
-import { EnvelopeIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import PomodoroTimer from './Shared/PomodoroTimer';
+import UniversalSearch from './UniversalSearch/UniversalSearch';
+import NotificationsDropdown from './Notifications/NotificationsDropdown';
+import { getApiPath } from '../config/paths';
+import { getFeatureFlags, FeatureFlags } from '../utils/featureFlags';
+import { setUserTimezone } from '../utils/dateUtils';
 
 interface NavbarProps {
     isDarkMode: boolean;
     toggleDarkMode: () => void;
     currentUser: {
         email: string;
-        avatarUrl?: string;
+        avatar_image?: string;
         is_admin?: boolean;
     };
     setCurrentUser: React.Dispatch<React.SetStateAction<any>>;
     isSidebarOpen: boolean;
     setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    openTaskModal: (type?: 'simplified' | 'full') => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -29,13 +33,44 @@ const Navbar: React.FC<NavbarProps> = ({
     setCurrentUser,
     isSidebarOpen,
     setIsSidebarOpen,
-    openTaskModal,
+    isDarkMode,
 }) => {
     const { t } = useTranslation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [pomodoroEnabled, setPomodoroEnabled] = useState(true); // Default to true
+    const [featureFlags, setFeatureFlags] = useState<FeatureFlags>({
+        backups: false,
+        calendar: false,
+        habits: false,
+    });
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    // Dispatch event when mobile search state changes
+    useEffect(() => {
+        window.dispatchEvent(
+            new CustomEvent('mobileSearchToggle', {
+                detail: { isOpen: isMobileSearchOpen },
+            })
+        );
+    }, [isMobileSearchOpen]);
+
+    // Listen for close mobile search events
+    useEffect(() => {
+        const handleCloseMobileSearch = () => {
+            setIsMobileSearchOpen(false);
+        };
+
+        window.addEventListener('closeMobileSearch', handleCloseMobileSearch);
+
+        return () => {
+            window.removeEventListener(
+                'closeMobileSearch',
+                handleCloseMobileSearch
+            );
+        };
+    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -52,11 +87,11 @@ const Navbar: React.FC<NavbarProps> = ({
         };
     }, []);
 
-    // Fetch user's pomodoro setting
+    // Fetch user's pomodoro setting and feature flags
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await fetch('/api/profile', {
+                const response = await fetch(getApiPath('profile'), {
                     credentials: 'include',
                 });
                 if (response.ok) {
@@ -66,6 +101,10 @@ const Navbar: React.FC<NavbarProps> = ({
                             ? profile.pomodoro_enabled
                             : true
                     );
+                    // Set user timezone for date formatting
+                    if (profile.timezone) {
+                        setUserTimezone(profile.timezone);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching profile:', error);
@@ -73,7 +112,13 @@ const Navbar: React.FC<NavbarProps> = ({
             }
         };
 
+        const fetchFlags = async () => {
+            const flags = await getFeatureFlags();
+            setFeatureFlags(flags);
+        };
+
         fetchProfile();
+        fetchFlags();
 
         // Listen for Pomodoro setting changes from ProfileSettings
         const handlePomodoroSettingChange = (event: CustomEvent) => {
@@ -99,7 +144,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
     const handleLogout = async () => {
         try {
-            const response = await fetch('/api/logout', {
+            const response = await fetch(getApiPath('logout'), {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -116,11 +161,12 @@ const Navbar: React.FC<NavbarProps> = ({
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-md h-16">
-            <div className="h-full flex items-center">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-md">
+            {/* Main navbar row */}
+            <div className="h-16 flex items-center justify-between">
                 {/* Sidebar-width area with logo and hamburger */}
                 <div
-                    className={`${isSidebarOpen ? 'w-full sm:w-72' : 'w-16'} flex items-center ${isSidebarOpen ? 'sm:justify-center' : 'sm:justify-start'} transition-all duration-300 ease-in-out px-4 relative`}
+                    className={`${isSidebarOpen ? 'sm:w-72' : 'w-auto sm:w-16'} flex items-center ${isSidebarOpen ? 'sm:justify-center' : 'sm:justify-start'} transition-all duration-300 ease-in-out px-4 relative flex-shrink-0`}
                 >
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -136,19 +182,41 @@ const Navbar: React.FC<NavbarProps> = ({
 
                     <Link
                         to="/"
-                        className={`flex items-center no-underline text-gray-900 dark:text-white ml-2 ${isSidebarOpen ? 'sm:ml-0' : 'sm:ml-2'}`}
+                        className={`flex items-center no-underline ml-2 ${isSidebarOpen ? 'sm:ml-0' : 'sm:ml-2'}`}
                     >
-                        <span className="text-2xl font-bold">
-                            <span className="sm:hidden">t</span>
-                            <span className="hidden sm:inline">tududi</span>
-                        </span>
+                        <img
+                            src={
+                                isDarkMode
+                                    ? '/wide-logo-light.png'
+                                    : '/wide-logo-dark.png'
+                            }
+                            alt="tududi"
+                            className="h-9 w-auto"
+                        />
                     </Link>
                 </div>
 
+                {/* Center section - Universal Search (hidden on mobile) */}
+                <div className="hidden md:flex flex-1 justify-center px-4">
+                    <UniversalSearch />
+                </div>
+
                 {/* Right section - Actions and user menu */}
-                <div className="flex items-center justify-end space-x-4 flex-1 px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-end space-x-2 sm:space-x-4 px-4 sm:px-6 lg:px-8 flex-shrink-0">
+                    {/* Mobile search toggle button */}
                     <button
-                        onClick={() => openTaskModal('simplified')}
+                        onClick={() =>
+                            setIsMobileSearchOpen(!isMobileSearchOpen)
+                        }
+                        className="md:hidden flex items-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-full focus:outline-none transition-all duration-200 p-2"
+                        aria-label="Toggle Search"
+                        title="Search"
+                    >
+                        <MagnifyingGlassIcon className="h-5 w-5" />
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/inbox')}
                         className="flex items-center bg-blue-500 hover:bg-blue-600 text-white rounded-full focus:outline-none transition-all duration-200 px-2 py-2 md:px-3 md:py-2"
                         aria-label="Quick Inbox Capture"
                         title="Quick Inbox Capture"
@@ -158,15 +226,17 @@ const Navbar: React.FC<NavbarProps> = ({
                     </button>
                     {pomodoroEnabled && <PomodoroTimer />}
 
+                    <NotificationsDropdown isDarkMode={isDarkMode} />
+
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={toggleDropdown}
                             className="flex items-center focus:outline-none"
                             aria-label="User Menu"
                         >
-                            {currentUser?.avatarUrl ? (
+                            {currentUser?.avatar_image ? (
                                 <img
-                                    src={currentUser.avatarUrl}
+                                    src={getApiPath(currentUser.avatar_image)}
                                     alt="User Avatar"
                                     className="h-8 w-8 rounded-full object-cover border-2 border-green-500"
                                 />
@@ -197,6 +267,18 @@ const Navbar: React.FC<NavbarProps> = ({
                                         'Profile Settings'
                                     )}
                                 </Link>
+                                {featureFlags.backups && (
+                                    <Link
+                                        to="/backup"
+                                        className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        {t(
+                                            'navigation.backupRestore',
+                                            'Backup & Restore'
+                                        )}
+                                    </Link>
+                                )}
                                 {currentUser?.is_admin === true && (
                                     <Link
                                         to="/admin/users"
@@ -227,6 +309,17 @@ const Navbar: React.FC<NavbarProps> = ({
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile search bar - toggleable on mobile with fade animation */}
+            <div
+                className={`md:hidden border-t border-gray-200 dark:border-gray-700 px-4 overflow-hidden transition-all duration-300 ease-in-out ${
+                    isMobileSearchOpen
+                        ? 'max-h-20 py-2 opacity-100'
+                        : 'max-h-0 py-0 opacity-0'
+                }`}
+            >
+                <UniversalSearch />
             </div>
         </nav>
     );

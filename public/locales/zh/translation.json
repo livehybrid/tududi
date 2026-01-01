@@ -18,7 +18,13 @@
     "status": "状态",
     "saving": "保存中...",
     "settings": "设置",
-    "none": "无"
+    "none": "无",
+    "discardChanges": "放弃更改？",
+    "discardChangesMessage": "您有未保存的更改。您确定要放弃它们吗？",
+    "no": "不，继续编辑",
+    "yesDiscard": "是的，放弃",
+    "uploading": "上传中...",
+    "refresh": "刷新"
   },
   "sidebar": {
     "dashboard": "仪表板",
@@ -34,6 +40,7 @@
     "addTagAriaLabel": "添加标签",
     "addTagTitle": "添加标签",
     "today": "今天",
+    "total": "Total",
     "upcoming": "即将到来",
     "nextActions": "下一步行动",
     "inbox": "收件箱",
@@ -45,7 +52,10 @@
     "addProjectTitle": "添加项目",
     "addNoteAriaLabel": "添加备注",
     "addNoteTitle": "添加备注",
-    "createNew": "创建新项目"
+    "createNew": "创建新项目",
+    "views": "视图",
+    "unpinView": "取消固定视图",
+    "pinView": "固定视图"
   },
   "navigation": {
     "home": "首页",
@@ -54,7 +64,8 @@
     "profileSettings": "个人设置",
     "settings": "设置",
     "about": "关于",
-    "logout": "注销"
+    "logout": "注销",
+    "backupRestore": "备份与恢复"
   },
   "settings": {
     "todayPageSettings": "今日页面设置",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "任务",
     "today": "今天",
+    "total": "Total",
     "backlog": "待办事项",
     "inProgress": "进行中",
     "dueToday": "今天到期",
@@ -115,7 +127,33 @@
     "showSubtasks": "显示子任务",
     "hideSubtasks": "隐藏子任务",
     "edit": "编辑任务",
-    "delete": "删除任务"
+    "delete": "删除任务",
+    "sortTasks": "排序任务",
+    "sortBy": "排序方式",
+    "direction": "方向",
+    "ascending": "升序",
+    "descending": "降序",
+    "groupBy": "分组方式",
+    "groupByProject": "项目",
+    "grouping": {
+      "none": "无"
+    },
+    "show": "显示",
+    "all": "全部",
+    "completedOnly": "仅已完成",
+    "notCompleted": "未完成",
+    "noProject": "无项目",
+    "unknownProject": "未知项目",
+    "tasks": "任务",
+    "showingItems": "显示 {{current}} / {{total}} 个任务",
+    "overdue": "逾期",
+    "planned": "计划中",
+    "open": "打开",
+    "completed": "已完成",
+    "noCompletedTasksToday": "今天没有完成的任务。",
+    "markAsDone": "Mark as done",
+    "notStarted": "未开始",
+    "done": "完成"
   },
   "timeline": {
     "activityTimeline": "活动时间线",
@@ -128,6 +166,7 @@
       "statusChanged": "状态已更改",
       "priorityChanged": "优先级已更改",
       "dueDateChanged": "截止日期已更改",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "名称已更新",
       "descriptionUpdated": "描述已更新",
       "noteUpdated": "备注已更新",
@@ -138,11 +177,19 @@
       "status": "状态",
       "priority": "优先级",
       "dueDate": "截止日期",
+      "deferUntil": "Defer until",
       "none": "无",
       "recurrenceEndDateChanged": "重复结束日期已更改",
       "recurrenceEndDate": "重复结束日期",
       "recurrence_type_changed": "重复类型已更改",
-      "recurrence_interval_changed": "重复间隔已更改"
+      "recurrence_interval_changed": "重复间隔已更改",
+      "completionBasedChanged": "基于完成的重复已更改",
+      "projectIdChanged": "已分配到项目",
+      "recurrenceType": "重复类型",
+      "recurrenceTypeChanged": "重复类型已更改",
+      "recurrence_weekday_changed": "重复的星期几已更改",
+      "recurrence_month_day_changed": "重复的月份天数已更改",
+      "recurrence_week_of_month_changed": "重复的月份周数已更改"
     },
     "justNow": "刚刚",
     "minutesAgo": "{{minutes}}分钟前",
@@ -265,7 +312,8 @@
       "security": "安全",
       "productivity": "生产力",
       "telegram": "电报",
-      "ai": "人工智能功能"
+      "ai": "人工智能功能",
+      "notifications": "通知偏好设置"
     },
     "security": "安全设置",
     "changePassword": "更改密码",
@@ -283,7 +331,6 @@
     "passwordChangeSuccess": "密码更改成功！",
     "changingPassword": "正在更改密码...",
     "accountSettings": "账户与偏好设置",
-    "aiProductivityFeatures": "人工智能与生产力功能",
     "botSetup": "机器人设置",
     "passwordChangeNote": "密码更改将在您点击表单底部的“保存更改”时保存。",
     "passwordChangeOptional": "留空密码字段以更新其他设置，而不更改您的密码。",
@@ -294,7 +341,23 @@
     "polish": "波兰语",
     "slovenian": "斯洛文尼亚语",
     "swedish": "瑞典语",
-    "firstDayOfWeek": "一周的第一天"
+    "firstDayOfWeek": "一周的第一天",
+    "name": "姓名",
+    "surname": "姓氏",
+    "enterName": "输入您的姓名",
+    "enterSurname": "输入您的姓氏",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "选择您希望如何接收重要事件的通知。",
+    "aiFeatures": "AI 功能"
   },
   "productivity": {
     "stalledProjects": "停滞项目",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "在{{days}}天内未更新的任务",
     "stuckProjects": "卡住的项目",
     "stuckProjectsDesc": "最近未更新的项目",
-    "issuesFound": "发现{{count}}个生产力问题需要关注",
     "reviewItems": "点击以审查和改善您的工作流程",
-    "suggestion": "点击上面的任何项目以打开并进行改进。"
+    "suggestion": "点击上面的任何项目以打开并进行改进。",
+    "issuesFound_other": "{{count}}个生产力问题需要关注",
+    "issuesFound_one": "1 个生产力问题需要关注"
   },
   "nextTask": {
     "suggestion": "由于没有进行中的任务，您觉得从这个开始怎么样",
@@ -365,6 +429,7 @@
     "title": "标题",
     "description": "描述",
     "dueDate": "截止日期",
+    "deferUntil": "Defer until",
     "priority": "优先级",
     "status": "状态",
     "assignedTo": "分配给",
@@ -382,6 +447,7 @@
         "status": "状态",
         "priority": "优先级",
         "dueDate": "截止日期",
+        "deferUntil": "延迟至",
         "note": "备注",
         "recurrenceType": "重复类型",
         "recurrenceInterval": "每",
@@ -389,7 +455,8 @@
         "monthDay": "每月的天",
         "weekOfMonth": "每月的周",
         "recurrenceEndDate": "结束日期（可选）",
-        "completionBased": "完成后重复"
+        "completionBased": "完成后重复",
+        "repeatOn": "重复于"
       },
       "projectSearchPlaceholder": "搜索或创建项目...",
       "noMatchingProjects": "没有匹配的项目",
@@ -410,7 +477,9 @@
         "short": "尽量更具体地说明需要做什么",
         "noVerb": "你需要采取什么具体行动？尝试以动词开头。",
         "vague": "尝试以动作动词开头，例如 \"打电话\"、\"写\"、\"安排\" 或 \"研究\""
-      }
+      },
+      "selectAtLeastOneDay": "请至少选择一天",
+      "deferUntilPlaceholder": "选择延迟至的日期和时间"
     },
     "noteTitle": "笔记标题",
     "noteContent": "笔记内容",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "低",
     "medium": "中",
-    "high": "高"
+    "high": "高",
+    "none": "无"
   },
   "status": {
     "notStarted": "未开始",
@@ -480,11 +550,19 @@
   "project": {
     "name": "项目名称",
     "projectImage": "项目图片",
-    "uploadImageHint": "上传项目图片（最大5MB）",
+    "uploadImageHint": "上传项目图片（最大10MB）",
     "browseImage": "浏览图片",
     "noNotes": "此项目没有备注。",
     "deleteProject": "删除项目",
-    "createSuccess": "项目创建成功！"
+    "createSuccess": "项目创建成功！",
+    "createdAndAssigned": "项目已创建并分配",
+    "createError": "创建项目失败",
+    "viewProject": "前往项目",
+    "editProject": "编辑项目",
+    "editBanner": "编辑项目横幅",
+    "currentBanner": "当前横幅",
+    "choosePreset": "选择一个预设横幅：",
+    "orUploadOwn": "或上传您自己的："
   },
   "errors": {
     "required": "此字段为必填项",
@@ -509,7 +587,10 @@
     "tagNameRequired": "标签名称是必需的。",
     "failedToSaveTag": "保存标签失败。",
     "projectNameRequired": "项目名称是必需的。",
-    "projectSaveFailed": "保存项目失败。"
+    "projectSaveFailed": "保存项目失败。",
+    "projectImageTooLarge": "图片太大。请选取一个小于10MB的文件。",
+    "projectImageUpload": "上传图片失败。请尝试一个更小的文件或不同的格式。",
+    "bannerSaveFailed": "保存横幅失败"
   },
   "inbox": {
     "title": "收件箱",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "今天",
+    "total": "Total",
     "tomorrow": "明天",
-    "yesterday": "昨天"
+    "yesterday": "昨天",
+    "nextWeek": "下周",
+    "nextMonth": "下个月"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "您正在查看特定项目的任务。利用这个空间管理和跟踪与该项目相关的任务。"
     },
     "today": "这些是今天到期的任务或您已安排立即处理的任务。利用此视图专注于今天需要完成的事项。标记任务为已完成，更新其状态，或根据需要调整到期日期。",
+    "total": "Total",
     "inbox": "收件箱是所有未分类任务的地方。未分配给项目或未设定到期日期的任务将在此显示。这是您的 \"脑力倾倒\" 区域，您可以快速记下任务并稍后整理。",
     "next": "此视图显示所有近期可操作的任务。这些任务准备好接下来进行处理，并且没有长期截止日期。当您希望在任务上快速取得进展时，这是一个很好的关注点。",
     "upcoming": "此视图突出显示计划在即将到来的星期内的任务。它帮助您准备并提前应对截止日期，通过提供您需要在不久的将来处理的工作的概览。到期日期在接下来的7天内的任务将在此显示。",
@@ -584,7 +669,8 @@
     "taskCreated": "任务创建成功！",
     "taskUpdated": "任务更新成功！",
     "taskDeleted": "任务删除成功！",
-    "noteDeleted": "笔记删除成功！"
+    "noteDeleted": "笔记删除成功！",
+    "bannerUpdated": "横幅更新成功！"
   },
   "note": {
     "title": "标题",
@@ -602,6 +688,7 @@
       "status": "状态",
       "priority": "优先级",
       "dueDate": "截止日期",
+      "deferUntil": "Defer until",
       "note": "备注"
     },
     "create": "创建",
@@ -637,7 +724,88 @@
     "subtasks": "子任务",
     "noSubtasks": "尚无子任务",
     "recentActivity": "最近活动",
-    "noActivityYet": "尚无活动"
+    "noActivityYet": "尚无活动",
+    "noSubtasksClickToAdd": "尚无子任务，点击添加",
+    "project": "项目",
+    "noProject": "没有项目 - 点击分配",
+    "tags": "标签",
+    "noTags": "没有标签",
+    "priority": "优先级",
+    "dueDate": "截止日期",
+    "deferUntil": "延迟至",
+    "recurringSetup": "重复设置",
+    "notRecurring": "此任务尚未重复。",
+    "clickToEditTitle": "点击编辑标题",
+    "clickToEditContent": "点击编辑内容",
+    "clickToAddContent": "点击添加内容",
+    "clickToEditSubtasks": "点击编辑子任务",
+    "clickToAddOrEditSubtasks": "点击添加或编辑子任务",
+    "contentPlaceholder": "在这里添加内容...（支持Markdown）",
+    "contentEditHint": "按 Cmd/Ctrl+Enter 保存，按 Esc 取消",
+    "noContentPreview": "没有内容可预览。切换到编辑模式以添加内容。",
+    "deleteConfirmTitle": "删除任务",
+    "deleteConfirmMessage": "您确定要删除此任务吗？此操作无法撤销。",
+    "noMoreIterations": "没有更多计划的迭代",
+    "nextOccurrences": "下一个发生",
+    "nextOccurrencesAfterThis": "此后的下一个发生",
+    "thisTask": "此任务",
+    "is": "是",
+    "and": "和",
+    "dueOn": "到期",
+    "inProject": "来自项目",
+    "lowPriority": "低优先级",
+    "mediumPriority": "中优先级",
+    "highPriority": "高优先级",
+    "inDays": "在 {{count}} 天内",
+    "daysAgo": "{{count}} 天前",
+    "tagsUpdated": "标签更新成功",
+    "tagsUpdateError": "更新标签失败",
+    "recurrenceUpdated": "重复更新成功",
+    "recurrenceUpdateError": "更新重复失败",
+    "dueDateUpdated": "截止日期更新成功",
+    "dueDateUpdateError": "更新截止日期失败",
+    "titleUpdated": "任务标题更新成功",
+    "titleUpdateError": "更新任务标题失败",
+    "contentUpdated": "任务内容更新成功",
+    "contentUpdateError": "更新任务内容失败",
+    "subtasksUpdated": "子任务更新成功",
+    "subtasksUpdateError": "更新子任务失败",
+    "projectUpdated": "项目更新成功",
+    "projectUpdateError": "更新项目失败",
+    "projectCleared": "项目清除成功",
+    "projectClearError": "清除项目失败",
+    "priorityUpdated": "优先级更新成功",
+    "priorityUpdateError": "更新优先级失败",
+    "status": {
+      "notStarted": "未开始",
+      "inProgress": "进行中",
+      "done": "已完成",
+      "archived": "已归档",
+      "unknown": "进行中",
+      "waiting": "等待中",
+      "setAsDone": "标记为完成"
+    },
+    "noDueDate": "没有截止日期",
+    "instanceOf": "这是一个重复任务的实例",
+    "parentTask": "父任务",
+    "includingToday": "包括今天",
+    "has": "有",
+    "fromProject": "来自项目",
+    "noDeferUntil": "无延迟至",
+    "deferUntilUpdated": "成功更新延迟至",
+    "deferUntilUpdateError": "更新延迟至失败",
+    "showOverdueWarning": "显示逾期警告",
+    "dueDateInPastWarning": "警告：您正在设置一个过去的截止日期",
+    "overview": "概览",
+    "schedule": "日程",
+    "attachments": "附件",
+    "attachmentsComingSoon": "附件功能即将推出",
+    "activity": "活动",
+    "lastUpdatedAt": "最后更新于",
+    "statusUpdated": "状态更新成功",
+    "statusUpdateError": "更新状态失败",
+    "updatedAt": "更新时间",
+    "upcoming": "即将到来"
   },
   "projects": {
     "loading": "加载项目中...",
@@ -654,7 +822,8 @@
       "active": "活动",
       "inactive": "非活动",
       "all": "所有",
-      "allAreas": "所有区域"
+      "allAreas": "所有区域",
+      "notCompleted": "未完成"
     },
     "selectState": "选择状态",
     "state": "项目状态",
@@ -668,8 +837,33 @@
       "planned_desc": "已确定范围并准备开始",
       "in_progress_desc": "正在进行的工作",
       "blocked_desc": "暂时暂停或卡住",
-      "completed_desc": "已完成并结束"
-    }
+      "completed_desc": "已完成并结束",
+      "active": "进行中",
+      "active_desc": "正在进行的工作"
+    },
+    "showMetrics": "显示指标",
+    "hideMetrics": "隐藏指标",
+    "progress": "进度",
+    "taskMomentum": "任务动力",
+    "activeTasks": "活动任务",
+    "dueSchedule": "截止日程",
+    "next14Days": "接下来14天",
+    "noUpcomingDue": "接下来14天没有截止日期。",
+    "peakDay": "峰值",
+    "none": "无",
+    "next3days": "接下来3天",
+    "nextWeek": "接下来7天",
+    "recentCompletion": "最近完成",
+    "last7And30": "过去7天和30天",
+    "weeklyPace": "每周速度",
+    "prevWeekCompleted": "{{count}} 上周",
+    "vsPrevWeek": "vs 上周",
+    "monthlyCompletion": "30天完成",
+    "last30Days": "过去30天",
+    "nextUp": "下一个最佳行动",
+    "focusTask": "最具影响力的任务",
+    "focusHint": "将此任务移至进行中和今天",
+    "noNextAction": "一切正常——没有未完成的任务。"
   },
   "projectItem": {
     "edit": "编辑",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "切换下拉菜单",
     "projectInitials": "项目首字母",
     "share": "分享",
-    "sharedProject": "与团队共享"
+    "sharedProject": "与团队共享",
+    "noDueDate": "无截止日期",
+    "dueToday": "今天到期",
+    "dueIn": "{{count}} {{unit}}后到期",
+    "overdue": "逾期 {{count}} {{unit}}",
+    "day": "天",
+    "days": "天",
+    "sharedUser": "共享用户",
+    "moreSharedUsers": "+{{count}}个用户"
   },
   "areas": {
     "title": "区域",
@@ -769,6 +971,7 @@
     "week": "周",
     "day": "天",
     "today": "今天",
+    "total": "Total",
     "addEvent": "添加事件",
     "weekView": "周视图",
     "dayView": "天视图",
@@ -792,6 +995,7 @@
     "title": "标题",
     "status": "状态",
     "dueDate": "截止日期",
+    "deferUntil": "Defer until",
     "priority": "优先级",
     "project": "项目",
     "area": "区域",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "没有可共享的用户",
     "shared": "已共享",
     "sharedWithTeam": "与团队共享"
+  },
+  "views": {
+    "title": "智能视图",
+    "loading": "加载视图中...",
+    "searchPlaceholder": "搜索视图...",
+    "noViewsFound": "未找到视图。通过执行搜索并点击 \"保存为智能视图\" 来创建视图。",
+    "deleteView": "删除视图",
+    "confirmDelete": "您确定要删除视图 \"{{viewName}}\" 吗？",
+    "pinView": "固定视图",
+    "unpinView": "取消固定视图",
+    "searchCriteria": "搜索条件",
+    "entityTypes": "实体类型",
+    "searchText": "搜索文本",
+    "priority": "优先级",
+    "dueDate": "到期日期",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "未设置特定条件",
+    "priorityLabel": "优先级：",
+    "dueLabel": "到期：",
+    "tags": "标签",
+    "recurring": "循环"
+  },
+  "search": {
+    "placeholder": "搜索任务、项目、笔记...",
+    "searchingFor": "您正在搜索",
+    "allItems": "所有项目",
+    "containingText": "，包含文本",
+    "withPriority": "，优先级为",
+    "priority": "优先级",
+    "due": "，到期",
+    "taggedWith": "，标记为",
+    "and": "和",
+    "criteria": "搜索条件",
+    "metadataFilters": "元数据过滤器",
+    "priorityFilter": "优先级",
+    "dueFilter": "到期",
+    "tagsFilter": "标签",
+    "saveAsSmartView": "保存为智能视图",
+    "viewName": "视图名称",
+    "viewNameRequired": "视图名称是必填项",
+    "viewNamePlaceholder": "输入视图名称",
+    "failedToSave": "保存视图失败。请再试一次。",
+    "cancel": "取消",
+    "saving": "保存中...",
+    "saveView": "保存视图",
+    "startTyping": "开始输入以搜索或选择上面的过滤器",
+    "noResults": "未找到结果",
+    "entityTypes": {
+      "task": "任务",
+      "project": "项目",
+      "area": "区域",
+      "note": "笔记"
+    },
+    "thatAre": "，是",
+    "extras": "附加项",
+    "recurringFilter": {
+      "label": "循环",
+      "recurring": "循环模板",
+      "nonRecurring": "非循环",
+      "instances": "循环实例"
+    },
+    "deferUntilFilter": "延迟到",
+    "deferUntil": "，延迟到",
+    "extrasFilter": {
+      "isRecurring": "是重复的",
+      "isOverdue": "已逾期",
+      "hasContent": "有内容",
+      "isDeferred": "已延迟",
+      "hasTags": "有标签",
+      "isAssignedToProject": "已分配给项目"
+    }
+  },
+  "subtasks": {
+    "placeholder": "添加子任务..."
+  },
+  "backup": {
+    "title": "备份与恢复",
+    "description": "创建备份或从以前的备份中恢复。您的最后 5 个备份会自动保存。",
+    "createBackup": "创建备份",
+    "importFromFile": "从文件导入",
+    "createNewBackup": "创建新备份",
+    "createDescription": "创建您所有数据的新备份。备份保存在服务器上，您可以稍后恢复。",
+    "createBackupNow": "立即创建备份",
+    "creating": "正在创建备份...",
+    "exportSuccess": "备份创建成功！",
+    "exportError": "创建备份失败",
+    "savedBackups": "已保存的备份",
+    "noBackups": "未找到备份。请在上方创建您的第一个备份。",
+    "createdAt": "创建于",
+    "version": "版本",
+    "currentVersion": "当前版本",
+    "size": "大小",
+    "contents": "内容",
+    "actions": "操作",
+    "restore": "恢复",
+    "download": "下载",
+    "downloadSuccess": "备份下载成功！",
+    "downloadError": "下载备份失败",
+    "confirmRestore": "恢复备份",
+    "confirmRestoreMessage": "您确定要恢复此备份吗？这将把备份的数据与您当前的数据合并。",
+    "restoreSuccess": "备份恢复成功！创建了：{{tasks}} 个任务，{{projects}} 个项目，{{notes}} 条笔记",
+    "restoreError": "恢复备份失败",
+    "confirmDelete": "删除备份",
+    "confirmDeleteMessage": "您确定要删除此备份吗？此操作无法撤销。",
+    "deleteSuccess": "备份删除成功！",
+    "deleteError": "删除备份失败",
+    "importTitle": "从文件导入",
+    "importDescription": "上传备份文件以恢复您的数据。您现有的数据将被保留，备份中的新项目将被添加。",
+    "importNote": "重要：",
+    "importNoteDescription": "导入将与您现有的项目合并数据。重复项目（相同的UID）将被跳过。",
+    "selectFile": "选择备份文件",
+    "clickToUpload": "点击浏览文件",
+    "restoreBackup": "恢复备份",
+    "importing": "导入中...",
+    "importSuccess": "备份导入成功！创建了：{{tasks}} 个任务，{{projects}} 个项目，{{notes}} 个笔记",
+    "importError": "导入备份失败",
+    "backupContents": "备份内容：",
+    "validationError": "所选文件不是有效的备份",
+    "validationErrors": "验证错误：",
+    "versionIncompatible": "版本不兼容",
+    "backupVersion": "备份版本",
+    "restoreButton": "恢复"
+  },
+  "notifications": {
+    "table": {
+      "type": "通知类型"
+    },
+    "channels": {
+      "inApp": "应用内",
+      "email": "电子邮件",
+      "push": "推送",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "到期任务",
+      "overdueTasks": "逾期任务",
+      "deferUntil": "推迟至",
+      "dueProjects": "到期项目",
+      "overdueProjects": "逾期项目"
+    },
+    "descriptions": {
+      "dueTasks": "在24小时内到期的任务",
+      "overdueTasks": "已过截止日期的任务",
+      "deferUntil": "现在可以开始处理的任务",
+      "dueProjects": "在24小时内到期的项目",
+      "overdueProjects": "已过截止日期的项目"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram 未配置：",
+        "message": "要接收 Telegram 通知，请在 Telegram 选项卡中配置您的 Telegram 机器人。"
+      }
+    },
+    "test": {
+      "title": "测试通知",
+      "description": "发送测试通知以查看它在应用内和启用的频道（Telegram 等）中的显示效果",
+      "send": "发送测试",
+      "sending": "发送中..."
+    },
+    "info": {
+      "title": "注意：",
+      "message": "电子邮件和推送通知即将推出。应用内和 Telegram 通知目前可用。"
+    }
+  },
+  "projectStatus": {
+    "not_started": "未开始",
+    "not_started_desc": "已捕获但尚未开始",
+    "planned": "已规划",
+    "planned_desc": "已确定范围并准备开始",
+    "in_progress": "进行中",
+    "in_progress_desc": "正在进行的工作",
+    "waiting": "等待中",
+    "waiting_desc": "等待外部输入",
+    "done": "已完成",
+    "done_desc": "已完成并结束",
+    "cancelled": "已取消",
+    "cancelled_desc": "将不会完成"
   }
 }

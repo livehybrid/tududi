@@ -2,6 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Login from './components/Login';
+import Register from './components/Register';
 import NotFound from './components/Shared/NotFound';
 import ProjectDetails from './components/Project/ProjectDetails';
 import Projects from './components/Projects';
@@ -9,18 +10,24 @@ import AreaDetails from './components/Area/AreaDetails';
 import Areas from './components/Areas';
 import TagDetails from './components/Tag/TagDetails';
 import Tags from './components/Tags';
+import Views from './components/Views';
+import ViewDetail from './components/ViewDetail';
 import Notes from './components/Notes';
 import NoteDetails from './components/Note/NoteDetails';
 import Calendar from './components/Calendar';
 import ProfileSettings from './components/Profile/ProfileSettings';
 import About from './components/About';
+import BackupRestore from './components/Backup/BackupRestore';
 import Layout from './Layout';
 import { User } from './entities/User';
 import TasksToday from './components/Task/TasksToday';
 import TaskDetails from './components/Task/TaskDetails';
 import LoadingScreen from './components/Shared/LoadingScreen';
 import InboxItems from './components/Inbox/InboxItems';
+import Habits from './components/Habits/Habits';
+import HabitDetails from './components/Habits/HabitDetails';
 import { setCurrentUser as setUserInStorage } from './utils/userUtils';
+import { getApiPath, getLocalesPath } from './config/paths';
 // Lazy load Tasks component to prevent issues with tags loading
 const Tasks = lazy(() => import('./components/Tasks'));
 
@@ -35,7 +42,7 @@ const App: React.FC = () => {
 
     const fetchCurrentUser = async () => {
         try {
-            const response = await fetch('/api/current_user', {
+            const response = await fetch(getApiPath('current_user'), {
                 credentials: 'include',
                 headers: {
                     Accept: 'application/json',
@@ -91,7 +98,7 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (i18n.isInitialized) {
-            fetch(`/locales/${i18n.language}/translation.json`)
+            fetch(getLocalesPath(`${i18n.language}/translation.json`))
                 .then((response) => {
                     return response.json();
                 })
@@ -218,6 +225,11 @@ const App: React.FC = () => {
                                 }
                             />
                             <Route path="/inbox" element={<InboxItems />} />
+                            <Route path="/habits" element={<Habits />} />
+                            <Route
+                                path="/habit/:uid"
+                                element={<HabitDetails />}
+                            />
                             <Route path="/projects" element={<Projects />} />
                             <Route
                                 path="/project/:uidSlug"
@@ -230,7 +242,13 @@ const App: React.FC = () => {
                                 path="/tag/:uidSlug"
                                 element={<TagDetails />}
                             />
+                            <Route path="/views" element={<Views />} />
+                            <Route
+                                path="/views/:uid"
+                                element={<ViewDetail />}
+                            />
                             <Route path="/notes" element={<Notes />} />
+                            <Route path="/notes/:uid" element={<Notes />} />
                             <Route
                                 path="/note/:uidSlug"
                                 element={<NoteDetails />}
@@ -246,7 +264,11 @@ const App: React.FC = () => {
                                     />
                                 }
                             />
-                            <Route path="/about" element={<About />} />
+                            <Route
+                                path="/about"
+                                element={<About isDarkMode={isDarkMode} />}
+                            />
+                            <Route path="/backup" element={<BackupRestore />} />
                             <Route
                                 path="/admin/users"
                                 element={
@@ -278,6 +300,7 @@ const App: React.FC = () => {
                 ) : (
                     <>
                         <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
                         <Route
                             path="/"
                             element={<Navigate to="/login" replace />}

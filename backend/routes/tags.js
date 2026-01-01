@@ -7,13 +7,12 @@ const _ = require('lodash');
 const { Op } = require('sequelize');
 const { logError } = require('../services/logService');
 
-// GET /api/tags
 router.get('/tags', async (req, res) => {
     try {
         const tags = await Tag.findAll({
             where: { user_id: req.currentUser.id },
             attributes: ['name', 'uid'],
-            order: [['name', 'ASC']],
+            order: [[sequelize.fn('LOWER', sequelize.col('name')), 'ASC']],
         });
         res.json(tags);
     } catch (error) {
@@ -53,7 +52,6 @@ router.get('/tag', async (req, res) => {
     }
 });
 
-// POST /api/tag
 router.post('/tag', async (req, res) => {
     try {
         const { name } = req.body;
@@ -61,6 +59,20 @@ router.post('/tag', async (req, res) => {
         const validation = validateTagName(name);
         if (!validation.valid) {
             return res.status(400).json({ error: validation.error });
+        }
+
+        // Check if tag already exists for this user
+        const existingTag = await Tag.findOne({
+            where: {
+                name: validation.name,
+                user_id: req.currentUser.id,
+            },
+        });
+
+        if (existingTag) {
+            return res.status(409).json({
+                error: `A tag with the name "${validation.name}" already exists.`,
+            });
         }
 
         const tag = await Tag.create({
@@ -74,6 +86,12 @@ router.post('/tag', async (req, res) => {
         });
     } catch (error) {
         logError('Error creating tag:', error);
+        // Check if it's a unique constraint violation
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({
+                error: 'A tag with this name already exists.',
+            });
+        }
         res.status(400).json({
             error: 'There was a problem creating the tag.',
         });
@@ -105,6 +123,23 @@ router.patch('/tag/:identifier', async (req, res) => {
             return res.status(400).json({ error: validation.error });
         }
 
+        // Check if another tag with the same name already exists
+        if (validation.name !== tag.name) {
+            const existingTag = await Tag.findOne({
+                where: {
+                    name: validation.name,
+                    user_id: req.currentUser.id,
+                    id: { [Op.ne]: tag.id },
+                },
+            });
+
+            if (existingTag) {
+                return res.status(409).json({
+                    error: `A tag with the name "${validation.name}" already exists.`,
+                });
+            }
+        }
+
         await tag.update({ name: validation.name });
 
         res.json({
@@ -113,6 +148,12 @@ router.patch('/tag/:identifier', async (req, res) => {
         });
     } catch (error) {
         logError('Error updating tag:', error);
+        // Check if it's a unique constraint violation
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({
+                error: 'A tag with this name already exists.',
+            });
+        }
         res.status(400).json({
             error: 'There was a problem updating the tag.',
         });

@@ -3,7 +3,6 @@ const path = require('path');
 const { getConfig } = require('../config/config');
 const config = getConfig();
 
-// Database configuration
 let dbConfig;
 
 dbConfig = {
@@ -20,7 +19,6 @@ dbConfig = {
 
 const sequelize = new Sequelize(dbConfig);
 
-// Import models
 const User = require('./user')(sequelize);
 const Area = require('./area')(sequelize);
 const Project = require('./project')(sequelize);
@@ -34,8 +32,14 @@ const Action = require('./action')(sequelize);
 const Permission = require('./permission')(sequelize);
 const ResearchJob = require('./research_job')(sequelize);
 const BackgroundAgentJob = require('./background_agent_job')(sequelize);
+const View = require('./view')(sequelize);
+const ApiToken = require('./api_token')(sequelize);
+const Setting = require('./setting')(sequelize);
+const Notification = require('./notification')(sequelize);
+const RecurringCompletion = require('./recurringCompletion')(sequelize);
+const TaskAttachment = require('./task_attachment')(sequelize);
+const Backup = require('./backup')(sequelize);
 
-// Define associations
 User.hasMany(Area, { foreignKey: 'user_id' });
 Area.belongsTo(User, { foreignKey: 'user_id' });
 
@@ -72,7 +76,6 @@ TaskEvent.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
 Task.hasMany(TaskEvent, { foreignKey: 'task_id', as: 'TaskEvents' });
 TaskEvent.belongsTo(Task, { foreignKey: 'task_id', as: 'Task' });
 
-// Task self-referencing associations for subtasks
 Task.belongsTo(Task, {
     as: 'ParentTask',
     foreignKey: 'parent_task_id',
@@ -82,7 +85,6 @@ Task.hasMany(Task, {
     foreignKey: 'parent_task_id',
 });
 
-// Task self-referencing associations for recurring tasks
 Task.belongsTo(Task, {
     as: 'RecurringParent',
     foreignKey: 'recurring_parent_id',
@@ -92,7 +94,15 @@ Task.hasMany(Task, {
     foreignKey: 'recurring_parent_id',
 });
 
-// Many-to-many associations
+Task.hasMany(RecurringCompletion, {
+    as: 'Completions',
+    foreignKey: 'task_id',
+});
+RecurringCompletion.belongsTo(Task, {
+    foreignKey: 'task_id',
+    as: 'Task',
+});
+
 Task.belongsToMany(Tag, {
     through: 'tasks_tags',
     foreignKey: 'task_id',
@@ -126,7 +136,6 @@ Tag.belongsToMany(Project, {
     otherKey: 'project_id',
 });
 
-// Roles and permissions associations
 User.hasOne(Role, { foreignKey: 'user_id' });
 Role.belongsTo(User, { foreignKey: 'user_id' });
 
@@ -135,12 +144,27 @@ Permission.belongsTo(User, {
     foreignKey: 'granted_by_user_id',
     as: 'GrantedBy',
 });
-// Optional backrefs if needed later:
-// User.hasMany(Permission, { foreignKey: 'user_id', as: 'Permissions' });
-
-// Actions relations (optional aliases)
 Action.belongsTo(User, { foreignKey: 'actor_user_id', as: 'Actor' });
 Action.belongsTo(User, { foreignKey: 'target_user_id', as: 'Target' });
+
+User.hasMany(View, { foreignKey: 'user_id' });
+View.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(ApiToken, { foreignKey: 'user_id', as: 'apiTokens' });
+ApiToken.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+User.hasMany(Notification, { foreignKey: 'user_id', as: 'Notifications' });
+Notification.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
+
+// TaskAttachment associations
+User.hasMany(TaskAttachment, { foreignKey: 'user_id' });
+TaskAttachment.belongsTo(User, { foreignKey: 'user_id' });
+Task.hasMany(TaskAttachment, { foreignKey: 'task_id', as: 'Attachments' });
+TaskAttachment.belongsTo(Task, { foreignKey: 'task_id' });
+
+// Backup associations
+User.hasMany(Backup, { foreignKey: 'user_id', as: 'Backups' });
+Backup.belongsTo(User, { foreignKey: 'user_id', as: 'User' });
 
 module.exports = {
     sequelize,
@@ -157,4 +181,11 @@ module.exports = {
     Permission,
     ResearchJob,
     BackgroundAgentJob,
+    View,
+    ApiToken,
+    Setting,
+    Notification,
+    RecurringCompletion,
+    TaskAttachment,
+    Backup,
 };

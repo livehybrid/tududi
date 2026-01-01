@@ -1,8 +1,29 @@
 const express = require('express');
-const { User, Role } = require('../models');
+const { User, Role, ApiToken } = require('../models');
+const _ = require('lodash');
 const { logError } = require('../services/logService');
 const taskSummaryService = require('../services/taskSummaryService');
 const router = express.Router();
+const { getAuthenticatedUserId } = require('../utils/request-utils');
+const {
+    createApiToken,
+    revokeApiToken,
+    deleteApiToken,
+    serializeApiToken,
+} = require('../services/apiTokenService');
+const { apiKeyManagementLimiter } = require('../middleware/rateLimiter');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs').promises;
+
+router.use((req, res, next) => {
+    const userId = getAuthenticatedUserId(req);
+    if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    req.authUserId = userId;
+    next();
+});
 
 const VALID_FREQUENCIES = [
     'daily',
@@ -15,7 +36,46 @@ const VALID_FREQUENCIES = [
     '12h',
 ];
 
-// GET /api/users - list all users for sharing purposes
+// Configure multer for avatar uploads
+const storage = multer.diskStorage({
+    destination: async (req, file, cb) => {
+        const uploadDir = path.join(__dirname, '../uploads/avatars');
+        try {
+            await fs.mkdir(uploadDir, { recursive: true });
+            cb(null, uploadDir);
+        } catch (error) {
+            cb(error, uploadDir);
+        }
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = path.extname(file.originalname);
+        cb(null, `avatar-${req.authUserId}-${uniqueSuffix}${ext}`);
+    },
+});
+
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(
+        path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+        return cb(null, true);
+    } else {
+        cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed!'));
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: fileFilter,
+});
+
 router.get('/users', async (req, res) => {
     try {
         const users = await User.findAll({
@@ -44,10 +104,9 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// GET /api/profile
 router.get('/profile', async (req, res) => {
     try {
-        const user = await User.findByPk(req.session.userId, {
+        const user = await User.findByPk(req.authUserId, {
             attributes: [
                 'uid',
                 'email',
@@ -67,11 +126,14 @@ router.get('/profile', async (req, res) => {
                 'auto_suggest_next_actions_enabled',
                 'pomodoro_enabled',
                 'today_settings',
+                'sidebar_settings',
                 'productivity_assistant_enabled',
                 'next_task_suggestion_enabled',
                 'background_agent_enabled',
                 'openrouter_api_key',
                 'include_user_context',
+                'notification_preferences',
+                'keyboard_shortcuts',
             ],
         });
 
@@ -88,6 +150,14 @@ router.get('/profile', async (req, res) => {
                 user.today_settings = null;
             }
         }
+        if (user.ui_settings && typeof user.ui_settings === 'string') {
+            try {
+                user.ui_settings = JSON.parse(user.ui_settings);
+            } catch (error) {
+                logError('Error parsing ui_settings:', error);
+                user.ui_settings = null;
+            }
+        }
 
         res.json(user);
     } catch (error) {
@@ -96,10 +166,9 @@ router.get('/profile', async (req, res) => {
     }
 });
 
-// PATCH /api/profile
 router.patch('/profile', async (req, res) => {
     try {
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'Profile not found.' });
         }
@@ -123,6 +192,9 @@ router.patch('/profile', async (req, res) => {
             pomodoro_enabled,
             background_agent_enabled,
             openrouter_api_key,
+            ui_settings,
+            notification_preferences,
+            keyboard_shortcuts,
             currentPassword,
             newPassword,
         } = req.body;
@@ -163,6 +235,11 @@ router.patch('/profile', async (req, res) => {
             allowedUpdates.background_agent_enabled = background_agent_enabled;
         if (openrouter_api_key !== undefined)
             allowedUpdates.openrouter_api_key = openrouter_api_key;
+        if (ui_settings !== undefined) allowedUpdates.ui_settings = ui_settings;
+        if (notification_preferences !== undefined)
+            allowedUpdates.notification_preferences = notification_preferences;
+        if (keyboard_shortcuts !== undefined)
+            allowedUpdates.keyboard_shortcuts = keyboard_shortcuts;
 
         // Validate first_day_of_week if provided
         if (first_day_of_week !== undefined) {
@@ -229,6 +306,8 @@ router.patch('/profile', async (req, res) => {
                 'pomodoro_enabled',
                 'background_agent_enabled',
                 'openrouter_api_key',
+                'notification_preferences',
+                'keyboard_shortcuts',
             ],
         });
 
@@ -244,7 +323,87 @@ router.patch('/profile', async (req, res) => {
     }
 });
 
-// POST /api/profile/change-password
+router.post('/profile/avatar', upload.single('avatar'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const user = await User.findByPk(req.authUserId);
+        if (!user) {
+            // Clean up uploaded file
+            await fs.unlink(req.file.path).catch(() => {});
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Delete old avatar file if it exists
+        if (user.avatar_image) {
+            const oldAvatarPath = path.join(
+                __dirname,
+                '../uploads/avatars',
+                path.basename(user.avatar_image)
+            );
+            await fs.unlink(oldAvatarPath).catch(() => {
+                // Ignore errors if file doesn't exist
+            });
+        }
+
+        // Store relative path in database
+        const avatarUrl = `/uploads/avatars/${path.basename(req.file.path)}`;
+        await user.update({ avatar_image: avatarUrl });
+
+        res.json({
+            success: true,
+            avatar_image: avatarUrl,
+            message: 'Avatar uploaded successfully',
+        });
+    } catch (error) {
+        // Clean up uploaded file on error
+        if (req.file) {
+            await fs.unlink(req.file.path).catch(() => {});
+        }
+        logError('Error uploading avatar:', error);
+        res.status(500).json({
+            error: 'Failed to upload avatar',
+            details: error.message,
+        });
+    }
+});
+
+router.delete('/profile/avatar', async (req, res) => {
+    try {
+        const user = await User.findByPk(req.authUserId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Delete avatar file if it exists
+        if (user.avatar_image) {
+            const avatarPath = path.join(
+                __dirname,
+                '../uploads/avatars',
+                path.basename(user.avatar_image)
+            );
+            await fs.unlink(avatarPath).catch(() => {
+                // Ignore errors if file doesn't exist
+            });
+        }
+
+        await user.update({ avatar_image: null });
+
+        res.json({
+            success: true,
+            message: 'Avatar removed successfully',
+        });
+    } catch (error) {
+        logError('Error removing avatar:', error);
+        res.status(500).json({
+            error: 'Failed to remove avatar',
+            details: error.message,
+        });
+    }
+});
+
 router.post('/profile/change-password', async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
@@ -262,7 +421,7 @@ router.post('/profile/change-password', async (req, res) => {
             });
         }
 
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -290,10 +449,104 @@ router.post('/profile/change-password', async (req, res) => {
     }
 });
 
-// POST /api/profile/task-summary/toggle
+router.get('/profile/api-keys', apiKeyManagementLimiter, async (req, res) => {
+    try {
+        const tokens = await ApiToken.findAll({
+            where: { user_id: req.authUserId },
+            order: [['created_at', 'DESC']],
+        });
+
+        res.json(tokens.map(serializeApiToken));
+    } catch (error) {
+        logError('Error listing API keys:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/profile/api-keys', apiKeyManagementLimiter, async (req, res) => {
+    try {
+        const { name, expires_at } = req.body || {};
+
+        if (!name || _.isEmpty(name.trim())) {
+            return res.status(400).json({ error: 'API key name is required.' });
+        }
+
+        let expiresAtDate = null;
+        if (expires_at) {
+            const parsedDate = new Date(expires_at);
+            if (Number.isNaN(parsedDate.getTime())) {
+                return res
+                    .status(400)
+                    .json({ error: 'expires_at must be a valid date.' });
+            }
+            expiresAtDate = parsedDate;
+        }
+
+        const { rawToken, tokenRecord } = await createApiToken({
+            userId: req.authUserId,
+            name: name.trim(),
+            expiresAt: expiresAtDate,
+        });
+
+        res.status(201).json({
+            token: rawToken,
+            apiKey: serializeApiToken(tokenRecord),
+        });
+    } catch (error) {
+        logError('Error creating API key:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post(
+    '/profile/api-keys/:id/revoke',
+    apiKeyManagementLimiter,
+    async (req, res) => {
+        try {
+            const tokenId = parseInt(req.params.id, 10);
+            if (Number.isNaN(tokenId)) {
+                return res.status(400).json({ error: 'Invalid API key id.' });
+            }
+
+            const token = await revokeApiToken(tokenId, req.authUserId);
+            if (!token) {
+                return res.status(404).json({ error: 'API key not found.' });
+            }
+
+            res.json(serializeApiToken(token));
+        } catch (error) {
+            logError('Error revoking API key:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
+router.delete(
+    '/profile/api-keys/:id',
+    apiKeyManagementLimiter,
+    async (req, res) => {
+        try {
+            const tokenId = parseInt(req.params.id, 10);
+            if (Number.isNaN(tokenId)) {
+                return res.status(400).json({ error: 'Invalid API key id.' });
+            }
+
+            const deleted = await deleteApiToken(tokenId, req.authUserId);
+            if (!deleted) {
+                return res.status(404).json({ error: 'API key not found.' });
+            }
+
+            res.status(204).send();
+        } catch (error) {
+            logError('Error deleting API key:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+);
+
 router.post('/profile/task-summary/toggle', async (req, res) => {
     try {
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
@@ -323,7 +576,6 @@ router.post('/profile/task-summary/toggle', async (req, res) => {
     }
 });
 
-// POST /api/profile/task-summary/frequency
 router.post('/profile/task-summary/frequency', async (req, res) => {
     try {
         const { frequency } = req.body;
@@ -336,7 +588,7 @@ router.post('/profile/task-summary/frequency', async (req, res) => {
             return res.status(400).json({ error: 'Invalid frequency value.' });
         }
 
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
@@ -359,10 +611,9 @@ router.post('/profile/task-summary/frequency', async (req, res) => {
     }
 });
 
-// POST /api/profile/task-summary/send-now
 router.post('/profile/task-summary/send-now', async (req, res) => {
     try {
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
@@ -395,10 +646,9 @@ router.post('/profile/task-summary/send-now', async (req, res) => {
     }
 });
 
-// GET /api/profile/task-summary/status
 router.get('/profile/task-summary/status', async (req, res) => {
     try {
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
@@ -416,16 +666,16 @@ router.get('/profile/task-summary/status', async (req, res) => {
     }
 });
 
-// PUT /api/profile/today-settings
 router.put('/profile/today-settings', async (req, res) => {
     try {
-        const user = await User.findByPk(req.session.userId);
+        const user = await User.findByPk(req.authUserId);
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
 
         const {
             showMetrics,
+            projectShowMetrics,
             showProductivity,
             showNextTaskSuggestion,
             showSuggestions,
@@ -436,6 +686,10 @@ router.put('/profile/today-settings', async (req, res) => {
         } = req.body;
 
         const todaySettings = {
+            projectShowMetrics:
+                projectShowMetrics !== undefined
+                    ? projectShowMetrics
+                    : (user.today_settings?.projectShowMetrics ?? true),
             showMetrics:
                 showMetrics !== undefined
                     ? showMetrics
@@ -488,6 +742,77 @@ router.put('/profile/today-settings', async (req, res) => {
         });
     } catch (error) {
         logError('Error updating today settings:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.put('/profile/sidebar-settings', async (req, res) => {
+    try {
+        const user = await User.findByPk(req.authUserId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        const { pinnedViewsOrder } = req.body;
+
+        if (!Array.isArray(pinnedViewsOrder)) {
+            return res.status(400).json({
+                error: 'pinnedViewsOrder must be an array',
+            });
+        }
+
+        const sidebarSettings = {
+            pinnedViewsOrder,
+        };
+
+        await user.update({
+            sidebar_settings: sidebarSettings,
+        });
+
+        res.json({
+            success: true,
+            sidebar_settings: sidebarSettings,
+        });
+    } catch (error) {
+        logError('Error updating sidebar settings:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Update generic UI settings (e.g., project metrics preferences)
+router.put('/profile/ui-settings', async (req, res) => {
+    try {
+        const user = await User.findByPk(req.authUserId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        const { project } = req.body;
+
+        const currentSettings = (user.ui_settings &&
+        typeof user.ui_settings === 'object'
+            ? user.ui_settings
+            : {}) || { project: { details: {} } };
+
+        const newSettings = {
+            ...currentSettings,
+            project: {
+                ...(currentSettings.project || {}),
+                ...(project || {}),
+                details: {
+                    ...((currentSettings.project &&
+                        currentSettings.project.details) ||
+                        {}),
+                    ...((project && project.details) || {}),
+                },
+            },
+        };
+
+        await user.update({ ui_settings: newSettings });
+
+        res.json({ success: true, ui_settings: newSettings });
+    } catch (error) {
+        logError('Error updating ui settings:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

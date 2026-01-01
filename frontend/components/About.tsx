@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HeartIcon } from '@heroicons/react/24/outline';
+import { getApiPath } from '../config/paths';
 
-const About: React.FC = () => {
+interface AboutProps {
+    isDarkMode?: boolean;
+}
+
+const About: React.FC<AboutProps> = ({ isDarkMode = false }) => {
     const { t } = useTranslation();
     const [version, setVersion] = useState<string>('0.3');
 
     useEffect(() => {
         // Fetch version from the deployed app
-        fetch('/api/version')
+        fetch(getApiPath('version'))
             .then((response) => response.json())
             .then((data) => {
                 if (data.version) {
@@ -22,8 +27,8 @@ const About: React.FC = () => {
     }, []);
 
     return (
-        <div className="flex justify-center px-4 lg:px-2">
-            <div className="w-full max-w-5xl">
+        <div className="w-full px-2 sm:px-4 lg:px-6 pt-4 pb-8">
+            <div className="w-full">
                 <div className="flex items-center mb-4">
                     <h2 className="text-2xl font-light">
                         {t('about.title', 'About')}
@@ -33,9 +38,17 @@ const About: React.FC = () => {
                 <div className="max-w-2xl mx-auto">
                     {/* Logo and Version */}
                     <div className="text-center mb-8">
-                        <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                            tududi
-                        </h2>
+                        <div className="flex justify-center mb-4">
+                            <img
+                                src={
+                                    isDarkMode
+                                        ? '/wide-logo-light.png'
+                                        : '/wide-logo-dark.png'
+                                }
+                                alt="tududi"
+                                className="h-16 w-auto"
+                            />
+                        </div>
                         <p className="text-lg text-gray-600 dark:text-gray-400">
                             {t('about.version', 'Version')} {version}
                         </p>

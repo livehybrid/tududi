@@ -18,7 +18,13 @@
     "status": "Tila",
     "saving": "Tallennetaan...",
     "settings": "Asetukset",
-    "none": "Ei mitään"
+    "none": "Ei mitään",
+    "discardChanges": "Hylkää muutokset?",
+    "discardChangesMessage": "Sinulla on tallentamattomia muutoksia. Oletko varma, että haluat hylätä ne?",
+    "no": "Ei, jatka muokkaamista",
+    "yesDiscard": "Kyllä, hylkää",
+    "uploading": "Lähetetään...",
+    "refresh": "Päivitä"
   },
   "sidebar": {
     "dashboard": "Ohjauspaneeli",
@@ -34,6 +40,7 @@
     "addTagAriaLabel": "Lisää tunniste",
     "addTagTitle": "Lisää tunniste",
     "today": "Tänään",
+    "total": "Total",
     "upcoming": "Tulevat",
     "nextActions": "Seuraavat toimet",
     "inbox": "Saapuneet",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Lisää projekti",
     "addNoteAriaLabel": "Lisää muistiinpano",
     "addNoteTitle": "Lisää muistiinpano",
-    "createNew": "Luo uusi"
+    "createNew": "Luo uusi",
+    "views": "Näkymät",
+    "unpinView": "Irrota näkymä",
+    "pinView": "Kiinnitä näkymä"
   },
   "navigation": {
     "home": "Koti",
@@ -54,7 +64,8 @@
     "profileSettings": "Profiiliasetukset",
     "settings": "Asetukset",
     "about": "Tietoja",
-    "logout": "Kirjaudu ulos"
+    "logout": "Kirjaudu ulos",
+    "backupRestore": "Varmuuskopioi & Palauta"
   },
   "settings": {
     "todayPageSettings": "Tänään-sivun asetukset",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Tehtävät",
     "today": "Tänään",
+    "total": "Total",
     "backlog": "Työjonossa",
     "inProgress": "Käynnissä",
     "dueToday": "Erääntyy tänään",
@@ -115,7 +127,33 @@
     "showSubtasks": "Näytä alitehtävät",
     "hideSubtasks": "Piilota alitehtävät",
     "edit": "Muokkaa tehtävää",
-    "delete": "Poista tehtävä"
+    "delete": "Poista tehtävä",
+    "sortTasks": "Lajittele tehtävät",
+    "sortBy": "Lajittele",
+    "direction": "Suunta",
+    "ascending": "Nouseva",
+    "descending": "Laskeva",
+    "groupBy": "Ryhmittele",
+    "groupByProject": "Projekti",
+    "grouping": {
+      "none": "Ei mitään"
+    },
+    "show": "Näytä",
+    "all": "Kaikki",
+    "completedOnly": "Vain valmiit",
+    "notCompleted": "Keskeneräiset",
+    "noProject": "Ei projektia",
+    "unknownProject": "Tuntematon projekti",
+    "tasks": "tehtävät",
+    "showingItems": "Näytetään {{current}} / {{total}} tehtävää",
+    "overdue": "Erääntynyt",
+    "planned": "Suunniteltu",
+    "open": "Avaa",
+    "completed": "Valmis",
+    "noCompletedTasksToday": "Ei suoritettuja tehtäviä tänään.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Ei aloitettu",
+    "done": "Valmis"
   },
   "timeline": {
     "activityTimeline": "Toiminta-aikajana",
@@ -128,6 +166,7 @@
       "statusChanged": "Tila muutettu",
       "priorityChanged": "Prioriteetti muutettu",
       "dueDateChanged": "Eräpäivä muutettu",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Nimi päivitetty",
       "descriptionUpdated": "Kuvaus päivitetty",
       "noteUpdated": "Muistutus päivitetty",
@@ -138,11 +177,19 @@
       "status": "Tila",
       "priority": "Prioriteetti",
       "dueDate": "Eräpäivä",
+      "deferUntil": "Defer until",
       "none": "Ei mitään",
       "recurrenceEndDateChanged": "Toistuvuuden päättymispäivämäärä on muuttunut",
       "recurrenceEndDate": "Toistuvuuden päättymispäivämäärä",
       "recurrence_type_changed": "Toistotyypin muutos",
-      "recurrence_interval_changed": "Toistovälin muutos"
+      "recurrence_interval_changed": "Toistovälin muutos",
+      "completionBasedChanged": "Suoritusperusteinen toistuvuus muuttunut",
+      "projectIdChanged": "Määrätty projektiin",
+      "recurrenceType": "Toistuvuustyyppi",
+      "recurrenceTypeChanged": "Toistuvuustyyppi muuttunut",
+      "recurrence_weekday_changed": "Toistopäivä muuttunut",
+      "recurrence_month_day_changed": "Toistokuukauden päivä muuttunut",
+      "recurrence_week_of_month_changed": "Toistokuukauden viikko muuttunut"
     },
     "justNow": "Juuri nyt",
     "minutesAgo": "{{minutes}}m sitten",
@@ -272,7 +319,8 @@
       "security": "Turvallisuus",
       "productivity": "Tuottavuus",
       "telegram": "Telegram",
-      "ai": "AI-ominaisuudet"
+      "ai": "AI-ominaisuudet",
+      "notifications": "Ilmoitusasetukset"
     },
     "security": "Turvallisuusasetukset",
     "changePassword": "Vaihda salasana",
@@ -290,11 +338,26 @@
     "passwordChangeSuccess": "Salasana vaihdettu onnistuneesti!",
     "changingPassword": "Salasanan vaihtaminen...",
     "accountSettings": "Tili & Asetukset",
-    "aiProductivityFeatures": "AI & Tuottavuusominaisuudet",
     "botSetup": "Botti-asetukset",
     "passwordChangeNote": "Salasanan muutokset tallennetaan, kun napsautat \"Tallenna muutokset\" lomakkeen alareunassa.",
     "passwordChangeOptional": "Jätä salasanakentät tyhjiksi päivittääksesi muita asetuksia ilman salasanan vaihtamista.",
-    "firstDayOfWeek": "Viikon ensimmäinen päivä"
+    "firstDayOfWeek": "Viikon ensimmäinen päivä",
+    "name": "Nimi",
+    "surname": "Sukunimi",
+    "enterName": "Syötä nimesi",
+    "enterSurname": "Syötä sukunimesi",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Valitse, miten haluat saada ilmoituksia tärkeistä tapahtumista.",
+    "aiFeatures": "AI-ominaisuudet"
   },
   "productivity": {
     "stalledProjects": "Jumiutuneet projektit",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Tehtävät, joita ei ole päivitetty {{days}} päivään",
     "stuckProjects": "Jumiutuneet projektit",
     "stuckProjectsDesc": "Projekteja, joita ei ole äskettäin päivitetty",
-    "issuesFound": "Löydettiin {{count}} tuottavuusongelmaa, jotka tarvitsevat huomiota",
     "reviewItems": "Napsauta tarkistaaksesi ja parantaaksesi työnkulkuasi",
-    "suggestion": "Napsauta mitä tahansa yllä olevaa kohdetta avatakseen sen ja tehdäkseen parannuksia."
+    "suggestion": "Napsauta mitä tahansa yllä olevaa kohdetta avatakseen sen ja tehdäkseen parannuksia.",
+    "issuesFound_one": "1 tuottavuusongelma tarvitsee huomiota",
+    "issuesFound_other": "{{count}} tuottavuusongelmaa tarvitsee huomiota"
   },
   "nextTask": {
     "suggestion": "Koska mitään ei ole käynnissä, mitä jos aloittaisit",
@@ -365,6 +429,7 @@
     "title": "Otsikko",
     "description": "Kuvaus",
     "dueDate": "Eräpäivä",
+    "deferUntil": "Defer until",
     "priority": "Prioriteetti",
     "status": "Tila",
     "assignedTo": "Määrätty",
@@ -382,6 +447,7 @@
         "status": "Tila",
         "priority": "Prioriteetti",
         "dueDate": "Eräpäivä",
+        "deferUntil": "Viivytä kunnes",
         "note": "Huomautus",
         "recurrenceType": "Toista",
         "recurrenceInterval": "Joka",
@@ -389,7 +455,8 @@
         "monthDay": "Kuukauden päivä",
         "weekOfMonth": "Kuukauden viikko",
         "recurrenceEndDate": "Loppupäivämäärä (valinnainen)",
-        "completionBased": "Toista valmistumisen jälkeen"
+        "completionBased": "Toista valmistumisen jälkeen",
+        "repeatOn": "Toista"
       },
       "projectSearchPlaceholder": "Etsi tai luo projekti...",
       "noMatchingProjects": "Ei vastaavia projekteja",
@@ -410,7 +477,9 @@
         "short": "Yritä olla tarkempi siitä, mitä on tehtävä",
         "noVerb": "Mitä erityistä toimintoa sinun tarvitsee tehdä? Yritä aloittaa verbillä.",
         "vague": "Yritä aloittaa toimintaverbillä kuten \"Soita\", \"Kirjoita\", \"Aikatauluta\" tai \"Tutki\""
-      }
+      },
+      "selectAtLeastOneDay": "Valitse vähintään yksi päivä",
+      "deferUntilPlaceholder": "Valitse viivytyspäivämäärä ja -aika"
     },
     "noteTitle": "Muistion Otsikko",
     "noteContent": "Muistion Sisältö",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Matala",
     "medium": "Keskitaso",
-    "high": "Korkea"
+    "high": "Korkea",
+    "none": "Ei mitään"
   },
   "status": {
     "notStarted": "Ei aloitettu",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Projektin nimi",
     "projectImage": "Projektikuva",
-    "uploadImageHint": "Lataa kuva projektiisi (max 5MB)",
+    "uploadImageHint": "Lataa kuva projektiisi (max 10MB)",
     "browseImage": "Selaa kuvaa",
     "noNotes": "Ei muistiinpanoja tälle projektille.",
     "deleteProject": "Poista projekti",
-    "createSuccess": "Projekti luotiin onnistuneesti!"
+    "createSuccess": "Projekti luotiin onnistuneesti!",
+    "createdAndAssigned": "Projekti luotu ja osoitettu",
+    "createError": "Projektin luominen epäonnistui",
+    "viewProject": "Siirry projektiin",
+    "editProject": "Muokkaa projektia",
+    "editBanner": "Muokkaa projektin banneria",
+    "currentBanner": "Nykyinen banneri",
+    "choosePreset": "Valitse esiasetettu banneri:",
+    "orUploadOwn": "Tai lataa oma:"
   },
   "errors": {
     "required": "Tämä kenttä on pakollinen",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Tunnisteen nimi on pakollinen.",
     "failedToSaveTag": "Tunnisteen tallentaminen epäonnistui.",
     "projectNameRequired": "Projektin nimi on pakollinen.",
-    "projectSaveFailed": "Projektin tallentaminen epäonnistui."
+    "projectSaveFailed": "Projektin tallentaminen epäonnistui.",
+    "projectImageTooLarge": "Kuva on liian suuri. Valitse tiedosto, joka on alle 10MB.",
+    "projectImageUpload": "Kuvan lataaminen epäonnistui. Kokeile pienempää tiedostoa tai toista formaattia.",
+    "bannerSaveFailed": "Bannerin tallentaminen epäonnistui"
   },
   "inbox": {
     "title": "Saapuneet",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "TÄNÄÄN",
+    "total": "Total",
     "tomorrow": "HUOMENNA",
-    "yesterday": "EILEN"
+    "yesterday": "EILEN",
+    "nextWeek": "ensi viikolla",
+    "nextMonth": "ensi kuussa"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Näet tehtäviä tietylle projektille. Käytä tätä tilaa hallitaksesi ja seurataksesi tähän projektiin liittyviä tehtäviä."
     },
     "today": "Nämä ovat tehtävät, joiden eräpäivä on tänään tai tehtävät, jotka olet aikatauluttanut välittömään käsittelyyn. Käytä tätä näkymää keskittyäksesi siihen, mitä on saatava valmiiksi tänään. Merkitse tehtävät valmiiksi, päivitä niiden tila tai säädä eräpäiviä tarvittaessa.",
+    "total": "Total",
     "inbox": "Saapuneet-kansio on paikka, jossa kaikki luokittelemattomat tehtävät sijaitsevat. Tehtävät, joita ei ole liitetty projektiin tai joilla ei ole määräaikaa, näkyvät täällä. Tämä on \"aivopurkaus\"-alueesi, johon voit nopeasti kirjata tehtäviä ja järjestää niitä myöhemmin.",
     "next": "Tämä näkymä näyttää kaikki tehtävät, jotka ovat toteutettavissa lähitulevaisuudessa. Nämä tehtävät ovat valmiita käsiteltäväksi seuraavaksi, eikä niillä ole pitkän aikavälin määräaikoja. Tämä on hyvä paikka keskittyä, kun haluat edistyä nopeasti tehtävissä.",
     "upcoming": "Tämä näkymä korostaa tehtäviä, jotka on aikataulutettu tulevalle viikolle. Se auttaa sinua valmistautumaan ja pysymään aikarajojen edellä antamalla yleiskatsauksen työstä, jonka sinun on käsiteltävä lähitulevaisuudessa. Tehtävät, joilla on määräajat seuraavien 7 päivän aikana, näkyvät täällä.",
@@ -584,7 +669,8 @@
     "taskCreated": "Tehtävä luotu onnistuneesti!",
     "taskUpdated": "Tehtävä päivitetty onnistuneesti!",
     "taskDeleted": "Tehtävä poistettu onnistuneesti!",
-    "noteDeleted": "Muistiinpano poistettiin onnistuneesti!"
+    "noteDeleted": "Muistiinpano poistettiin onnistuneesti!",
+    "bannerUpdated": "Banneri päivitettiin onnistuneesti!"
   },
   "note": {
     "title": "Otsikko",
@@ -602,6 +688,7 @@
       "status": "Tila",
       "priority": "Prioriteetti",
       "dueDate": "Eräpäivä",
+      "deferUntil": "Defer until",
       "note": "Muistiinpano"
     },
     "create": "Luo",
@@ -637,7 +724,88 @@
     "subtasks": "Ala-tehtävät",
     "noSubtasks": "Ei vielä ala-tehtäviä",
     "recentActivity": "Viimeaikainen toiminta",
-    "noActivityYet": "Ei vielä toimintaa"
+    "noActivityYet": "Ei vielä toimintaa",
+    "thisTask": "Tämä tehtävä",
+    "is": "on",
+    "and": "ja",
+    "dueOn": "eräpäivä",
+    "inProject": "projektista",
+    "lowPriority": "matala prioriteetti",
+    "mediumPriority": "keskitasoinen prioriteetti",
+    "highPriority": "korkea prioriteetti",
+    "inDays": "{{count}} päivän kuluttua",
+    "daysAgo": "{{count}} päivää sitten",
+    "tagsUpdated": "Tunnisteet päivitetty onnistuneesti",
+    "tagsUpdateError": "Tunnisteiden päivittäminen epäonnistui",
+    "recurrenceUpdated": "Toistuvuus päivitetty onnistuneesti",
+    "recurrenceUpdateError": "Toistuvuuden päivittäminen epäonnistui",
+    "dueDateUpdated": "Eräpäivä päivitetty onnistuneesti",
+    "dueDateUpdateError": "Eräpäivän päivittäminen epäonnistui",
+    "titleUpdated": "Tehtävän otsikko päivitetty onnistuneesti",
+    "titleUpdateError": "Tehtävän otsikon päivittäminen epäonnistui",
+    "contentUpdated": "Tehtävän sisältö päivitetty onnistuneesti",
+    "contentUpdateError": "Tehtävän sisällön päivittäminen epäonnistui",
+    "subtasksUpdated": "Ala-tehtävät päivitetty onnistuneesti",
+    "subtasksUpdateError": "Ala-tehtävien päivittäminen epäonnistui",
+    "projectUpdated": "Projekti päivitetty onnistuneesti",
+    "projectUpdateError": "Projektin päivittäminen epäonnistui",
+    "projectCleared": "Projekti tyhjennetty onnistuneesti",
+    "projectClearError": "Projektin tyhjentäminen epäonnistui",
+    "priorityUpdated": "Prioriteetti päivitetty onnistuneesti",
+    "priorityUpdateError": "Prioriteetin päivittäminen epäonnistui",
+    "status": {
+      "notStarted": "ei aloitettu",
+      "inProgress": "käynnissä",
+      "done": "valmis",
+      "archived": "arkistoitu",
+      "unknown": "käynnissä",
+      "waiting": "Odottaa",
+      "setAsDone": "Merkitse valmiiksi"
+    },
+    "noSubtasksClickToAdd": "Ei alitehtäviä vielä, napsauta lisätäksesi",
+    "project": "Projekti",
+    "noProject": "Ei projektia - Napsauta osoittaaksesi",
+    "tags": "Tunnisteet",
+    "noTags": "Ei tunnisteita",
+    "priority": "Prioriteetti",
+    "dueDate": "Eräpäivä",
+    "deferUntil": "Viivytä kunnes",
+    "recurringSetup": "Toistuva asetukset",
+    "notRecurring": "Tämä tehtävä ei ole vielä toistuva.",
+    "clickToEditTitle": "Napsauta muokataksesi otsikkoa",
+    "clickToEditContent": "Napsauta muokataksesi sisältöä",
+    "clickToAddContent": "Napsauta lisätäksesi sisältöä",
+    "clickToEditSubtasks": "Napsauta muokataksesi alitehtäviä",
+    "clickToAddOrEditSubtasks": "Napsauta lisätäksesi tai muokataksesi alitehtäviä",
+    "contentPlaceholder": "Lisää sisältöä tänne... (Markdown tuettu)",
+    "contentEditHint": "Paina Cmd/Ctrl+Enter tallentaaksesi, Esc peruuttaaksesi",
+    "noContentPreview": "Ei esikatseltavaa sisältöä. Vaihda Muokkaustilaan lisätäksesi sisältöä.",
+    "deleteConfirmTitle": "Poista tehtävä",
+    "deleteConfirmMessage": "Oletko varma, että haluat poistaa tämän tehtävän? Tätä toimintoa ei voi peruuttaa.",
+    "noMoreIterations": "Ei enää aikataulutettuja iteraatioita",
+    "nextOccurrences": "Seuraavat esiintymät",
+    "nextOccurrencesAfterThis": "Seuraavat esiintymät tämän jälkeen",
+    "noDueDate": "Ei määräaikaa",
+    "instanceOf": "Tämä on toistuvan tehtävän instanssi",
+    "parentTask": "Ylätason tehtävä",
+    "includingToday": "mukana tänään",
+    "has": "on",
+    "fromProject": "projektista",
+    "noDeferUntil": "Ei viivytystä ennen",
+    "deferUntilUpdated": "Viivytä kunnes päivitys onnistuu",
+    "deferUntilUpdateError": "Viivytyksen päivittäminen epäonnistui",
+    "showOverdueWarning": "Näytä erääntynyt varoitus",
+    "dueDateInPastWarning": "Varoitus: Asetat eräpäivän menneisyyteen",
+    "overview": "Yhteenveto",
+    "schedule": "Aikataulu",
+    "attachments": "Liitteet",
+    "attachmentsComingSoon": "Liitteet-ominaisuus tulossa pian",
+    "activity": "Toiminta",
+    "lastUpdatedAt": "Viimeksi päivitetty",
+    "statusUpdated": "Tila päivitetty onnistuneesti",
+    "statusUpdateError": "Tilapäivitys epäonnistui",
+    "updatedAt": "Päivitetty",
+    "upcoming": "tulossa"
   },
   "projects": {
     "loading": "Ladataan projekteja...",
@@ -654,7 +822,8 @@
       "active": "Aktiivinen",
       "inactive": "Passiivinen",
       "all": "Kaikki",
-      "allAreas": "Kaikki alueet"
+      "allAreas": "Kaikki alueet",
+      "notCompleted": "Ei valmis"
     },
     "selectState": "Valitse tila",
     "state": "Projektin tila",
@@ -668,8 +837,33 @@
       "planned_desc": "Määritelty ja valmis aloittamaan",
       "in_progress_desc": "Aktiivista työtä käynnissä",
       "blocked_desc": "Tilapäisesti keskeytetty tai jumissa",
-      "completed_desc": "Valmistunut ja tehty"
-    }
+      "completed_desc": "Valmistunut ja tehty",
+      "active": "Käynnissä",
+      "active_desc": "Aktiivista työtä tapahtuu"
+    },
+    "showMetrics": "Näytä mittarit",
+    "hideMetrics": "Piilota mittarit",
+    "progress": "Edistyminen",
+    "taskMomentum": "Tehtävien vauhti",
+    "activeTasks": "Aktiiviset tehtävät",
+    "dueSchedule": "Eräpäiväaikataulu",
+    "next14Days": "Seuraavat 14 päivää",
+    "noUpcomingDue": "Ei määräaikoja seuraavan 14 päivän aikana.",
+    "peakDay": "Huippu",
+    "none": "Ei mitään",
+    "next3days": "Seuraavat 3 päivää",
+    "nextWeek": "Seuraavat 7 päivää",
+    "recentCompletion": "Viimeaikaiset suoritukset",
+    "last7And30": "Viimeiset 7 ja 30 päivää",
+    "weeklyPace": "Viikkovauhti",
+    "prevWeekCompleted": "{{count}} edellinen viikko",
+    "vsPrevWeek": "vs edellinen viikko",
+    "monthlyCompletion": "30 päivän suoritukset",
+    "last30Days": "Viimeiset 30 päivää",
+    "nextUp": "Seuraava paras toiminto",
+    "focusTask": "Vaikuttavin tehtävä",
+    "focusHint": "Siirtää tehtävän tilaan käynnissä ja tänään",
+    "noNextAction": "Kaikki kunnossa - ei avoimia tehtäviä."
   },
   "projectItem": {
     "edit": "Muokkaa",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Vaihda avattavaa valikkoa",
     "projectInitials": "Projektin lyhenteet",
     "share": "Jaa",
-    "sharedProject": "Jaettu tiimille"
+    "sharedProject": "Jaettu tiimille",
+    "noDueDate": "Ei määräaikaa",
+    "dueToday": "Erääntyy tänään",
+    "dueIn": "Erääntyy {{count}} {{unit}} kuluttua",
+    "overdue": "Myöhässä {{count}} {{unit}}",
+    "day": "päivä",
+    "days": "päivää",
+    "sharedUser": "Jaettu käyttäjä",
+    "moreSharedUsers": "+{{count}} lisää käyttäjää"
   },
   "areas": {
     "title": "Alueet",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Olet muokkaamassa vanhemman tehtävän toistuvia asetuksia. Muutokset vaikuttavat kaikkiin tuleviin ilmentymiin tästä toistuvasta tehtävästä."
   },
   "weekdays": {
-    "sunday": "Sunnuntai",
-    "monday": "Maanantai",
-    "tuesday": "Tiistai",
-    "wednesday": "Keskiviikko",
-    "thursday": "Torstai",
-    "friday": "Perjantai",
-    "saturday": "Lauantai"
+    "sunday": "Su",
+    "monday": "Ma",
+    "tuesday": "Ti",
+    "wednesday": "Ke",
+    "thursday": "To",
+    "friday": "Pe",
+    "saturday": "La"
   },
   "pomodoro": {
     "play": "Toista",
@@ -769,6 +971,7 @@
     "week": "Viikko",
     "day": "Päivä",
     "today": "Tänään",
+    "total": "Total",
     "addEvent": "Lisää Tapahtuma",
     "weekView": "Viikkonäkymä",
     "dayView": "Päivänäkymä",
@@ -792,6 +995,7 @@
     "title": "Otsikko",
     "status": "Tila",
     "dueDate": "Eräpäivä",
+    "deferUntil": "Defer until",
     "priority": "Prioriteetti",
     "project": "Projekti",
     "area": "Alue",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Ei käyttäjiä, joille jakaa",
     "shared": "Jaettu",
     "sharedWithTeam": "Jaettu tiimin kanssa"
+  },
+  "views": {
+    "title": "Älykkäät näkymät",
+    "loading": "Ladataan näkymiä...",
+    "searchPlaceholder": "Etsi näkymiä...",
+    "noViewsFound": "Näkymiä ei löytynyt. Luo näkymä suorittamalla haku ja napsauttamalla \"Tallenna älykkäänä näkymänä\".",
+    "deleteView": "Poista näkymä",
+    "confirmDelete": "Oletko varma, että haluat poistaa näkymän \"{{viewName}}\"?",
+    "pinView": "Kiinnitä näkymä",
+    "unpinView": "Irrota näkymä",
+    "searchCriteria": "Hakukriteerit",
+    "entityTypes": "Entiteettityypit",
+    "searchText": "Hakuteksti",
+    "priority": "Prioriteetti",
+    "dueDate": "Eräpäivä",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Ei erityisiä kriteereitä asetettu",
+    "priorityLabel": "Prioriteetti:",
+    "dueLabel": "Eräpäivä:",
+    "tags": "Tunnisteet",
+    "recurring": "Toistuva"
+  },
+  "search": {
+    "placeholder": "Hae tehtäviä, projekteja, muistiinpanoja...",
+    "searchingFor": "Etsit",
+    "allItems": "kaikkia kohteita",
+    "containingText": ", joka sisältää tekstin",
+    "withPriority": ", prioriteetilla",
+    "priority": "prioriteetti",
+    "due": ", eräpäivä",
+    "taggedWith": ", merkitty",
+    "and": "ja",
+    "criteria": "Hakukriteerit",
+    "metadataFilters": "Metatietosuodattimet",
+    "priorityFilter": "Prioriteetti",
+    "dueFilter": "Eräpäivä",
+    "tagsFilter": "Tunnisteet",
+    "saveAsSmartView": "Tallenna älynäkymänä",
+    "viewName": "Näkymän nimi",
+    "viewNameRequired": "Näkymän nimi on pakollinen",
+    "viewNamePlaceholder": "Syötä näkymän nimi",
+    "failedToSave": "Näytön tallentaminen epäonnistui. Yritä uudelleen.",
+    "cancel": "Peruuta",
+    "saving": "Tallennetaan...",
+    "saveView": "Tallenna näkymä",
+    "startTyping": "Aloita kirjoittaminen etsiäksesi tai valitaksesi suodattimia yllä",
+    "noResults": "Ei tuloksia löytynyt",
+    "entityTypes": {
+      "task": "tehtävä",
+      "project": "projekti",
+      "area": "alue",
+      "note": "muistio"
+    },
+    "thatAre": ", jotka ovat",
+    "extras": "Lisäosat",
+    "recurringFilter": {
+      "label": "Toistuva",
+      "recurring": "toistuvat mallit",
+      "nonRecurring": "ei-toistuva",
+      "instances": "toistuvat instanssit"
+    },
+    "deferUntilFilter": "Viivästytä kunnes",
+    "deferUntil": ", viivästytä kunnes",
+    "extrasFilter": {
+      "isRecurring": "on Toistuva",
+      "isOverdue": "on Erääntynyt",
+      "hasContent": "on Sisältöä",
+      "isDeferred": "on Siirretty",
+      "hasTags": "on Tunnisteita",
+      "isAssignedToProject": "on Määrätty Projektiin"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Lisää alitehtävä..."
+  },
+  "backup": {
+    "title": "Varmuuskopioi & Palauta",
+    "description": "Luo varmuuskopioita tai palauta aiemmista varmuuskopioista. Viimeiset 5 varmuuskopiota tallennetaan automaattisesti.",
+    "createBackup": "Luo varmuuskopio",
+    "importFromFile": "Tuo tiedostosta",
+    "createNewBackup": "Luo uusi varmuuskopio",
+    "createDescription": "Luo uusi varmuuskopio kaikista tiedoistasi. Varmuuskopiot tallennetaan palvelimelle ja voit palauttaa ne myöhemmin.",
+    "createBackupNow": "Luo varmuuskopio nyt",
+    "creating": "Luodaan varmuuskopiota...",
+    "exportSuccess": "Varmuuskopio luotiin onnistuneesti!",
+    "exportError": "Varmuuskopion luominen epäonnistui",
+    "savedBackups": "Tallennetut varmuuskopiot",
+    "noBackups": "Varmuuskopioita ei löytynyt. Luo ensimmäinen varmuuskopiosi yllä.",
+    "createdAt": "Luotu",
+    "version": "Versio",
+    "currentVersion": "Nykyinen versio",
+    "size": "Koko",
+    "contents": "Sisältö",
+    "actions": "Toiminnot",
+    "restore": "Palauta",
+    "download": "Lataa",
+    "downloadSuccess": "Varasto ladattu onnistuneesti!",
+    "downloadError": "Varaston lataaminen epäonnistui",
+    "confirmRestore": "Palauta varasto",
+    "confirmRestoreMessage": "Oletko varma, että haluat palauttaa tämän varaston? Tämä yhdistää varatun tiedon nykyisiin tietoihisi.",
+    "restoreSuccess": "Varasto palautettu onnistuneesti! Luotu: {{tasks}} tehtävää, {{projects}} projektia, {{notes}} muistiota",
+    "restoreError": "Varaston palauttaminen epäonnistui",
+    "confirmDelete": "Poista varasto",
+    "confirmDeleteMessage": "Oletko varma, että haluat poistaa tämän varaston? Tätä toimintoa ei voi peruuttaa.",
+    "deleteSuccess": "Varasto poistettu onnistuneesti!",
+    "deleteError": "Varaston poistaminen epäonnistui",
+    "importTitle": "Tuo tiedostosta",
+    "importDescription": "Lataa varastotiedosto palauttaaksesi tietosi. Nykyiset tietosi säilytetään, ja varastosta lisätään uusia kohteita.",
+    "importNote": "Tärkeää:",
+    "importNoteDescription": "Tuo yhdistää tiedot nykyisiin kohteisiisi. Kaksoiskappaleet (sama UID) ohitetaan.",
+    "selectFile": "Valitse varastotiedosto",
+    "clickToUpload": "Napsauta selataksesi tiedostoja",
+    "restoreBackup": "Palauta varasto",
+    "importing": "Tuodaan...",
+    "importSuccess": "Varmuuskopio tuotiin onnistuneesti! Luotu: {{tasks}} tehtävää, {{projects}} projektia, {{notes}} muistiota",
+    "importError": "Varmuuskopion tuonti epäonnistui",
+    "backupContents": "Varmuuskopion sisältö:",
+    "validationError": "Valittu tiedosto ei ole voimassa oleva varmuuskopio",
+    "validationErrors": "Validointivirheet:",
+    "versionIncompatible": "Versio yhteensopimaton",
+    "backupVersion": "Varmuuskopion versio",
+    "restoreButton": "Palauta"
+  },
+  "notifications": {
+    "table": {
+      "type": "Ilmoituksen tyyppi"
+    },
+    "channels": {
+      "inApp": "Sovelluksessa",
+      "email": "Sähköposti",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Erääntyneet tehtävät",
+      "overdueTasks": "Myöhästyneet tehtävät",
+      "deferUntil": "Viivästytä kunnes",
+      "dueProjects": "Erääntyneet projektit",
+      "overdueProjects": "Myöhästyneet projektit"
+    },
+    "descriptions": {
+      "dueTasks": "Tehtävät, jotka erääntyvät 24 tunnin sisällä",
+      "overdueTasks": "Tehtävät, joiden eräpäivä on mennyt",
+      "deferUntil": "Tehtävät, jotka ovat nyt saatavilla työstettäväksi",
+      "dueProjects": "Projektit, jotka erääntyvät 24 tunnin sisällä",
+      "overdueProjects": "Projektit, joiden eräpäivä on mennyt"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram ei ole konfiguroitu:",
+        "message": "Saadaksesi Telegram-ilmoituksia, konfiguroi Telegram-bottisi Telegram-välilehdellä."
+      }
+    },
+    "test": {
+      "title": "Testi-ilmoitukset",
+      "description": "Lähetä testiviesti nähdäksesi, miltä se näyttää sovelluksessa ja käytössä olevilla kanavilla (Telegram, jne.)",
+      "send": "Lähetä testi",
+      "sending": "Lähetetään..."
+    },
+    "info": {
+      "title": "Huom:",
+      "message": "Sähköposti- ja Push-ilmoitukset ovat tulossa pian. Sovelluksen sisäiset ja Telegram-ilmoitukset ovat tällä hetkellä saatavilla."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Ei aloitettu",
+    "not_started_desc": "Tallennettu mutta ei vielä aloitettu",
+    "planned": "Suunniteltu",
+    "planned_desc": "Määritelty ja valmis aloittamaan",
+    "in_progress": "Käynnissä",
+    "in_progress_desc": "Aktiivista työtä käynnissä",
+    "waiting": "Odottaa",
+    "waiting_desc": "Odottaa ulkoista syötettä",
+    "done": "Valmistunut",
+    "done_desc": "Valmis ja tehty",
+    "cancelled": "Peruutettu",
+    "cancelled_desc": "Ei tule valmistumaan"
   }
 }

@@ -5,27 +5,25 @@ import { useSidebar } from '../contexts/SidebarContext';
 import TaskList from './Task/TaskList';
 import GroupedTaskList from './Task/GroupedTaskList';
 import NewTask from './Task/NewTask';
-import SortFilter from './Shared/SortFilter';
 import { Task } from '../entities/Task';
 import { getTitleAndIcon } from './Task/getTitleAndIcon';
 import { getDescription } from './Task/getDescription';
-import {
-    createTask,
-    toggleTaskToday,
-    GroupedTasks,
-} from '../utils/tasksService';
+import { createTask, GroupedTasks } from '../utils/tasksService';
 import { useStore } from '../store/useStore';
 import { useToast } from './Shared/ToastContext';
 import { SortOption } from './Shared/SortFilterButton';
+import IconSortDropdown from './Shared/IconSortDropdown';
+import { TagIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import {
-    TagIcon,
-    XMarkIcon,
+    QueueListIcon,
+    InformationCircleIcon,
     MagnifyingGlassIcon,
-} from '@heroicons/react/24/solid';
+    CheckIcon,
+} from '@heroicons/react/24/outline';
+import { getApiPath } from '../config/paths';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
-// Helper function to get search placeholder by language
 const getSearchPlaceholder = (language: string): string => {
     const placeholders: Record<string, string> = {
         en: 'Search tasks...',
@@ -51,64 +49,75 @@ const Tasks: React.FC = () => {
     const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
     const [orderBy, setOrderBy] = useState<string>('created_at:desc');
     const [taskSearchQuery, setTaskSearchQuery] = useState<string>('');
-    const [isInfoExpanded, setIsInfoExpanded] = useState(false); // Collapsed by default
-    const [isSearchExpanded, setIsSearchExpanded] = useState(false); // Collapsed by default
-    const [showCompleted, setShowCompleted] = useState(false); // Show completed tasks toggle
+    const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+    const [showCompleted, setShowCompleted] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [groupBy, setGroupBy] = useState<'none' | 'project'>('none');
+
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [totalCount, setTotalCount] = useState(0);
+    const DEFAULT_LIMIT = 20;
+    const [limit, setLimit] = useState(DEFAULT_LIMIT);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
     const navigate = useNavigate();
 
     const query = new URLSearchParams(location.search);
-    const isUpcomingView = query.get('type') === 'upcoming';
+    const isUpcomingView =
+        query.get('type') === 'upcoming' || location.pathname === '/upcoming';
+    const status = query.get('status');
+    const tag = query.get('tag');
 
-    // Filter tasks based on completion status and search query
+    useEffect(() => {
+        if (status === 'completed') {
+            setShowCompleted(true);
+        } else if (status === 'active') {
+            setShowCompleted(false);
+        } else if (status === null) {
+            setShowCompleted(true);
+        }
+    }, [status, isUpcomingView]);
+
     const displayTasks = useMemo(() => {
-        let filteredTasks;
+        let filteredTasks: Task[] = tasks;
 
-        // For upcoming view, don't filter by completion status here
-        // Let GroupedTaskList handle it
-        if (isUpcomingView) {
-            filteredTasks = tasks;
-        } else {
-            // First filter by completion status
-            if (showCompleted) {
-                // Show only completed tasks (done=2 or archived=3)
-                filteredTasks = tasks.filter(
-                    (task) =>
-                        task.status === 'done' ||
-                        task.status === 'archived' ||
-                        task.status === 2 ||
-                        task.status === 3
-                );
-            } else {
-                // Show only non-completed tasks - exclude done(2) and archived(3)
-                filteredTasks = tasks.filter(
-                    (task) =>
-                        task.status !== 'done' &&
-                        task.status !== 'archived' &&
-                        task.status !== 2 &&
-                        task.status !== 3
-                );
-            }
+        if (status === 'completed') {
+            filteredTasks = filteredTasks.filter((task: Task) => {
+                const isCompleted =
+                    task.status === 'done' ||
+                    task.status === 'archived' ||
+                    task.status === 2 ||
+                    task.status === 3;
+                return isCompleted;
+            });
+        } else if (status === 'active') {
+            filteredTasks = filteredTasks.filter((task: Task) => {
+                const isCompleted =
+                    task.status === 'done' ||
+                    task.status === 'archived' ||
+                    task.status === 2 ||
+                    task.status === 3;
+                return !isCompleted;
+            });
+        }
 
-            // Then filter by search query if provided (skip for upcoming view)
-            if (taskSearchQuery.trim()) {
-                const query = taskSearchQuery.toLowerCase();
-                filteredTasks = filteredTasks.filter(
-                    (task) =>
-                        task.name.toLowerCase().includes(query) ||
-                        task.original_name?.toLowerCase().includes(query) ||
-                        task.note?.toLowerCase().includes(query)
-                );
-            }
+        if (taskSearchQuery.trim() && !isUpcomingView) {
+            const queryLower = taskSearchQuery.toLowerCase();
+            filteredTasks = filteredTasks.filter(
+                (task: Task) =>
+                    task.name.toLowerCase().includes(queryLower) ||
+                    task.original_name?.toLowerCase().includes(queryLower) ||
+                    task.note?.toLowerCase().includes(queryLower)
+            );
         }
 
         return filteredTasks;
-    }, [tasks, showCompleted, taskSearchQuery, isUpcomingView]);
+    }, [tasks, showCompleted, status, taskSearchQuery, isUpcomingView]);
 
-    // Handle the /upcoming route by setting type=upcoming in query params
     if (location.pathname === '/upcoming' && !query.get('type')) {
         query.set('type', 'upcoming');
     }
@@ -119,13 +128,14 @@ const Tasks: React.FC = () => {
         stateTitle ||
         getTitleAndIcon(query, projects, t, location.pathname).title;
 
-    const tag = query.get('tag');
-    const status = query.get('status');
-
     useEffect(() => {
         const savedOrderBy =
             localStorage.getItem('order_by') || 'created_at:desc';
         setOrderBy(savedOrderBy);
+        const savedGroupBy =
+            (localStorage.getItem('tasks_group_by') as 'none' | 'project') ||
+            'none';
+        setGroupBy(savedGroupBy);
 
         const params = new URLSearchParams(location.search);
         if (!params.get('order_by')) {
@@ -140,7 +150,6 @@ const Tasks: React.FC = () => {
         }
     }, [location.pathname]);
 
-    // Clear search query when switching to upcoming view
     useEffect(() => {
         if (isUpcomingView) {
             setTaskSearchQuery('');
@@ -165,55 +174,141 @@ const Tasks: React.FC = () => {
         };
     }, [dropdownOpen]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const tagId = query.get('tag');
-                const type = query.get('type');
+    const fetchData = async (
+        resetPagination = true,
+        options?: {
+            limitOverride?: number;
+            forceOffset?: number;
+            disableHasMore?: boolean;
+            disablePagination?: boolean;
+        }
+    ) => {
+        setLoading(resetPagination);
+        setError(null);
+        try {
+            const tagId = query.get('tag');
+            const type = query.get('type');
 
-                // Fetch all tasks (both completed and non-completed) for client-side filtering
-                const allTasksUrl = new URLSearchParams(query.toString());
-                // Add special parameter to get ALL tasks (completed and non-completed)
-                allTasksUrl.set('client_side_filtering', 'true');
+            const allTasksUrl = new URLSearchParams(query.toString());
+            allTasksUrl.set('client_side_filtering', 'true');
 
-                // Add groupBy=day for upcoming tasks
-                if (type === 'upcoming') {
-                    allTasksUrl.set('type', 'upcoming');
-                    allTasksUrl.set('groupBy', 'day');
-                    // Always show 7 days (whole week including tomorrow)
-                    allTasksUrl.set('maxDays', '7');
-                    allTasksUrl.set('sidebarOpen', isSidebarOpen.toString());
-                    allTasksUrl.set('isMobile', isMobile.toString());
-                }
+            if (type === 'upcoming') {
+                allTasksUrl.set('type', 'upcoming');
+                allTasksUrl.set('groupBy', 'day');
+                allTasksUrl.set('maxDays', '7');
+                allTasksUrl.set('sidebarOpen', isSidebarOpen.toString());
+                allTasksUrl.set('isMobile', isMobile.toString());
+            }
 
-                const searchParams = allTasksUrl.toString();
+            if (!options?.disablePagination && type !== 'upcoming') {
+                const currentOffset =
+                    options?.forceOffset !== undefined
+                        ? options.forceOffset
+                        : resetPagination
+                          ? 0
+                          : offset;
+                const limitToUse = options?.limitOverride ?? limit;
+                allTasksUrl.set('limit', limitToUse.toString());
+                allTasksUrl.set('offset', currentOffset.toString());
+            }
 
-                const tasksResponse = await fetch(
-                    `/api/tasks?${searchParams}${tagId ? `&tag=${tagId}` : ''}`
-                );
+            const searchParams = allTasksUrl.toString();
 
-                if (tasksResponse.ok) {
-                    const tasksData = await tasksResponse.json();
+            const tasksResponse = await fetch(
+                getApiPath(
+                    `tasks?${searchParams}${tagId ? `&tag=${tagId}` : ''}`
+                )
+            );
+
+            if (tasksResponse.ok) {
+                const tasksData = await tasksResponse.json();
+
+                if (resetPagination) {
                     setTasks(tasksData.tasks || []);
                     setGroupedTasks(tasksData.groupedTasks || null);
+                    if (!options?.disablePagination) {
+                        const limitToUse = options?.limitOverride ?? limit;
+                        setOffset(limitToUse);
+                    }
                 } else {
-                    throw new Error('Failed to fetch tasks.');
+                    setTasks((prev) => [...prev, ...(tasksData.tasks || [])]);
+                    if (tasksData.groupedTasks) {
+                        setGroupedTasks((prev) => {
+                            if (!prev) return tasksData.groupedTasks;
+                            return {
+                                ...prev,
+                                ...tasksData.groupedTasks,
+                            };
+                        });
+                    }
+                    if (!options?.disablePagination) {
+                        const limitToUse = options?.limitOverride ?? limit;
+                        setOffset((prev) => prev + limitToUse);
+                    }
                 }
 
-                // Projects are now loaded by Layout component into global store
-            } catch (error) {
-                setError((error as Error).message);
-            } finally {
-                setLoading(false);
+                setHasMore(
+                    options?.disableHasMore ||
+                        options?.disablePagination ||
+                        type === 'upcoming'
+                        ? false
+                        : tasksData.pagination?.hasMore || false
+                );
+                if (tasksData.pagination) {
+                    setTotalCount(tasksData.pagination.total);
+                } else if (options?.disablePagination || type === 'upcoming') {
+                    setTotalCount(tasksData.tasks?.length || 0);
+                }
+            } else {
+                throw new Error('Failed to fetch tasks.');
             }
-        };
+        } catch (error) {
+            setError((error as Error).message);
+        } finally {
+            setLoading(false);
+            setIsLoadingMore(false);
+        }
+    };
 
-        fetchData();
-    }, [location, isSidebarOpen, isMobile]);
+    const loadMore = async (all: boolean) => {
+        if (isLoadingMore) return;
+        if (!hasMore && !all) return;
+        setIsLoadingMore(true);
+        const shouldDisablePagination =
+            !isUpcomingView && groupBy === 'project';
+        if (all || shouldDisablePagination) {
+            const newLimit = totalCount > 0 ? totalCount : 10000;
+            await fetchData(true, {
+                limitOverride: newLimit,
+                forceOffset: 0,
+                disableHasMore: true,
+                disablePagination: true,
+            });
+            setLimit(DEFAULT_LIMIT);
+            setHasMore(false);
+        } else {
+            await fetchData(false);
+        }
+        if (all) {
+            setHasMore(false);
+        }
+    };
 
-    // Handle window resize for mobile detection
+    useEffect(() => {
+        const shouldDisablePagination = isUpcomingView || groupBy === 'project';
+        fetchData(
+            true,
+            shouldDisablePagination
+                ? {
+                      disablePagination: true,
+                      disableHasMore: true,
+                      limitOverride: 10000,
+                      forceOffset: 0,
+                  }
+                : undefined
+        );
+    }, [location, isSidebarOpen, isMobile, groupBy, isUpcomingView]);
+
     useEffect(() => {
         const handleResize = () => {
             const newIsMobile = window.innerWidth < 768;
@@ -226,7 +321,6 @@ const Tasks: React.FC = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, [isMobile]);
 
-    // Listen for task creation from other components (e.g., Layout modal)
     useEffect(() => {
         const handleTaskCreated = (event: CustomEvent) => {
             const newTask = event.detail;
@@ -259,10 +353,8 @@ const Tasks: React.FC = () => {
     const handleTaskCreate = async (taskData: Partial<Task>) => {
         try {
             const newTask = await createTask(taskData as Task);
-            // Add the new task optimistically to avoid race conditions
             setTasks((prevTasks) => [newTask, ...prevTasks]);
 
-            // Show success toast with task link
             const taskLink = (
                 <span>
                     {t('task.created', 'Task')}{' '}
@@ -279,17 +371,20 @@ const Tasks: React.FC = () => {
         } catch (error) {
             console.error('Error creating task:', error);
             setError('Error creating task.');
-            throw error; // Re-throw to allow proper error handling
+            throw error;
         }
     };
 
     const handleTaskUpdate = async (updatedTask: Task) => {
         try {
-            const response = await fetch(`/api/task/${updatedTask.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedTask),
-            });
+            const response = await fetch(
+                getApiPath(`task/${updatedTask.uid}`),
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedTask),
+                }
+            );
 
             if (response.ok) {
                 const updatedTaskFromServer = await response.json();
@@ -299,18 +394,9 @@ const Tasks: React.FC = () => {
                             ? {
                                   ...task,
                                   ...updatedTaskFromServer,
-                                  // Explicitly preserve subtasks data
                                   subtasks:
                                       updatedTaskFromServer.subtasks ||
-                                      updatedTaskFromServer.Subtasks ||
                                       task.subtasks ||
-                                      task.Subtasks ||
-                                      [],
-                                  Subtasks:
-                                      updatedTaskFromServer.subtasks ||
-                                      updatedTaskFromServer.Subtasks ||
-                                      task.subtasks ||
-                                      task.Subtasks ||
                                       [],
                               }
                             : task
@@ -327,7 +413,6 @@ const Tasks: React.FC = () => {
         }
     };
 
-    // Handler specifically for task completion toggles (no API call needed, just state update)
     const handleTaskCompletionToggle = (updatedTask: Task) => {
         setTasks((prevTasks) =>
             prevTasks.map((task) =>
@@ -335,7 +420,6 @@ const Tasks: React.FC = () => {
             )
         );
 
-        // Also update groupedTasks if they exist
         if (groupedTasks) {
             setGroupedTasks((prevGroupedTasks) => {
                 if (!prevGroupedTasks) return null;
@@ -353,15 +437,18 @@ const Tasks: React.FC = () => {
         }
     };
 
-    const handleTaskDelete = async (taskId: number) => {
+    const handleTaskDelete = async (taskUid: string) => {
         try {
-            const response = await fetch(`/api/task/${taskId}`, {
-                method: 'DELETE',
-            });
+            const response = await fetch(
+                getApiPath(`task/${encodeURIComponent(taskUid)}`),
+                {
+                    method: 'DELETE',
+                }
+            );
 
             if (response.ok) {
                 setTasks((prevTasks) =>
-                    prevTasks.filter((task) => task.id !== taskId)
+                    prevTasks.filter((task) => task.uid !== taskUid)
                 );
             } else {
                 const errorData = await response.json();
@@ -371,35 +458,6 @@ const Tasks: React.FC = () => {
         } catch (error) {
             console.error('Error deleting task:', error);
             setError('Error deleting task.');
-        }
-    };
-
-    const handleToggleToday = async (taskId: number): Promise<void> => {
-        try {
-            await toggleTaskToday(taskId);
-            // Refetch data to ensure consistency with all task relationships
-            const params = new URLSearchParams(location.search);
-            const type = params.get('type') || 'all';
-            const tag = params.get('tag');
-            const project = params.get('project');
-            const priority = params.get('priority');
-
-            let apiPath = `/api/tasks?type=${type}&order_by=${orderBy}`;
-            if (tag) apiPath += `&tag=${tag}`;
-            if (project) apiPath += `&project=${project}`;
-            if (priority) apiPath += `&priority=${priority}`;
-
-            const response = await fetch(apiPath, {
-                credentials: 'include',
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setTasks(data.tasks || data);
-            }
-        } catch (error) {
-            console.error('Error toggling task today status:', error);
-            setError('Error toggling task today status.');
         }
     };
 
@@ -418,13 +476,20 @@ const Tasks: React.FC = () => {
         setDropdownOpen(false);
     };
 
-    // Sort options for tasks
     const sortOptions: SortOption[] = [
         { value: 'due_date:asc', label: t('sort.due_date', 'Due Date') },
         { value: 'name:asc', label: t('sort.name', 'Name') },
         { value: 'priority:desc', label: t('sort.priority', 'Priority') },
         { value: 'status:desc', label: t('sort.status', 'Status') },
         { value: 'created_at:desc', label: t('sort.created_at', 'Created At') },
+        ...(status === 'done'
+            ? [
+                  {
+                      value: 'completed_at:desc',
+                      label: t('sort.completed_at', 'Completed At'),
+                  },
+              ]
+            : []),
     ];
 
     const description = getDescription(query, projects, t, location.pathname);
@@ -436,22 +501,20 @@ const Tasks: React.FC = () => {
 
     return (
         <div
-            className={
-                isUpcomingView
-                    ? 'w-full px-2 sm:px-4 lg:px-6'
-                    : 'flex justify-center px-4 lg:px-2'
-            }
+            className={`w-full pt-4 pb-8 ${isUpcomingView ? 'pl-4 sm:pl-6 md:pl-8' : 'px-2 sm:px-4 lg:px-6'}`}
         >
             <div
-                className={`w-full ${isUpcomingView ? 'max-w-none' : 'max-w-5xl'}`}
+                className={`w-full ${isUpcomingView ? '' : 'max-w-5xl mx-auto'}`}
             >
                 {/* Title row with info button and filters dropdown on the right */}
                 <div
-                    className={`flex flex-col sm:flex-row items-start sm:items-center justify-between ${isUpcomingView ? 'mb-4 sm:mb-6' : 'mb-8'}`}
+                    className={`flex items-center justify-between gap-2 min-w-0 ${
+                        isUpcomingView ? 'mb-4 sm:mb-6' : 'mb-8'
+                    }`}
                 >
-                    <div className="flex items-center mb-2 sm:mb-0">
+                    <div className="flex items-center flex-1 min-w-0 gap-2">
                         <h2
-                            className={`${isUpcomingView ? 'text-lg sm:text-xl' : 'text-2xl'} font-medium`}
+                            className={`${isUpcomingView ? 'text-lg sm:text-xl' : 'text-2xl'} font-light truncate`}
                         >
                             {title}
                         </h2>
@@ -472,7 +535,11 @@ const Tasks: React.FC = () => {
                     </div>
                     {/* Info expand/collapse button, search button, show completed toggle, and sort dropdown */}
                     <div
-                        className={`flex items-center gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0 ${isUpcomingView ? 'md:fixed md:right-4 md:top-20 md:px-3 md:py-2 md:z-20' : 'flex-wrap'}`}
+                        className={`flex items-center gap-2 flex-shrink-0 ${
+                            isUpcomingView
+                                ? 'md:fixed md:right-4 md:top-20 md:px-3 md:py-2 md:z-20'
+                                : ''
+                        }`}
                     >
                         <button
                             onClick={() => setIsInfoExpanded((v) => !v)}
@@ -485,19 +552,7 @@ const Tasks: React.FC = () => {
                             }
                             title={isInfoExpanded ? 'Hide info' : 'About Tasks'}
                         >
-                            <svg
-                                className="h-5 w-5 text-blue-500"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                                />
-                            </svg>
+                            <InformationCircleIcon className="h-5 w-5 text-blue-500" />
                             <span className="sr-only">
                                 {isInfoExpanded ? 'Hide info' : 'About Tasks'}
                             </span>
@@ -530,42 +585,242 @@ const Tasks: React.FC = () => {
                                 </span>
                             </button>
                         )}
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                Show completed
-                            </span>
-                            <button
-                                onClick={() => setShowCompleted((v) => !v)}
-                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                    showCompleted
-                                        ? 'bg-blue-600'
-                                        : 'bg-gray-200 dark:bg-gray-600'
-                                }`}
-                                aria-pressed={showCompleted}
-                                aria-label={
-                                    showCompleted
-                                        ? 'Hide completed tasks'
-                                        : 'Show completed tasks'
-                                }
-                                title={
-                                    showCompleted
-                                        ? 'Hide completed tasks'
-                                        : 'Show completed tasks'
-                                }
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                        showCompleted
-                                            ? 'translate-x-4'
-                                            : 'translate-x-0.5'
-                                    }`}
-                                />
-                            </button>
-                        </div>
-                        <SortFilter
-                            sortOptions={sortOptions}
-                            sortValue={orderBy}
-                            onSortChange={handleSortChange}
+                        <IconSortDropdown
+                            options={sortOptions}
+                            value={orderBy}
+                            onChange={handleSortChange}
+                            ariaLabel={t('tasks.sortTasks', 'Sort tasks')}
+                            title={t('tasks.sortTasks', 'Sort tasks')}
+                            dropdownLabel={t('tasks.sortBy', 'Sort by')}
+                            align="right"
+                            footerContent={
+                                <div className="space-y-3">
+                                    {!isUpcomingView && (
+                                        <div>
+                                            <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                                                {t('tasks.groupBy', 'Group by')}
+                                            </div>
+                                            <div className="py-1">
+                                                {['none', 'project'].map(
+                                                    (val) => (
+                                                        <button
+                                                            key={val}
+                                                            onClick={() => {
+                                                                setGroupBy(
+                                                                    val as
+                                                                        | 'none'
+                                                                        | 'project'
+                                                                );
+                                                                localStorage.setItem(
+                                                                    'tasks_group_by',
+                                                                    val
+                                                                );
+                                                            }}
+                                                            className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                                                                groupBy === val
+                                                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                            }`}
+                                                        >
+                                                            <span>
+                                                                {val ===
+                                                                'project'
+                                                                    ? t(
+                                                                          'tasks.groupByProject',
+                                                                          'Project'
+                                                                      )
+                                                                    : t(
+                                                                          'tasks.grouping.none',
+                                                                          'None'
+                                                                      )}
+                                                            </span>
+                                                            {groupBy ===
+                                                                val && (
+                                                                <CheckIcon className="h-4 w-4" />
+                                                            )}
+                                                        </button>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div>
+                                        <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-gray-200 dark:border-gray-700">
+                                            {t('tasks.show', 'Show')}
+                                        </div>
+                                        <div className="py-1 space-y-1">
+                                            {[
+                                                {
+                                                    key: 'active',
+                                                    label: t(
+                                                        'tasks.open',
+                                                        'Open'
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'all',
+                                                    label: t(
+                                                        'tasks.all',
+                                                        'All'
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'completed',
+                                                    label: t(
+                                                        'tasks.completed',
+                                                        'Completed'
+                                                    ),
+                                                },
+                                            ].map((opt) => {
+                                                const isActive =
+                                                    (opt.key === 'all' &&
+                                                        status === null) ||
+                                                    (opt.key === 'completed' &&
+                                                        status ===
+                                                            'completed') ||
+                                                    (opt.key === 'active' &&
+                                                        status === 'active');
+                                                return (
+                                                    <button
+                                                        key={opt.key}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (
+                                                                opt.key ===
+                                                                'completed'
+                                                            ) {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.set(
+                                                                    'status',
+                                                                    'completed'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            } else if (
+                                                                opt.key ===
+                                                                'all'
+                                                            ) {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.delete(
+                                                                    'status'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            } else {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.set(
+                                                                    'status',
+                                                                    'active'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            }
+                                                        }}
+                                                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                                                            isActive
+                                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                        }`}
+                                                    >
+                                                        <span>{opt.label}</span>
+                                                        {isActive && (
+                                                            <CheckIcon className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 border-t border-b border-gray-200 dark:border-gray-700">
+                                            {t('tasks.direction', 'Direction')}
+                                        </div>
+                                        <div className="py-1">
+                                            {[
+                                                {
+                                                    key: 'asc',
+                                                    label: t(
+                                                        'tasks.ascending',
+                                                        'Ascending'
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'desc',
+                                                    label: t(
+                                                        'tasks.descending',
+                                                        'Descending'
+                                                    ),
+                                                },
+                                            ].map((dir) => {
+                                                const currentDirection =
+                                                    orderBy.split(':')[1] ||
+                                                    'asc';
+                                                const isActive =
+                                                    currentDirection ===
+                                                    dir.key;
+                                                return (
+                                                    <button
+                                                        key={dir.key}
+                                                        onClick={() => {
+                                                            const [field] =
+                                                                orderBy.split(
+                                                                    ':'
+                                                                );
+                                                            const newOrderBy = `${field}:${dir.key}`;
+                                                            handleSortChange(
+                                                                newOrderBy
+                                                            );
+                                                        }}
+                                                        className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                                                            isActive
+                                                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                        }`}
+                                                    >
+                                                        <span>{dir.label}</span>
+                                                        {isActive && (
+                                                            <CheckIcon className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         />
                     </div>
                 </div>
@@ -580,19 +835,7 @@ const Tasks: React.FC = () => {
                 >
                     <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-lg px-6 py-5 flex items-start gap-4">
                         <div className="flex-shrink-0">
-                            <svg
-                                className="h-12 w-12 text-blue-400 opacity-20"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                                />
-                            </svg>
+                            <InformationCircleIcon className="h-12 w-12 text-blue-400 opacity-20" />
                         </div>
                         <div className="flex-1">
                             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -636,7 +879,7 @@ const Tasks: React.FC = () => {
                     <>
                         {/* New Task Form */}
                         {isNewTaskAllowed() && (
-                            <div className="mb-1.5">
+                            <div className="mb-6">
                                 <NewTask
                                     onTaskCreate={async (taskName: string) =>
                                         await handleTaskCreate({
@@ -651,52 +894,128 @@ const Tasks: React.FC = () => {
                         {displayTasks.length > 0 ||
                         (groupedTasks &&
                             Object.keys(groupedTasks).length > 0) ? (
-                            query.get('type') === 'upcoming' ? (
-                                <GroupedTaskList
-                                    tasks={displayTasks}
-                                    groupedTasks={groupedTasks}
-                                    onTaskCreate={handleTaskCreate}
-                                    onTaskUpdate={handleTaskUpdate}
-                                    onTaskCompletionToggle={
-                                        handleTaskCompletionToggle
-                                    }
-                                    onTaskDelete={handleTaskDelete}
-                                    projects={projects}
-                                    hideProjectName={false}
-                                    onToggleToday={undefined} // Don't show "Add to Today" in upcoming view
-                                    showCompletedTasks={showCompleted}
-                                    searchQuery={taskSearchQuery}
-                                />
-                            ) : (
-                                <TaskList
-                                    tasks={displayTasks}
-                                    onTaskCreate={handleTaskCreate}
-                                    onTaskUpdate={handleTaskUpdate}
-                                    onTaskCompletionToggle={
-                                        handleTaskCompletionToggle
-                                    }
-                                    onTaskDelete={handleTaskDelete}
-                                    projects={projects}
-                                    onToggleToday={handleToggleToday}
-                                    showCompletedTasks={showCompleted}
-                                />
-                            )
+                            <>
+                                {query.get('type') === 'upcoming' ? (
+                                    <GroupedTaskList
+                                        tasks={displayTasks}
+                                        groupedTasks={groupedTasks}
+                                        groupBy="none"
+                                        onTaskCreate={handleTaskCreate}
+                                        onTaskUpdate={handleTaskUpdate}
+                                        onTaskCompletionToggle={
+                                            handleTaskCompletionToggle
+                                        }
+                                        onTaskDelete={handleTaskDelete}
+                                        projects={projects}
+                                        hideProjectName={false}
+                                        onToggleToday={undefined}
+                                        showCompletedTasks={showCompleted}
+                                        searchQuery={taskSearchQuery}
+                                    />
+                                ) : groupBy === 'project' ? (
+                                    <GroupedTaskList
+                                        tasks={displayTasks}
+                                        groupedTasks={null}
+                                        groupBy="project"
+                                        onTaskCreate={handleTaskCreate}
+                                        onTaskUpdate={handleTaskUpdate}
+                                        onTaskCompletionToggle={
+                                            handleTaskCompletionToggle
+                                        }
+                                        onTaskDelete={handleTaskDelete}
+                                        projects={projects}
+                                        hideProjectName={false}
+                                        onToggleToday={undefined}
+                                        showCompletedTasks={showCompleted}
+                                        searchQuery={taskSearchQuery}
+                                    />
+                                ) : (
+                                    <TaskList
+                                        tasks={displayTasks}
+                                        onTaskCreate={handleTaskCreate}
+                                        onTaskUpdate={handleTaskUpdate}
+                                        onTaskCompletionToggle={
+                                            handleTaskCompletionToggle
+                                        }
+                                        onTaskDelete={handleTaskDelete}
+                                        projects={projects}
+                                        onToggleToday={undefined}
+                                        showCompletedTasks={showCompleted}
+                                    />
+                                )}
+                                {/* Load more button - hide in upcoming view */}
+                                {!isUpcomingView && hasMore && (
+                                    <div className="flex justify-center pt-4 gap-3">
+                                        <button
+                                            onClick={() => loadMore(false)}
+                                            disabled={isLoadingMore}
+                                            className="inline-flex items-center px-5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            {isLoadingMore ? (
+                                                <>
+                                                    <svg
+                                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <circle
+                                                            className="opacity-25"
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="10"
+                                                            stroke="currentColor"
+                                                            strokeWidth="4"
+                                                        ></circle>
+                                                        <path
+                                                            className="opacity-75"
+                                                            fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                        ></path>
+                                                    </svg>
+                                                    {t(
+                                                        'common.loading',
+                                                        'Loading...'
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <QueueListIcon className="h-4 w-4 mr-2" />
+                                                    {t(
+                                                        'common.loadMore',
+                                                        'Load More'
+                                                    )}
+                                                </>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => loadMore(true)}
+                                            disabled={isLoadingMore}
+                                            className="inline-flex items-center px-5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            {t('common.showAll', 'Show All')}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Pagination info - hide in upcoming view */}
+                                {!isUpcomingView && tasks.length > 0 && (
+                                    <div className="text-center text-sm text-gray-500 dark:text-gray-400 pt-2 pb-4">
+                                        {t(
+                                            'tasks.showingItems',
+                                            'Showing {{current}} of {{total}} tasks',
+                                            {
+                                                current: tasks.length,
+                                                total: totalCount,
+                                            }
+                                        )}
+                                    </div>
+                                )}
+                            </>
                         ) : (
                             <div className="flex justify-center items-center mt-4">
                                 <div className="w-full max-w bg-black/2 dark:bg-gray-900/25 rounded-l px-10 py-24 flex flex-col items-center opacity-95">
-                                    <svg
-                                        className="h-20 w-20 text-gray-400 opacity-30 mb-6"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                                        />
-                                    </svg>
+                                    <InformationCircleIcon className="h-20 w-20 text-gray-400 opacity-30 mb-6" />
                                     <p className="text-2xl font-light text-center text-gray-600 dark:text-gray-300 mb-2">
                                         {t(
                                             'tasks.noTasksAvailable',

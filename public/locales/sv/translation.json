@@ -18,7 +18,13 @@
     "status": "Status",
     "saving": "Sparar...",
     "settings": "Inställningar",
-    "none": "Ingen"
+    "none": "Ingen",
+    "discardChanges": "Kasta bort ändringar?",
+    "discardChangesMessage": "Du har osparade ändringar. Är du säker på att du vill kasta bort dem?",
+    "no": "Nej, fortsätt redigera",
+    "yesDiscard": "Ja, kasta bort",
+    "uploading": "Laddar upp...",
+    "refresh": "Uppdatera"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -41,11 +47,15 @@
     "addNoteTitle": "Lägg till anteckning",
     "createNew": "Skapa ny",
     "today": "Idag",
+    "total": "Total",
     "upcoming": "Kommande",
     "nextActions": "Nästa åtgärder",
     "inbox": "Inkorg",
     "completed": "Slutförda",
-    "allTasks": "Alla uppgifter"
+    "allTasks": "Alla uppgifter",
+    "views": "Vy",
+    "unpinView": "Ta bort fästning av vy",
+    "pinView": "Fäst vy"
   },
   "navigation": {
     "home": "Hem",
@@ -54,7 +64,8 @@
     "profileSettings": "Profilinställningar",
     "settings": "Inställningar",
     "about": "Om",
-    "logout": "Logga ut"
+    "logout": "Logga ut",
+    "backupRestore": "Säkerhetskopiera & Återställ"
   },
   "settings": {
     "todayPageSettings": "Inställningar för dagens sida",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Uppgifter",
     "today": "Idag",
+    "total": "Total",
     "backlog": "Backlog",
     "inProgress": "Pågående",
     "dueToday": "Förfaller idag",
@@ -115,7 +127,33 @@
     "showSubtasks": "Visa deluppgifter",
     "hideSubtasks": "Dölj deluppgifter",
     "edit": "Ändra uppgift",
-    "delete": "Ta bort uppgift"
+    "delete": "Ta bort uppgift",
+    "sortTasks": "Sortera uppgifter",
+    "sortBy": "Sortera efter",
+    "direction": "Riktning",
+    "ascending": "Stigande",
+    "descending": "Fallande",
+    "groupBy": "Gruppera efter",
+    "groupByProject": "Projekt",
+    "grouping": {
+      "none": "Ingen"
+    },
+    "show": "Visa",
+    "all": "Alla",
+    "completedOnly": "Endast slutförda",
+    "notCompleted": "Ej slutförda",
+    "noProject": "Inget projekt",
+    "unknownProject": "Okänt projekt",
+    "tasks": "uppgifter",
+    "showingItems": "Visar {{current}} av {{total}} uppgifter",
+    "overdue": "Förfallen",
+    "planned": "Planerad",
+    "open": "Öppna",
+    "completed": "Avslutad",
+    "noCompletedTasksToday": "Inga slutförda uppgifter idag.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Ej påbörjad",
+    "done": "Utförd"
   },
   "timeline": {
     "activityTimeline": "Aktivitetslinje",
@@ -135,6 +173,7 @@
       "statusChanged": "Status ändrad",
       "priorityChanged": "Prioritet ändrad",
       "dueDateChanged": "Förfallodatum ändrat",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Namn uppdaterat",
       "descriptionUpdated": "Beskrivning uppdaterad",
       "noteUpdated": "Anteckning uppdaterad",
@@ -145,11 +184,19 @@
       "status": "Status",
       "priority": "Prioritet",
       "dueDate": "Förfallodatum",
+      "deferUntil": "Defer until",
       "none": "Inga",
       "recurrenceEndDateChanged": "Återkommande slutdatum ändrat",
       "recurrenceEndDate": "Återkommande slutdatum",
       "recurrence_type_changed": "Återkommande typ ändrad",
-      "recurrence_interval_changed": "Återkommande intervall ändrat"
+      "recurrence_interval_changed": "Återkommande intervall ändrat",
+      "completionBasedChanged": "Ändrad återkommande baserat på slutförande",
+      "projectIdChanged": "Tilldelad ett projekt",
+      "recurrenceType": "Typ av återkommande",
+      "recurrenceTypeChanged": "Typ av återkommande ändrad",
+      "recurrence_weekday_changed": "Återkommande veckodag ändrad",
+      "recurrence_month_day_changed": "Återkommande månad dag ändrad",
+      "recurrence_week_of_month_changed": "Återkommande vecka i månaden ändrad"
     }
   },
   "profile": {
@@ -272,7 +319,8 @@
       "security": "Säkerhet",
       "productivity": "Produktivitet",
       "telegram": "Telegram",
-      "ai": "AI-funktioner"
+      "ai": "AI-funktioner",
+      "notifications": "Notifikationsinställningar"
     },
     "security": "Säkerhetsinställningar",
     "changePassword": "Ändra lösenord",
@@ -290,11 +338,26 @@
     "passwordChangeSuccess": "Lösenordet har ändrats!",
     "changingPassword": "Ändrar lösenord...",
     "accountSettings": "Konto & Inställningar",
-    "aiProductivityFeatures": "AI & Produktivitetsfunktioner",
     "botSetup": "Bot-inställningar",
     "passwordChangeNote": "Ändringar av lösenordet sparas när du klickar på \"Spara ändringar\" längst ner i formuläret.",
     "passwordChangeOptional": "Lämna lösenordsfälten tomma för att uppdatera andra inställningar utan att ändra ditt lösenord.",
-    "firstDayOfWeek": "Första dagen i veckan"
+    "firstDayOfWeek": "Första dagen i veckan",
+    "name": "Namn",
+    "surname": "Efternamn",
+    "enterName": "Ange ditt namn",
+    "enterSurname": "Ange ditt efternamn",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Välj hur du vill bli meddelad om viktiga händelser.",
+    "aiFeatures": "AI-funktioner"
   },
   "productivity": {
     "stalledProjects": "Stagnerade projekt",
@@ -309,9 +372,10 @@
     "staleTasksDesc": "Uppgifter som inte har uppdaterats på {{days}} dag(ar)",
     "stuckProjects": "Fastlåsta projekt",
     "stuckProjectsDesc": "Projekt som inte uppdaterats nyligen",
-    "issuesFound": "Hittade {{count}} produktivitetsproblem som behöver uppmärksammas",
     "reviewItems": "Klicka för att granska och förbättra ditt arbetsflöde",
-    "suggestion": "Klicka på ett objekt ovan för att öppna och förbättra det."
+    "suggestion": "Klicka på ett objekt ovan för att öppna och förbättra det.",
+    "issuesFound_one": "1 produktivitetsproblem behöver uppmärksammas",
+    "issuesFound_other": "{{count}} produktivitetsproblem behöver uppmärksammas"
   },
   "nextTask": {
     "suggestion": "Eftersom det inte finns något pågående, vad sägs om att börja med",
@@ -365,6 +429,7 @@
     "title": "Titel",
     "description": "Beskrivning",
     "dueDate": "Förfallodatum",
+    "deferUntil": "Defer until",
     "priority": "Prioritet",
     "status": "Status",
     "assignedTo": "Tilldelad till",
@@ -382,6 +447,7 @@
         "status": "Status",
         "priority": "Prioritet",
         "dueDate": "Förfallodatum",
+        "deferUntil": "Skjut upp till",
         "note": "Anteckning",
         "recurrenceType": "Upprepa",
         "recurrenceInterval": "Varje",
@@ -389,7 +455,8 @@
         "monthDay": "Dag i månaden",
         "weekOfMonth": "Vecka i månaden",
         "recurrenceEndDate": "Slutdatum (valfritt)",
-        "completionBased": "Upprepa efter slutförd"
+        "completionBased": "Upprepa efter slutförd",
+        "repeatOn": "Upprepa på"
       },
       "projectSearchPlaceholder": "Sök eller skapa ett projekt...",
       "noMatchingProjects": "Inga matchande projekt",
@@ -410,7 +477,9 @@
         "short": "Försök att vara mer specifik om vad som behöver göras",
         "noVerb": "Vilken specifik åtgärd behöver du vidta? Försök att börja med ett verb.",
         "vague": "Försök att börja med ett handlingsverb som \"Ring\", \"Skriv\", \"Boka\" eller \"Forska\""
-      }
+      },
+      "selectAtLeastOneDay": "Vänligen välj minst en dag",
+      "deferUntilPlaceholder": "Välj datum och tid för uppskjutning"
     },
     "noteTitle": "Anteckningsitel",
     "noteContent": "Anteckningsinnehåll",
@@ -464,7 +533,8 @@
   "priority": {
     "low": "Låg",
     "medium": "Medel",
-    "high": "Hög"
+    "high": "Hög",
+    "none": "Ingen"
   },
   "status": {
     "notStarted": "Ej påbörjad",
@@ -480,11 +550,19 @@
   "project": {
     "name": "Projektnamn",
     "projectImage": "Projektbild",
-    "uploadImageHint": "Ladda upp en bild för ditt projekt (max 5 MB)",
+    "uploadImageHint": "Ladda upp en bild för ditt projekt (max 10 MB)",
     "browseImage": "Bläddra efter bild",
     "noNotes": "Inga anteckningar för detta projekt.",
     "deleteProject": "Ta bort projekt",
-    "createSuccess": "Projekt skapat!"
+    "createSuccess": "Projekt skapat!",
+    "createdAndAssigned": "Projekt skapat och tilldelat",
+    "createError": "Misslyckades med att skapa projekt",
+    "viewProject": "Gå till projekt",
+    "editProject": "Redigera projekt",
+    "editBanner": "Redigera projektbanner",
+    "currentBanner": "Aktuell banner",
+    "choosePreset": "Välj en förinställd banner:",
+    "orUploadOwn": "Eller ladda upp din egen:"
   },
   "errors": {
     "required": "Detta fält är obligatoriskt",
@@ -509,7 +587,10 @@
     "tagNameRequired": "Taggnamn krävs.",
     "failedToSaveTag": "Kunde inte spara tagg.",
     "projectNameRequired": "Projektnamn krävs.",
-    "projectSaveFailed": "Kunde inte spara projekt."
+    "projectSaveFailed": "Kunde inte spara projekt.",
+    "projectImageTooLarge": "Bilden är för stor. Vänligen välj en fil under 10MB.",
+    "projectImageUpload": "Misslyckades med att ladda upp bilden. Vänligen försök med en mindre fil eller ett annat format.",
+    "bannerSaveFailed": "Misslyckades med att spara banner"
   },
   "inbox": {
     "title": "Inkorg",
@@ -555,8 +636,11 @@
   },
   "dateIndicators": {
     "today": "IDAG",
+    "total": "Total",
     "tomorrow": "IMORGON",
-    "yesterday": "IGÅR"
+    "yesterday": "IGÅR",
+    "nextWeek": "nästa vecka",
+    "nextMonth": "nästa månad"
   },
   "taskViews": {
     "project": {
@@ -564,6 +648,7 @@
       "noName": "Du tittar på uppgifter för ett specifikt projekt. Använd detta utrymme för att hantera och följa uppgifter kopplade till detta projekt."
     },
     "today": "Detta är de uppgifter som ska vara klara idag eller uppgifter som du har schemalagt för omedelbar uppmärksamhet. Använd denna vy för att fokusera på vad som behöver slutföras idag. Markera uppgifter som slutförda, uppdatera deras status eller justera deras förfallodatum om det behövs.",
+    "total": "Total",
     "inbox": "Inkorgen är där alla okategoriserade uppgifter finns. De som ännu inte har tilldelats ett projekt eller fått ett förfallodatum kommer att visas här. Detta är din \"brain dump\" där du snabbt kan skriva ner uppgifter för att organisera dem senare.",
     "next": "Denna vy visar alla uppgifter som är handlingsbara inom en snar framtid. Dessa uppgifter är redo att arbetas med härnäst och har inga långsiktiga deadlines. Det är en bra plats att fokusera på när du vill göra snabba framsteg med uppgifter.",
     "upcoming": "Denna vy visar uppgifter som är schemalagda för den kommande veckan. Den hjälper dig att förbereda och ligga steget före deadlines genom att ge dig en översikt över det arbete du behöver ta itu med inom kort. Uppgifter med förfallodatum inom de kommande sju dagarna visas här.",
@@ -584,7 +669,8 @@
     "taskCreated": "Uppgift skapad!",
     "taskUpdated": "Uppgift uppdaterad!",
     "taskDeleted": "Uppgift borttagen!",
-    "noteDeleted": "Anteckning borttagen!"
+    "noteDeleted": "Anteckning borttagen!",
+    "bannerUpdated": "Banner uppdaterad framgångsrikt!"
   },
   "note": {
     "title": "Titel",
@@ -602,6 +688,7 @@
       "status": "Status",
       "priority": "Prioritet",
       "dueDate": "Förfallodatum",
+      "deferUntil": "Defer until",
       "note": "Anteckning"
     },
     "create": "Skapa",
@@ -637,7 +724,88 @@
     "subtasks": "Deluppgifter",
     "noSubtasks": "Inga deluppgifter än",
     "recentActivity": "Senaste aktivitet",
-    "noActivityYet": "Ingen aktivitet än"
+    "noActivityYet": "Ingen aktivitet än",
+    "noSubtasksClickToAdd": "Inga deluppgifter ännu, klicka för att lägga till",
+    "project": "Projekt",
+    "noProject": "Inget projekt - Klicka för att tilldela",
+    "tags": "Taggar",
+    "noTags": "Inga taggar",
+    "priority": "Prioritet",
+    "dueDate": "Förfallodatum",
+    "deferUntil": "Skjut upp till",
+    "recurringSetup": "Återkommande inställning",
+    "notRecurring": "Denna uppgift är inte återkommande ännu.",
+    "clickToEditTitle": "Klicka för att redigera titel",
+    "clickToEditContent": "Klicka för att redigera innehåll",
+    "clickToAddContent": "Klicka för att lägga till innehåll",
+    "clickToEditSubtasks": "Klicka för att redigera deluppgifter",
+    "clickToAddOrEditSubtasks": "Klicka för att lägga till eller redigera deluppgifter",
+    "contentPlaceholder": "Lägg till innehåll här... (Markdown stöds)",
+    "contentEditHint": "Tryck Cmd/Ctrl+Enter för att spara, Esc för att avbryta",
+    "noContentPreview": "Inga innehåll att förhandsgranska. Väx till redigeringsläge för att lägga till innehåll.",
+    "deleteConfirmTitle": "Ta bort uppgift",
+    "deleteConfirmMessage": "Är du säker på att du vill ta bort denna uppgift? Denna åtgärd kan inte ångras.",
+    "noMoreIterations": "Inga fler iterationer schemalagda",
+    "nextOccurrences": "Nästa förekomster",
+    "nextOccurrencesAfterThis": "Nästa förekomster efter detta",
+    "thisTask": "Denna uppgift",
+    "is": "är",
+    "and": "och",
+    "dueOn": "förfall",
+    "inProject": "från projekt",
+    "lowPriority": "låg prioritet",
+    "mediumPriority": "medelhög prioritet",
+    "highPriority": "hög prioritet",
+    "inDays": "om {{count}} dagar",
+    "daysAgo": "{{count}} dagar sedan",
+    "tagsUpdated": "Taggar uppdaterade framgångsrikt",
+    "tagsUpdateError": "Misslyckades med att uppdatera taggar",
+    "recurrenceUpdated": "Återkommande uppdaterad framgångsrikt",
+    "recurrenceUpdateError": "Misslyckades med att uppdatera återkommande",
+    "dueDateUpdated": "Förfallodatum uppdaterat framgångsrikt",
+    "dueDateUpdateError": "Misslyckades med att uppdatera förfallodatum",
+    "titleUpdated": "Uppgiftens titel uppdaterad framgångsrikt",
+    "titleUpdateError": "Misslyckades med att uppdatera uppgiftens titel",
+    "contentUpdated": "Uppgiftens innehåll uppdaterat framgångsrikt",
+    "contentUpdateError": "Misslyckades med att uppdatera uppgiftens innehåll",
+    "subtasksUpdated": "Underrubriker uppdaterade framgångsrikt",
+    "subtasksUpdateError": "Misslyckades med att uppdatera underrubriker",
+    "projectUpdated": "Projekt uppdaterat framgångsrikt",
+    "projectUpdateError": "Misslyckades med att uppdatera projekt",
+    "projectCleared": "Projekt rensat framgångsrikt",
+    "projectClearError": "Misslyckades med att rensa projekt",
+    "priorityUpdated": "Prioritet uppdaterad framgångsrikt",
+    "priorityUpdateError": "Misslyckades med att uppdatera prioritet",
+    "status": {
+      "notStarted": "inte påbörjad",
+      "inProgress": "pågående",
+      "done": "avslutad",
+      "archived": "arkiverad",
+      "unknown": "pågår",
+      "waiting": "Väntar",
+      "setAsDone": "Markera som klar"
+    },
+    "noDueDate": "Ingen förfallodatum",
+    "instanceOf": "Detta är en instans av en återkommande uppgift",
+    "parentTask": "Överordnad uppgift",
+    "includingToday": "inklusive idag",
+    "has": "har",
+    "fromProject": "från projektet",
+    "noDeferUntil": "Ingen uppskjutning",
+    "deferUntilUpdated": "Uppskjutning uppdaterad framgångsrikt",
+    "deferUntilUpdateError": "Misslyckades med att uppdatera uppskjutning",
+    "showOverdueWarning": "Visa försenad varning",
+    "dueDateInPastWarning": "Varning: Du sätter ett förfallodatum i det förflutna",
+    "overview": "Översikt",
+    "schedule": "Schema",
+    "attachments": "Bifogade filer",
+    "attachmentsComingSoon": "Funktionen för bifogade filer kommer snart",
+    "activity": "Aktivitet",
+    "lastUpdatedAt": "Senast uppdaterad kl",
+    "statusUpdated": "Status uppdaterad framgångsrikt",
+    "statusUpdateError": "Misslyckades med att uppdatera status",
+    "updatedAt": "Uppdaterad den",
+    "upcoming": "kommande"
   },
   "projects": {
     "loading": "Laddar projekt...",
@@ -654,7 +822,8 @@
       "active": "Aktiva",
       "inactive": "Inaktiva",
       "all": "Alla",
-      "allAreas": "Alla områden"
+      "allAreas": "Alla områden",
+      "notCompleted": "Ej slutförd"
     },
     "selectState": "Välj status",
     "state": "Projektstatus",
@@ -668,8 +837,33 @@
       "planned_desc": "Avgränsad och redo att starta",
       "in_progress_desc": "Aktivt arbete pågår",
       "blocked_desc": "Tillfälligt pausad eller fast",
-      "completed_desc": "Avslutad och klar"
-    }
+      "completed_desc": "Avslutad och klar",
+      "active": "Pågående",
+      "active_desc": "Aktivt arbete pågår"
+    },
+    "showMetrics": "Visa mätvärden",
+    "hideMetrics": "Dölj mätvärden",
+    "progress": "Framsteg",
+    "taskMomentum": "Uppgiftsmomentum",
+    "activeTasks": "Aktiva uppgifter",
+    "dueSchedule": "Förfallschema",
+    "next14Days": "Nästa 14 dagar",
+    "noUpcomingDue": "Inga deadlines de närmaste 14 dagarna.",
+    "peakDay": "Topp",
+    "none": "Ingen",
+    "next3days": "Nästa 3 dagar",
+    "nextWeek": "Nästa 7 dagar",
+    "recentCompletion": "Senaste slutförande",
+    "last7And30": "Senaste 7 och 30 dagarna",
+    "weeklyPace": "Veckovis takt",
+    "prevWeekCompleted": "{{count}} föregående vecka",
+    "vsPrevWeek": "vs föregående vecka",
+    "monthlyCompletion": "30-dagars slutföranden",
+    "last30Days": "Senaste 30 dagarna",
+    "nextUp": "Nästa bästa åtgärd",
+    "focusTask": "Mest påverkande uppgift",
+    "focusHint": "Flyttar denna uppgift till pågående och idag",
+    "noNextAction": "Allt klart - inga utestående uppgifter."
   },
   "projectItem": {
     "edit": "Ändra",
@@ -679,7 +873,15 @@
     "toggleDropdownMenu": "Toggla rullgardinsmeny",
     "projectInitials": "Projektinitialer",
     "share": "Dela",
-    "sharedProject": "Delad med teamet"
+    "sharedProject": "Delad med teamet",
+    "noDueDate": "Ingen deadline",
+    "dueToday": "Förfaller idag",
+    "dueIn": "Förfaller om {{count}} {{unit}}",
+    "overdue": "Försenat med {{count}} {{unit}}",
+    "day": "dag",
+    "days": "dagar",
+    "sharedUser": "Delad användare",
+    "moreSharedUsers": "+{{count}} fler användare"
   },
   "areas": {
     "title": "Områden",
@@ -747,13 +949,13 @@
     "parentEditWarning": "⚠️ Du ändrar föräldrauppgiftens återkommande inställningar. Ändringarna kommer att påverka alla framtida instanser av denna återkommande uppgift."
   },
   "weekdays": {
-    "sunday": "Söndag",
-    "monday": "Måndag",
-    "tuesday": "Tisdag",
-    "wednesday": "Onsdag",
-    "thursday": "Torsdag",
-    "friday": "Fredag",
-    "saturday": "Lördag"
+    "sunday": "Sön",
+    "monday": "Mån",
+    "tuesday": "Tis",
+    "wednesday": "Ons",
+    "thursday": "Tor",
+    "friday": "Fre",
+    "saturday": "Lör"
   },
   "pomodoro": {
     "play": "Starta",
@@ -769,6 +971,7 @@
     "week": "Vecka",
     "day": "Dag",
     "today": "Idag",
+    "total": "Total",
     "addEvent": "Lägg till evenemang",
     "weekView": "Veckovy",
     "dayView": "Dagsvy",
@@ -792,6 +995,7 @@
     "title": "Titel",
     "status": "Status",
     "dueDate": "Förfallodatum",
+    "deferUntil": "Defer until",
     "priority": "Prioritet",
     "project": "Projekt",
     "area": "Område",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Inga användare tillgängliga att dela med",
     "shared": "Delad",
     "sharedWithTeam": "Delad med teamet"
+  },
+  "views": {
+    "title": "Smart Vyer",
+    "loading": "Laddar vyer...",
+    "searchPlaceholder": "Sök vyer...",
+    "noViewsFound": "Inga vyer hittades. Skapa en vy genom att utföra en sökning och klicka på \"Spara som Smart Vy\".",
+    "deleteView": "Ta bort vy",
+    "confirmDelete": "Är du säker på att du vill ta bort vyn \"{{viewName}}\"?",
+    "pinView": "Fäst vy",
+    "unpinView": "Ta bort fästning av vy",
+    "searchCriteria": "Sök Kriterier",
+    "entityTypes": "Entitetstyper",
+    "searchText": "Söktext",
+    "priority": "Prioritet",
+    "dueDate": "Förfallodatum",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Inga specifika kriterier angivna",
+    "priorityLabel": "Prioritet:",
+    "dueLabel": "Förfall:",
+    "tags": "Taggar",
+    "recurring": "Återkommande"
+  },
+  "search": {
+    "placeholder": "Sök uppgifter, projekt, anteckningar...",
+    "searchingFor": "Du söker efter",
+    "allItems": "alla objekt",
+    "containingText": ", som innehåller texten",
+    "withPriority": ", med",
+    "priority": "prioritet",
+    "due": ", förfallodag",
+    "taggedWith": ", taggad med",
+    "and": "och",
+    "criteria": "Sök Kriterier",
+    "metadataFilters": "Metadatafilter",
+    "priorityFilter": "Prioritet",
+    "dueFilter": "Förfallodag",
+    "tagsFilter": "Taggar",
+    "saveAsSmartView": "Spara som Smart View",
+    "viewName": "Visningsnamn",
+    "viewNameRequired": "Visningsnamn krävs",
+    "viewNamePlaceholder": "Ange visningsnamn",
+    "failedToSave": "Misslyckades med att spara vy. Vänligen försök igen.",
+    "cancel": "Avbryt",
+    "saving": "Sparar...",
+    "saveView": "Spara vy",
+    "startTyping": "Börja skriva för att söka eller välj filter ovan",
+    "noResults": "Inga resultat hittades",
+    "entityTypes": {
+      "task": "uppgift",
+      "project": "projekt",
+      "area": "område",
+      "note": "anteckning"
+    },
+    "thatAre": ", som är",
+    "extras": "Extra",
+    "recurringFilter": {
+      "label": "Återkommande",
+      "recurring": "återkommande mallar",
+      "nonRecurring": "icke-återkommande",
+      "instances": "återkommande instanser"
+    },
+    "deferUntilFilter": "Skjut upp tills",
+    "deferUntil": ", skjuta upp tills",
+    "extrasFilter": {
+      "isRecurring": "är Återkommande",
+      "isOverdue": "är Försenad",
+      "hasContent": "har Innehåll",
+      "isDeferred": "är Utsatt",
+      "hasTags": "har Taggar",
+      "isAssignedToProject": "är Tilldelad Projekt"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Lägg till en deluppgift..."
+  },
+  "backup": {
+    "title": "Säkerhetskopiera & Återställ",
+    "description": "Skapa säkerhetskopior eller återställ från tidigare säkerhetskopior. Dina senaste 5 säkerhetskopior sparas automatiskt.",
+    "createBackup": "Skapa säkerhetskopia",
+    "importFromFile": "Importera från fil",
+    "createNewBackup": "Skapa ny säkerhetskopia",
+    "createDescription": "Skapa en ny säkerhetskopia av alla dina data. Säkerhetskopior sparas på servern och du kan återställa dem senare.",
+    "createBackupNow": "Skapa säkerhetskopia nu",
+    "creating": "Skapar säkerhetskopia...",
+    "exportSuccess": "Säkerhetskopian skapades framgångsrikt!",
+    "exportError": "Misslyckades med att skapa säkerhetskopia",
+    "savedBackups": "Sparade säkerhetskopior",
+    "noBackups": "Inga säkerhetskopior hittades. Skapa din första säkerhetskopia ovan.",
+    "createdAt": "Skapad",
+    "version": "Version",
+    "currentVersion": "Aktuell version",
+    "size": "Storlek",
+    "contents": "Innehåll",
+    "actions": "Åtgärder",
+    "restore": "Återställ",
+    "download": "Ladda ner",
+    "downloadSuccess": "Backup nedladdad framgångsrikt!",
+    "downloadError": "Misslyckades med att ladda ner backup",
+    "confirmRestore": "Återställ Backup",
+    "confirmRestoreMessage": "Är du säker på att du vill återställa denna backup? Detta kommer att slå samman den säkerhetskopierade datan med din nuvarande data.",
+    "restoreSuccess": "Backup återställd framgångsrikt! Skapade: {{tasks}} uppgifter, {{projects}} projekt, {{notes}} anteckningar",
+    "restoreError": "Misslyckades med att återställa backup",
+    "confirmDelete": "Ta bort Backup",
+    "confirmDeleteMessage": "Är du säker på att du vill ta bort denna backup? Denna åtgärd kan inte ångras.",
+    "deleteSuccess": "Backup borttagen framgångsrikt!",
+    "deleteError": "Misslyckades med att ta bort backup",
+    "importTitle": "Importera från Fil",
+    "importDescription": "Ladda upp en backupfil för att återställa din data. Din befintliga data kommer att bevaras, och nya objekt från backupen kommer att läggas till.",
+    "importNote": "Viktigt:",
+    "importNoteDescription": "Import kommer att slå samman data med dina befintliga objekt. Duplicerade objekt (samma UID) kommer att hoppas över.",
+    "selectFile": "Välj Backupfil",
+    "clickToUpload": "Klicka för att bläddra bland filer",
+    "restoreBackup": "Återställ Backup",
+    "importing": "Importerar...",
+    "importSuccess": "Backup importerad framgångsrikt! Skapade: {{tasks}} uppgifter, {{projects}} projekt, {{notes}} anteckningar",
+    "importError": "Misslyckades med att importera backup",
+    "backupContents": "Backupinnehåll:",
+    "validationError": "Den valda filen är inte en giltig backup",
+    "validationErrors": "Valideringsfel:",
+    "versionIncompatible": "Version inkompatibel",
+    "backupVersion": "Backupversion",
+    "restoreButton": "Återställ"
+  },
+  "notifications": {
+    "table": {
+      "type": "Notifikationstyp"
+    },
+    "channels": {
+      "inApp": "I appen",
+      "email": "E-post",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Förfallna uppgifter",
+      "overdueTasks": "Överfallna uppgifter",
+      "deferUntil": "Skjut upp till",
+      "dueProjects": "Förfallna projekt",
+      "overdueProjects": "Överfallna projekt"
+    },
+    "descriptions": {
+      "dueTasks": "Uppgifter som förfaller inom 24 timmar",
+      "overdueTasks": "Uppgifter som har passerat sitt förfallodatum",
+      "deferUntil": "Uppgifter som nu är tillgängliga att arbeta med",
+      "dueProjects": "Projekt som förfaller inom 24 timmar",
+      "overdueProjects": "Projekt som har passerat sitt förfallodatum"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram inte konfigurerat:",
+        "message": "För att ta emot Telegram-notifikationer, vänligen konfigurera din Telegram-bot i Telegram-fliken."
+      }
+    },
+    "test": {
+      "title": "Testnotifikationer",
+      "description": "Skicka en testnotifikation för att se hur den visas i appen och på aktiverade kanaler (Telegram, etc.)",
+      "send": "Skicka test",
+      "sending": "Skickar..."
+    },
+    "info": {
+      "title": "Notera:",
+      "message": "E-post och push-notifikationer kommer snart. In-app och Telegram-notifikationer är för närvarande tillgängliga."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Ej påbörjad",
+    "not_started_desc": "Fångad men ej påbörjad än",
+    "planned": "Planerad",
+    "planned_desc": "Definierad och redo att starta",
+    "in_progress": "Pågående",
+    "in_progress_desc": "Aktivt arbete pågår",
+    "waiting": "Väntar",
+    "waiting_desc": "Väntar på extern input",
+    "done": "Slutförd",
+    "done_desc": "Avslutad och klar",
+    "cancelled": "Avbruten",
+    "cancelled_desc": "Kommer inte att slutföras"
   }
 }

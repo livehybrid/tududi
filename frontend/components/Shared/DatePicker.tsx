@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
     ChevronLeftIcon,
@@ -9,6 +9,8 @@ import {
     getFirstDayOfWeek,
     getLocaleFirstDayOfWeek,
 } from '../../utils/profileService';
+import { useTranslation } from 'react-i18next';
+import { resolveUserLocale } from '../../utils/localeUtils';
 
 interface DatePickerProps {
     value: string;
@@ -25,6 +27,11 @@ const DatePicker: React.FC<DatePickerProps> = ({
     disabled = false,
     className = '',
 }) => {
+    const { i18n } = useTranslation();
+    const displayLocale = useMemo(
+        () => resolveUserLocale(i18n?.language),
+        [i18n?.language]
+    );
     const [isOpen, setIsOpen] = useState(false);
     const [position, setPosition] = useState({
         top: 0,
@@ -77,7 +84,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
         if (!dateString) return placeholder;
         const date = parseDate(dateString);
         if (!date || isNaN(date.getTime())) return placeholder;
-        return date.toLocaleDateString('en-US', {
+        return date.toLocaleDateString(displayLocale, {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -264,15 +271,17 @@ const DatePicker: React.FC<DatePickerProps> = ({
     return (
         <div
             ref={dropdownRef}
+            data-testid="datepicker"
+            data-state={isOpen ? 'open' : 'closed'}
             className={`relative inline-block text-left w-full ${className}`}
         >
             <div className="relative">
                 <button
                     type="button"
-                    className={`inline-flex justify-between w-full px-3 py-2 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-900 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                    className={`inline-flex justify-between w-full px-3 py-2 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                         disabled
                             ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                     onClick={(e) => {
                         e.preventDefault();

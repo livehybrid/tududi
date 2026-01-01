@@ -18,7 +18,13 @@
     "status": "Статус",
     "saving": "Збереження...",
     "settings": "Налаштування",
-    "none": "Немає"
+    "none": "Немає",
+    "discardChanges": "Відкинути зміни?",
+    "discardChangesMessage": "У вас є незбережені зміни. Ви впевнені, що хочете їх відкинути?",
+    "no": "Ні, продовжити редагування",
+    "yesDiscard": "Так, відкинути",
+    "uploading": "Завантаження...",
+    "refresh": "Оновити"
   },
   "sidebar": {
     "dashboard": "Дашборд",
@@ -30,6 +36,7 @@
     "areas": "Області",
     "tags": "Теги",
     "today": "Сьогодні",
+    "total": "Total",
     "upcoming": "Майбутні",
     "nextActions": "Наступні дії",
     "inbox": "Вхідні",
@@ -45,7 +52,10 @@
     "addProjectTitle": "Додати проект",
     "addNoteAriaLabel": "Додати нотатку",
     "addNoteTitle": "Додати нотатку",
-    "createNew": "Створити новий"
+    "createNew": "Створити новий",
+    "views": "Перегляди",
+    "unpinView": "Відкріпити перегляд",
+    "pinView": "Закріпити перегляд"
   },
   "navigation": {
     "home": "Головна",
@@ -54,7 +64,8 @@
     "profileSettings": "Налаштування профілю",
     "settings": "Налаштування",
     "about": "Про програму",
-    "logout": "Вийти"
+    "logout": "Вийти",
+    "backupRestore": "Резервне копіювання та відновлення"
   },
   "settings": {
     "todayPageSettings": "Налаштування сторінки Сьогодні",
@@ -91,6 +102,7 @@
   "tasks": {
     "title": "Завдання",
     "today": "Сьогодні",
+    "total": "Total",
     "backlog": "Відкладені",
     "inProgress": "В процесі",
     "dueToday": "Термін сьогодні",
@@ -115,7 +127,33 @@
     "showSubtasks": "Показати підзадачі",
     "hideSubtasks": "Сховати підзадачі",
     "edit": "Редагувати задачу",
-    "delete": "Видалити задачу"
+    "delete": "Видалити задачу",
+    "sortTasks": "Сортувати завдання",
+    "sortBy": "Сортувати за",
+    "direction": "Напрямок",
+    "ascending": "За зростанням",
+    "descending": "За спаданням",
+    "groupBy": "Групувати за",
+    "groupByProject": "Проект",
+    "grouping": {
+      "none": "Без групування"
+    },
+    "show": "Показати",
+    "all": "Усі",
+    "completedOnly": "Тільки завершені",
+    "notCompleted": "Незавершені",
+    "noProject": "Без проекту",
+    "unknownProject": "Невідомий проект",
+    "tasks": "завдання",
+    "showingItems": "Показано {{current}} з {{total}} завдань",
+    "overdue": "Прострочено",
+    "planned": "Заплановано",
+    "open": "Відкрити",
+    "completed": "Завершено",
+    "noCompletedTasksToday": "Сьогодні немає завершених завдань.",
+    "markAsDone": "Mark as done",
+    "notStarted": "Не розпочато",
+    "done": "Завершено"
   },
   "timeline": {
     "activityTimeline": "Хронологія Активності",
@@ -128,6 +166,7 @@
       "statusChanged": "Статус змінено",
       "priorityChanged": "Пріоритет змінено",
       "dueDateChanged": "Термін змінено",
+      "deferUntilChanged": "Defer date changed",
       "nameUpdated": "Назва оновлена",
       "descriptionUpdated": "Опис оновлено",
       "noteUpdated": "Нотатка оновлена",
@@ -138,11 +177,19 @@
       "status": "Статус",
       "priority": "Пріоритет",
       "dueDate": "Термін",
+      "deferUntil": "Defer until",
       "none": "Немає",
       "recurrenceEndDateChanged": "Дата закінчення повторення змінена",
       "recurrenceEndDate": "Дата закінчення повторення",
       "recurrence_type_changed": "Тип повторення змінено",
-      "recurrence_interval_changed": "Інтервал повторення змінено"
+      "recurrence_interval_changed": "Інтервал повторення змінено",
+      "completionBasedChanged": "Зміни в повторенні на основі завершення",
+      "projectIdChanged": "Призначено проекту",
+      "recurrenceType": "Тип повторення",
+      "recurrenceTypeChanged": "Тип повторення змінено",
+      "recurrence_weekday_changed": "Змінено день тижня повторення",
+      "recurrence_month_day_changed": "Змінено день місяця повторення",
+      "recurrence_week_of_month_changed": "Змінено тиждень місяця повторення"
     },
     "justNow": "Щойно",
     "minutesAgo": "{{minutes}}м тому",
@@ -164,7 +211,8 @@
       "active": "Активні",
       "inactive": "Неактивні",
       "all": "Всі",
-      "allAreas": "Всі області"
+      "allAreas": "Всі області",
+      "notCompleted": "Не завершено"
     },
     "active": "Активні",
     "inactive": "Неактивні",
@@ -181,8 +229,33 @@
       "planned_desc": "Визначено та готово до початку",
       "in_progress_desc": "Активна робота триває",
       "blocked_desc": "Тимчасово призупинено або застрягло",
-      "completed_desc": "Завершено та виконано"
-    }
+      "completed_desc": "Завершено та виконано",
+      "active": "В процесі",
+      "active_desc": "Активна робота триває"
+    },
+    "showMetrics": "Показати метрики",
+    "hideMetrics": "Сховати метрики",
+    "progress": "Прогрес",
+    "taskMomentum": "Імпульс завдань",
+    "activeTasks": "Активні завдання",
+    "dueSchedule": "Графік термінів",
+    "next14Days": "Наступні 14 днів",
+    "noUpcomingDue": "Немає термінів у найближчі 14 днів.",
+    "peakDay": "Пік",
+    "none": "Немає",
+    "next3days": "Наступні 3 дні",
+    "nextWeek": "Наступні 7 днів",
+    "recentCompletion": "Нещодавнє завершення",
+    "last7And30": "Останні 7 і 30 днів",
+    "weeklyPace": "Тижневий темп",
+    "prevWeekCompleted": "{{count}} попередній тиждень",
+    "vsPrevWeek": "vs попередній тиждень",
+    "monthlyCompletion": "Завершення за 30 днів",
+    "last30Days": "Останні 30 днів",
+    "nextUp": "Наступна найкраща дія",
+    "focusTask": "Найвпливовіше завдання",
+    "focusHint": "Переміщує це завдання до „Виконується\" та „Сьогодні\"",
+    "noNextAction": "Все готово - немає невиконаних завдань."
   },
   "projectItem": {
     "edit": "Редагувати",
@@ -192,7 +265,15 @@
     "toggleDropdownMenu": "Перемкнути випадаюче меню",
     "projectInitials": "Ініціали проекту",
     "share": "Поділитися",
-    "sharedProject": "Поділено з командою"
+    "sharedProject": "Поділено з командою",
+    "noDueDate": "Немає терміну",
+    "dueToday": "Термін сьогодні",
+    "dueIn": "Термін через {{count}} {{unit}}",
+    "overdue": "Прострочено на {{count}} {{unit}}",
+    "day": "день",
+    "days": "днів",
+    "sharedUser": "Спільний користувач",
+    "moreSharedUsers": "+{{count}} користувачів"
   },
   "forms": {
     "noteTitle": "Заголовок нотатки",
@@ -218,7 +299,9 @@
         "status": "Статус",
         "priority": "Пріоритет",
         "dueDate": "Термін виконання",
-        "note": "Примітка"
+        "deferUntil": "Відкласти до",
+        "note": "Примітка",
+        "repeatOn": "Повторювати в"
       },
       "recurrenceSettings": "Налаштування повторення",
       "completionBasedHelp": "Якщо відмічено, наступне завдання буде створене на основі дати завершення замість дати виконання",
@@ -240,11 +323,14 @@
         "short": "Спробуйте бути більш конкретними щодо того, що потрібно зробити",
         "noVerb": "Які конкретні дії ви повинні виконати? Спробуйте почати з дієслова.",
         "vague": "Спробуйте почати з дієслова, наприклад \"Зателефонувати\", \"Написати\", \"Запланувати\", або \"Дослідити\""
-      }
+      },
+      "selectAtLeastOneDay": "Будь ласка, виберіть принаймні один день",
+      "deferUntilPlaceholder": "Виберіть дату та час для відкладення"
     },
     "title": "Назва",
     "description": "Опис",
     "dueDate": "Термін виконання",
+    "deferUntil": "Defer until",
     "priority": "Пріоритет",
     "status": "Статус",
     "assignedTo": "Призначено",
@@ -331,7 +417,10 @@
     "areaNameRequired": "Назва області є обов'язковою.",
     "failedToSaveArea": "Не вдалося зберегти область.",
     "tagNameRequired": "Назва тегу є обов'язковою.",
-    "failedToSaveTag": "Не вдалося зберегти тег."
+    "failedToSaveTag": "Не вдалося зберегти тег.",
+    "projectImageTooLarge": "Зображення занадто велике. Будь ласка, виберіть файл розміром до 10 МБ.",
+    "projectImageUpload": "Не вдалося завантажити зображення. Будь ласка, спробуйте менший файл або інший формат.",
+    "bannerSaveFailed": "Не вдалося зберегти банер"
   },
   "success": {
     "noteUpdated": "Нотатку успішно оновлено!",
@@ -346,7 +435,8 @@
     "taskCreated": "Завдання успішно створено!",
     "taskUpdated": "Завдання успішно оновлено!",
     "taskDeleted": "Завдання успішно видалено!",
-    "noteDeleted": "Примітка успішно видалена!"
+    "noteDeleted": "Примітка успішно видалена!",
+    "bannerUpdated": "Банер успішно оновлено!"
   },
   "notes": {
     "loading": "Завантаження нотаток...",
@@ -380,13 +470,13 @@
     "parentEditWarning": "⚠️ Ви редагуєте налаштування повторення батьківського завдання. Зміни вплинуть на всі майбутні екземпляри цього повторюваного завдання."
   },
   "weekdays": {
+    "sunday": "Нд",
     "monday": "Пн",
     "tuesday": "Вт",
     "wednesday": "Ср",
     "thursday": "Чт",
     "friday": "Пт",
-    "saturday": "Сб",
-    "sunday": "Нд"
+    "saturday": "Сб"
   },
   "inbox": {
     "title": "Вхідні",
@@ -423,12 +513,20 @@
   },
   "project": {
     "projectImage": "Зображення проекту",
-    "uploadImageHint": "Завантажте зображення для вашого проекту (макс. 5МБ)",
+    "uploadImageHint": "Завантажте зображення для вашого проекту (макс. 10МБ)",
     "browseImage": "Обрати зображення",
     "name": "Назва проекту",
     "noNotes": "Немає приміток для цього проекту.",
     "deleteProject": "Видалити проект",
-    "createSuccess": "Проект успішно створено!"
+    "createSuccess": "Проект успішно створено!",
+    "createdAndAssigned": "Проект створено та призначено",
+    "createError": "Не вдалося створити проект",
+    "viewProject": "Перейти до проекту",
+    "editProject": "Редагувати проект",
+    "editBanner": "Редагувати банер проекту",
+    "currentBanner": "Поточний банер",
+    "choosePreset": "Виберіть пресет банера:",
+    "orUploadOwn": "Або завантажте свій власний:"
   },
   "profile": {
     "title": "Налаштування Профілю",
@@ -480,7 +578,8 @@
       "security": "Безпека",
       "productivity": "Продуктивність",
       "telegram": "Telegram",
-      "ai": "ШІ Функції"
+      "ai": "ШІ Функції",
+      "notifications": "Налаштування сповіщень"
     },
     "security": "Налаштування безпеки",
     "changePassword": "Змінити пароль",
@@ -498,7 +597,6 @@
     "passwordChangeSuccess": "Пароль успішно змінено!",
     "changingPassword": "Зміна паролю...",
     "accountSettings": "Обліковий запис та налаштування",
-    "aiProductivityFeatures": "ШІ та функції продуктивності",
     "botSetup": "Налаштування бота",
     "successMessage": "Профіль успішно оновлено!",
     "settings": "Налаштування профілю",
@@ -572,7 +670,23 @@
     "polish": "Польська",
     "slovenian": "Словенська",
     "swedish": "Шведська",
-    "firstDayOfWeek": "Перший день тижня"
+    "firstDayOfWeek": "Перший день тижня",
+    "name": "Ім'я",
+    "surname": "Прізвище",
+    "enterName": "Введіть ваше ім'я",
+    "enterSurname": "Введіть ваше прізвище",
+    "avatar": "Profile Photo",
+    "uploadAvatar": "Upload Photo",
+    "removeAvatar": "Remove Avatar",
+    "avatarDescription": "Upload a profile photo (max 5MB)",
+    "avatarUploadError": "Please upload an image file",
+    "avatarSizeError": "Image must be smaller than 5MB",
+    "avatarUploadSuccess": "Avatar uploaded successfully!",
+    "avatarRemoveSuccess": "Avatar removed successfully!",
+    "avatarUploadFailed": "Failed to upload avatar",
+    "avatarRemoveFailed": "Failed to remove avatar",
+    "notificationsDescription": "Виберіть, як ви хочете отримувати сповіщення про важливі події.",
+    "aiFeatures": "Функції ШІ"
   },
   "task": {
     "suggestions": {
@@ -590,6 +704,7 @@
       "status": "Статус",
       "priority": "Пріоритет",
       "dueDate": "Термін виконання",
+      "deferUntil": "Defer until",
       "note": "Нотатка"
     },
     "create": "Створити",
@@ -616,13 +731,95 @@
     "subtasks": "Підзавдання",
     "noSubtasks": "Ще немає підзавдань",
     "recentActivity": "Остання активність",
-    "noActivityYet": "Ще немає активності"
+    "noActivityYet": "Ще немає активності",
+    "noSubtasksClickToAdd": "Немає підзадач, натисніть, щоб додати",
+    "project": "Проект",
+    "noProject": "Немає проекту - натисніть, щоб призначити",
+    "tags": "Теги",
+    "noTags": "Немає тегів",
+    "priority": "Пріоритет",
+    "dueDate": "Термін виконання",
+    "deferUntil": "Відкласти до",
+    "recurringSetup": "Налаштування повторення",
+    "notRecurring": "Ця задача ще не є повторюваною.",
+    "clickToEditTitle": "Натисніть, щоб редагувати заголовок",
+    "clickToEditContent": "Натисніть, щоб редагувати вміст",
+    "clickToAddContent": "Натисніть, щоб додати вміст",
+    "clickToEditSubtasks": "Натисніть, щоб редагувати підзадачі",
+    "clickToAddOrEditSubtasks": "Натисніть, щоб додати або редагувати підзадачі",
+    "contentPlaceholder": "Додайте вміст тут... (підтримується Markdown)",
+    "contentEditHint": "Натисніть Cmd/Ctrl+Enter, щоб зберегти, Esc, щоб скасувати",
+    "noContentPreview": "Немає вмісту для попереднього перегляду. Перейдіть в режим редагування, щоб додати вміст.",
+    "deleteConfirmTitle": "Видалити задачу",
+    "deleteConfirmMessage": "Ви впевнені, що хочете видалити цю задачу? Цю дію не можна скасувати.",
+    "noMoreIterations": "Більше ітерацій не заплановано",
+    "nextOccurrences": "Наступні випадки",
+    "nextOccurrencesAfterThis": "Наступні випадки після цього",
+    "thisTask": "Ця задача",
+    "is": "є",
+    "and": "і",
+    "dueOn": "термін",
+    "inProject": "з проєкту",
+    "lowPriority": "низький пріоритет",
+    "mediumPriority": "середній пріоритет",
+    "highPriority": "високий пріоритет",
+    "inDays": "через {{count}} дні",
+    "daysAgo": "{{count}} днів тому",
+    "tagsUpdated": "Теги успішно оновлено",
+    "tagsUpdateError": "Не вдалося оновити теги",
+    "recurrenceUpdated": "Повторення успішно оновлено",
+    "recurrenceUpdateError": "Не вдалося оновити повторення",
+    "dueDateUpdated": "Термін виконання успішно оновлено",
+    "dueDateUpdateError": "Не вдалося оновити термін виконання",
+    "titleUpdated": "Назву завдання успішно оновлено",
+    "titleUpdateError": "Не вдалося оновити назву завдання",
+    "contentUpdated": "Зміст завдання успішно оновлено",
+    "contentUpdateError": "Не вдалося оновити зміст завдання",
+    "subtasksUpdated": "Підзавдання успішно оновлено",
+    "subtasksUpdateError": "Не вдалося оновити підзавдання",
+    "projectUpdated": "Проект успішно оновлено",
+    "projectUpdateError": "Не вдалося оновити проект",
+    "projectCleared": "Проект успішно очищено",
+    "projectClearError": "Не вдалося очистити проект",
+    "priorityUpdated": "Пріоритет успішно оновлено",
+    "priorityUpdateError": "Не вдалося оновити пріоритет",
+    "status": {
+      "notStarted": "не розпочато",
+      "inProgress": "в процесі",
+      "done": "завершено",
+      "archived": "архівовано",
+      "unknown": "триває",
+      "waiting": "Очікування",
+      "setAsDone": "Позначити як виконане"
+    },
+    "noDueDate": "Без терміну виконання",
+    "instanceOf": "Це екземпляр повторювального завдання",
+    "parentTask": "Батьківське завдання",
+    "includingToday": "включаючи сьогодні",
+    "has": "має",
+    "fromProject": "з проєкту",
+    "noDeferUntil": "Не відкладати до",
+    "deferUntilUpdated": "Відкладено до успішного оновлення",
+    "deferUntilUpdateError": "Не вдалося оновити відкладення до",
+    "showOverdueWarning": "Показати попередження про прострочення",
+    "dueDateInPastWarning": "Попередження: Ви встановлюєте дату виконання в минулому",
+    "overview": "Огляд",
+    "schedule": "Розклад",
+    "attachments": "Вкладення",
+    "attachmentsComingSoon": "Функція вкладень незабаром",
+    "activity": "Активність",
+    "lastUpdatedAt": "Останнє оновлення",
+    "statusUpdated": "Статус успішно оновлено",
+    "statusUpdateError": "Не вдалося оновити статус",
+    "updatedAt": "Оновлено о",
+    "upcoming": "майбутні"
   },
   "calendar": {
     "month": "Місяць",
     "week": "Тиждень",
     "day": "День",
     "today": "Сьогодні",
+    "total": "Total",
     "addEvent": "Додати подію",
     "weekView": "Тижневий вигляд",
     "dayView": "Денний вигляд",
@@ -646,6 +843,7 @@
     "title": "Назва",
     "status": "Статус",
     "dueDate": "Термін виконання",
+    "deferUntil": "Defer until",
     "priority": "Пріоритет",
     "project": "Проект",
     "area": "Область",
@@ -681,9 +879,10 @@
     "staleTasksDesc": "Завдання не оновлювалися {{days}} днів",
     "stuckProjects": "Завислі проекти",
     "stuckProjectsDesc": "Проекти не оновлювалися нещодавно",
-    "issuesFound": "Знайдено {{count}} проблем з продуктивністю, які потребують уваги",
     "reviewItems": "Натисніть, щоб переглянути та вдосконалити ваш робочий процес",
-    "suggestion": "Натисніть на будь-який пункт вище, щоб відкрити його та внести поліпшення."
+    "suggestion": "Натисніть на будь-який пункт вище, щоб відкрити його та внести поліпшення.",
+    "issuesFound_one": "1 проблема з продуктивністю потребує уваги",
+    "issuesFound_other": "{{count}} проблем з продуктивністю потребують уваги"
   },
   "auth": {
     "login": "Увійти",
@@ -722,7 +921,8 @@
   "priority": {
     "low": "Низький",
     "medium": "Середній",
-    "high": "Високий"
+    "high": "Високий",
+    "none": "Немає"
   },
   "status": {
     "notStarted": "Не розпочато",
@@ -737,8 +937,11 @@
   },
   "dateIndicators": {
     "today": "СЬОГОДНІ",
+    "total": "Total",
     "tomorrow": "ЗАВТРА",
-    "yesterday": "ВЧОРА"
+    "yesterday": "ВЧОРА",
+    "nextWeek": "наступного тижня",
+    "nextMonth": "наступного місяця"
   },
   "taskViews": {
     "project": {
@@ -746,6 +949,7 @@
       "noName": "Ви переглядаєте завдання для конкретного проекту. Використовуйте це місце для управління і відстеження завдань, пов'язаних з цим проектом."
     },
     "today": "Це завдання, які слід виконати сьогодні або завдання, які ви запланували для негайної уваги. Використовуйте цей вид, щоб зосередитись на тому, що потрібно завершити сьогодні. Позначте завдання як виконані, оновіть їх статус або при необхідності скоригуйте терміни виконання.",
+    "total": "Total",
     "inbox": "Вхідні - це місце, де знаходяться всі некатегоризовані завдання. Завдання, які не були призначені проекту або не отримали терміну виконання, з'являться тут. Це ваша зона \"brain dump\", де ви можете швидко записати завдання і організувати їх пізніше.",
     "next": "Цей вид показує всі завдання, які можна виконати в найближчому майбутньому. Ці завдання готові до роботи і не мають довготривалих термінів. Це хороше місце для зосередження, коли ви шукаєте швидкого прогресу в завданнях.",
     "upcoming": "Цей вид виділяє завдання, які заплановані на наступний тиждень. Він допомагає вам готуватися і бути впереду термінів, даючи вам огляд роботи, яку вам потрібно виконати в найближчому майбутньому. Завдання з термінами виконання протягом наступних 7 днів з'являться тут.",
@@ -978,5 +1182,182 @@
     "noAvailableUsers": "Немає користувачів для спільного використання",
     "shared": "Поділено",
     "sharedWithTeam": "Поділено з командою"
+  },
+  "views": {
+    "title": "Розумні перегляди",
+    "loading": "Завантаження переглядів...",
+    "searchPlaceholder": "Пошук переглядів...",
+    "noViewsFound": "Переглядів не знайдено. Створіть перегляд, виконавши пошук і натиснувши \"Зберегти як розумний перегляд\".",
+    "deleteView": "Видалити перегляд",
+    "confirmDelete": "Ви впевнені, що хочете видалити перегляд \"{{viewName}}\"?",
+    "pinView": "Закріпити перегляд",
+    "unpinView": "Відкріпити перегляд",
+    "searchCriteria": "Критерії пошуку",
+    "entityTypes": "Типи сутностей",
+    "searchText": "Текст пошуку",
+    "priority": "Пріоритет",
+    "dueDate": "Термін виконання",
+    "deferUntil": "Defer until",
+    "noCriteriaSet": "Не встановлено жодних конкретних критеріїв",
+    "priorityLabel": "Пріоритет:",
+    "dueLabel": "Термін:",
+    "tags": "Теги",
+    "recurring": "Повторювані"
+  },
+  "search": {
+    "placeholder": "Шукати завдання, проекти, нотатки...",
+    "searchingFor": "Ви шукаєте",
+    "allItems": "всі елементи",
+    "containingText": ", що містять текст",
+    "withPriority": ", з",
+    "priority": "пріоритетом",
+    "due": ", термін",
+    "taggedWith": ", помічені тегом",
+    "and": "і",
+    "criteria": "Критерії пошуку",
+    "metadataFilters": "Фільтри метаданих",
+    "priorityFilter": "Пріоритет",
+    "dueFilter": "Термін",
+    "tagsFilter": "Теги",
+    "saveAsSmartView": "Зберегти як Розумний перегляд",
+    "viewName": "Назва перегляду",
+    "viewNameRequired": "Назва перегляду є обов'язковою",
+    "viewNamePlaceholder": "Введіть назву перегляду",
+    "failedToSave": "Не вдалося зберегти вигляд. Будь ласка, спробуйте ще раз.",
+    "cancel": "Скасувати",
+    "saving": "Зберігається...",
+    "saveView": "Зберегти вигляд",
+    "startTyping": "Почніть вводити для пошуку або виберіть фільтри вище",
+    "noResults": "Не знайдено жодного результату",
+    "entityTypes": {
+      "task": "задача",
+      "project": "проект",
+      "area": "область",
+      "note": "нота"
+    },
+    "thatAre": ", які є",
+    "extras": "Додатково",
+    "recurringFilter": {
+      "label": "Повторювані",
+      "recurring": "повторювані шаблони",
+      "nonRecurring": "неповторювані",
+      "instances": "повторювані екземпляри"
+    },
+    "deferUntilFilter": "Відкласти до",
+    "deferUntil": ", відкласти до",
+    "extrasFilter": {
+      "isRecurring": "є повторюваним",
+      "isOverdue": "прострочено",
+      "hasContent": "має вміст",
+      "isDeferred": "відкладено",
+      "hasTags": "має теги",
+      "isAssignedToProject": "призначено проекту"
+    }
+  },
+  "subtasks": {
+    "placeholder": "Додати підзадачу..."
+  },
+  "backup": {
+    "title": "Резервне копіювання та відновлення",
+    "description": "Створіть резервні копії або відновіть з попередніх резервних копій. Ваші останні 5 резервних копій автоматично зберігаються.",
+    "createBackup": "Створити резервну копію",
+    "importFromFile": "Імпортувати з файлу",
+    "createNewBackup": "Створити нову резервну копію",
+    "createDescription": "Створіть нову резервну копію всіх ваших даних. Резервні копії зберігаються на сервері, і ви можете відновити їх пізніше.",
+    "createBackupNow": "Створити резервну копію зараз",
+    "creating": "Створення резервної копії...",
+    "exportSuccess": "Резервну копію успішно створено!",
+    "exportError": "Не вдалося створити резервну копію",
+    "savedBackups": "Збережені резервні копії",
+    "noBackups": "Резервні копії не знайдено. Створіть свою першу резервну копію вище.",
+    "createdAt": "Створено",
+    "version": "Версія",
+    "currentVersion": "Поточна версія",
+    "size": "Розмір",
+    "contents": "Вміст",
+    "actions": "Дії",
+    "restore": "Відновити",
+    "download": "Завантажити",
+    "downloadSuccess": "Резервну копію успішно завантажено!",
+    "downloadError": "Не вдалося завантажити резервну копію",
+    "confirmRestore": "Відновити резервну копію",
+    "confirmRestoreMessage": "Ви впевнені, що хочете відновити цю резервну копію? Це об'єднає дані резервної копії з вашими поточними даними.",
+    "restoreSuccess": "Резервну копію успішно відновлено! Створено: {{tasks}} завдань, {{projects}} проектів, {{notes}} нотаток",
+    "restoreError": "Не вдалося відновити резервну копію",
+    "confirmDelete": "Видалити резервну копію",
+    "confirmDeleteMessage": "Ви впевнені, що хочете видалити цю резервну копію? Цю дію не можна скасувати.",
+    "deleteSuccess": "Резервну копію успішно видалено!",
+    "deleteError": "Не вдалося видалити резервну копію",
+    "importTitle": "Імпорт з файлу",
+    "importDescription": "Завантажте файл резервної копії, щоб відновити ваші дані. Ваші існуючі дані будуть збережені, а нові елементи з резервної копії будуть додані.",
+    "importNote": "Важливо:",
+    "importNoteDescription": "Імпорт об'єднає дані з вашими існуючими елементами. Дублікати (однаковий UID) будуть пропущені.",
+    "selectFile": "Вибрати файл резервної копії",
+    "clickToUpload": "Натисніть, щоб вибрати файли",
+    "restoreBackup": "Відновити резервну копію",
+    "importing": "Імпортується...",
+    "importSuccess": "Резервну копію успішно імпортовано! Створено: {{tasks}} завдань, {{projects}} проектів, {{notes}} нотаток",
+    "importError": "Не вдалося імпортувати резервну копію",
+    "backupContents": "Зміст резервної копії:",
+    "validationError": "Вибраний файл не є дійсною резервною копією",
+    "validationErrors": "Помилки валідації:",
+    "versionIncompatible": "Несумісна версія",
+    "backupVersion": "Версія резервної копії",
+    "restoreButton": "Відновити"
+  },
+  "notifications": {
+    "table": {
+      "type": "Тип сповіщення"
+    },
+    "channels": {
+      "inApp": "В додатку",
+      "email": "Електронна пошта",
+      "push": "Push",
+      "telegram": "Telegram"
+    },
+    "types": {
+      "dueTasks": "Завдання, що підлягають виконанню",
+      "overdueTasks": "Прострочені завдання",
+      "deferUntil": "Відкласти до",
+      "dueProjects": "Проекти, що підлягають виконанню",
+      "overdueProjects": "Прострочені проекти"
+    },
+    "descriptions": {
+      "dueTasks": "Завдання, термін виконання яких спливає протягом 24 годин",
+      "overdueTasks": "Завдання, термін виконання яких минув",
+      "deferUntil": "Завдання, які тепер доступні для виконання",
+      "dueProjects": "Проекти, термін виконання яких спливає протягом 24 годин",
+      "overdueProjects": "Проекти, термін виконання яких минув"
+    },
+    "telegram": {
+      "notConfigured": {
+        "title": "Telegram не налаштовано:",
+        "message": "Щоб отримувати сповіщення в Telegram, будь ласка, налаштуйте свого Telegram бота у вкладці Telegram."
+      }
+    },
+    "test": {
+      "title": "Тестові сповіщення",
+      "description": "Надішліть тестове сповіщення, щоб побачити, як воно виглядає в додатку та на активованих каналах (Telegram тощо)",
+      "send": "Надіслати тест",
+      "sending": "Надсилається..."
+    },
+    "info": {
+      "title": "Примітка:",
+      "message": "Сповіщення електронною поштою та Push скоро з'являться. Сповіщення в додатку та Telegram наразі доступні."
+    }
+  },
+  "projectStatus": {
+    "not_started": "Не розпочато",
+    "not_started_desc": "Зафіксовано, але ще не розпочато",
+    "planned": "Заплановано",
+    "planned_desc": "Окреслено і готово до початку",
+    "in_progress": "В процесі",
+    "in_progress_desc": "Активна робота триває",
+    "waiting": "Очікування",
+    "waiting_desc": "Очікування на зовнішній внесок",
+    "done": "Завершено",
+    "done_desc": "Закінчено і виконано",
+    "cancelled": "Скасовано",
+    "cancelled_desc": "Не буде завершено"
   }
 }

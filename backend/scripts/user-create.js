@@ -28,12 +28,6 @@ async function createUser() {
         process.exit(1);
     }
 
-    // Validate password
-    if (!validatePassword(password)) {
-        console.error('Password must be at least 6 characters long');
-        process.exit(1);
-    }
-
     // Validate email
     if (!validateEmail(email)) {
         console.error('Invalid email format');
@@ -41,6 +35,17 @@ async function createUser() {
     }
 
     try {
+        const { User } = require('../models');
+
+        // Check if user exists to determine if we should validate password
+        const existingUser = await User.findOne({ where: { email } });
+
+        // Only validate password for new users
+        if (!existingUser && !validatePassword(password)) {
+            console.error('Password must be at least 6 characters long');
+            process.exit(1);
+        }
+
         console.log(`Creating user with email: ${email}`);
 
         const { user, created } = await createOrUpdateUser(email, password);
@@ -48,10 +53,17 @@ async function createUser() {
         // Optionally grant admin role
         const shouldBeAdmin = String(isAdminArg).toLowerCase() === 'true';
         if (shouldBeAdmin) {
-            await Role.findOrCreate({
+            // Find or create role, and ensure is_admin is true
+            const [role, roleCreated] = await Role.findOrCreate({
                 where: { user_id: user.id },
                 defaults: { user_id: user.id, is_admin: true },
             });
+
+            // Update to admin if role exists but is not admin
+            if (!roleCreated && !role.is_admin) {
+                role.is_admin = true;
+                await role.save();
+            }
         }
 
         if (!created) {

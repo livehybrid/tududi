@@ -1,46 +1,40 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-    PencilSquareIcon,
-    TrashIcon,
-    TagIcon,
-    FolderIcon,
-    CalendarIcon,
-    ExclamationTriangleIcon,
-    ArrowPathIcon,
-    ListBulletIcon,
-    XMarkIcon,
-    ClockIcon,
-    MagnifyingGlassIcon,
-    PlusIcon,
-} from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import ConfirmDialog from '../Shared/ConfirmDialog';
-import TaskModal from './TaskModal';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import {
     updateTask,
     deleteTask,
-    toggleTaskCompletion,
     fetchTaskByUid,
-    fetchTaskById,
     fetchTaskNextIterations,
     TaskIteration,
-    fetchTaskByNanoid,
+    toggleTaskCompletion,
     createTask,
 } from '../../utils/tasksService';
 import { createProject } from '../../utils/projectsService';
+import { fetchAttachments } from '../../utils/attachmentsService';
 import { createBackgroundAgentJob } from '../../utils/backgroundAgentService';
-import { useStore } from '../../store/useStore';
-import { useToast } from '../Shared/ToastContext';
-import TaskPriorityIcon from './TaskPriorityIcon';
-import LoadingScreen from '../Shared/LoadingScreen';
-import MarkdownRenderer from '../Shared/MarkdownRenderer';
-import TaskTimeline from './TaskTimeline';
 import BackgroundAgentResults from './BackgroundAgentResults';
 import BackgroundAgentModal from '../BackgroundAgent/BackgroundAgentModal';
-import { isTaskOverdue } from '../../utils/dateUtils';
+import { useStore } from '../../store/useStore';
+import { useToast } from '../Shared/ToastContext';
+import LoadingScreen from '../Shared/LoadingScreen';
+import TaskTimeline from './TaskTimeline';
+import {
+    TaskDetailsHeader,
+    TaskContentCard,
+    TaskProjectCard,
+    TaskTagsCard,
+    TaskSubtasksCard,
+    TaskRecurrenceCard,
+    TaskDueDateCard,
+    TaskDeferUntilCard,
+    TaskAttachmentsCard,
+} from './TaskDetails/';
+import { isTaskOverdueInTodayPlan, isTaskPastDue } from '../../utils/dateUtils';
 
 const TaskDetails: React.FC = () => {
     const { uid } = useParams<{ uid: string }>();
@@ -48,120 +42,405 @@ const TaskDetails: React.FC = () => {
     const { t } = useTranslation();
     const { showSuccessToast, showErrorToast } = useToast();
 
-    const projects = useStore((state: any) => state.projectsStore.projects);
+    const projectsStore = useStore((state: any) => state.projectsStore);
     const tagsStore = useStore((state: any) => state.tagsStore);
     const tasksStore = useStore((state: any) => state.tasksStore);
     const task = useStore((state: any) =>
         state.tasksStore.tasks.find((t: Task) => t.uid === uid)
     );
 
-    // Get subtasks from the task data (already loaded in global store)
-    const subtasks = task?.subtasks || task?.Subtasks || [];
+    const subtasks = task?.subtasks || [];
 
-    // Local state
-    const [loading, setLoading] = useState(!task); // Only show loading if task not in store
+    const [loading, setLoading] = useState(!task);
     const [error, setError] = useState<string | null>(null);
-    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
-    const [focusSubtasks, setFocusSubtasks] = useState(false);
     const [timelineRefreshKey, setTimelineRefreshKey] = useState(0);
-    const [isOverdueAlertDismissed, setIsOverdueAlertDismissed] =
-        useState(false);
+    const [isOverdueBubbleVisible, setIsOverdueBubbleVisible] = useState(false);
     const [nextIterations, setNextIterations] = useState<TaskIteration[]>([]);
     const [loadingIterations, setLoadingIterations] = useState(false);
     const [parentTask, setParentTask] = useState<Task | null>(null);
     const [loadingParent, setLoadingParent] = useState(false);
     const [backgroundAgentJobId, setBackgroundAgentJobId] = useState<number | null>(null);
-    const [isSubtaskModalOpen, setIsSubtaskModalOpen] = useState(false);
-    const [editingSubtask, setEditingSubtask] = useState<Task | null>(null);
-
-    // Load tags early and check for pending modal state on mount
+    const [isEditingSubtasks, setIsEditingSubtasks] = useState(false);
+    const [editedSubtasks, setEditedSubtasks] = useState<Task[]>([]);
+    const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+    const actionsMenuRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        // Preload tags if not already loaded
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as Node;
+            if (
+                actionsMenuOpen &&
+                actionsMenuRef.current &&
+                !actionsMenuRef.current.contains(target)
+            ) {
+                setActionsMenuOpen(false);
+            }
+
+            if (isOverdueBubbleVisible) {
+                const clickedOverdueToggle =
+                    typeof e.composedPath === 'function'
+                        ? e
+                              .composedPath()
+                              .some(
+                                  (node) =>
+                                      node instanceof HTMLElement &&
+                                      node.hasAttribute('data-overdue-toggle')
+                              )
+                        : target instanceof HTMLElement &&
+                          !!target.closest('[data-overdue-toggle]');
+
+                if (!clickedOverdueToggle) {
+                    setIsOverdueBubbleVisible(false);
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [actionsMenuOpen, isOverdueBubbleVisible]);
+    const [isEditingDueDate, setIsEditingDueDate] = useState(false);
+    const [editedDueDate, setEditedDueDate] = useState<string>(
+        task?.due_date || ''
+    );
+    const [isEditingDeferUntil, setIsEditingDeferUntil] = useState(false);
+    const [editedDeferUntil, setEditedDeferUntil] = useState<string>(
+        task?.defer_until || ''
+    );
+    const [isEditingRecurrence, setIsEditingRecurrence] = useState(false);
+    const [recurrenceForm, setRecurrenceForm] = useState({
+        recurrence_type: task?.recurrence_type || 'none',
+        recurrence_interval: task?.recurrence_interval || 1,
+        recurrence_end_date: task?.recurrence_end_date || '',
+        recurrence_weekday: task?.recurrence_weekday || null,
+        recurrence_weekdays: task?.recurrence_weekdays || [],
+        recurrence_month_day: task?.recurrence_month_day || null,
+        recurrence_week_of_month: task?.recurrence_week_of_month || null,
+        completion_based: task?.completion_based || false,
+    });
+    const [activePill, setActivePill] = useState('overview');
+    const [attachmentCount, setAttachmentCount] = useState(0);
+
+    useEffect(() => {
+        setEditedDueDate(task?.due_date || '');
+    }, [task?.due_date]);
+
+    useEffect(() => {
+        setRecurrenceForm({
+            recurrence_type: task?.recurrence_type || 'none',
+            recurrence_interval: task?.recurrence_interval || 1,
+            recurrence_end_date: task?.recurrence_end_date || '',
+            recurrence_weekday: task?.recurrence_weekday || null,
+            recurrence_weekdays: task?.recurrence_weekdays || [],
+            recurrence_month_day: task?.recurrence_month_day || null,
+            recurrence_week_of_month: task?.recurrence_week_of_month || null,
+            completion_based: task?.completion_based || false,
+        });
+    }, [
+        task?.recurrence_type,
+        task?.recurrence_interval,
+        task?.recurrence_end_date,
+        task?.recurrence_weekday,
+        task?.recurrence_weekdays,
+        task?.recurrence_month_day,
+        task?.recurrence_week_of_month,
+        task?.completion_based,
+    ]);
+
+    useEffect(() => {
         if (!tagsStore.hasLoaded && !tagsStore.isLoading) {
             tagsStore.loadTags();
         }
+    }, [tagsStore]);
 
-        try {
-            // Check for subtasks modal state
-            const pendingStateStr = sessionStorage.getItem('pendingModalState');
-            if (pendingStateStr) {
-                const pendingState = JSON.parse(pendingStateStr);
-                const isRecent = Date.now() - pendingState.timestamp < 2000; // Within 2 seconds
-                const isCorrectTask = pendingState.taskId === uid;
+    const handleStartRecurrenceEdit = () => {
+        setRecurrenceForm({
+            recurrence_type: task?.recurrence_type || 'none',
+            recurrence_interval: task?.recurrence_interval || 1,
+            recurrence_end_date: task?.recurrence_end_date || '',
+            recurrence_weekday: task?.recurrence_weekday || null,
+            recurrence_weekdays: task?.recurrence_weekdays || [],
+            recurrence_month_day: task?.recurrence_month_day || null,
+            recurrence_week_of_month: task?.recurrence_week_of_month || null,
+            completion_based: task?.completion_based || false,
+        });
+        setIsEditingRecurrence(true);
+    };
 
-                if (isRecent && isCorrectTask && pendingState.isOpen) {
-                    // Use microtask to avoid lifecycle method warning
-                    queueMicrotask(() => {
-                        setIsTaskModalOpen(true);
-                        setFocusSubtasks(pendingState.focusSubtasks);
-                    });
-                    sessionStorage.removeItem('pendingModalState');
-                }
-            }
+    const isOverdue = task ? isTaskOverdueInTodayPlan(task) : false;
+    const isPastDue = task ? isTaskPastDue(task) : false;
 
-            // Check for edit modal state
-            const pendingEditStateStr = sessionStorage.getItem(
-                'pendingTaskEditModalState'
-            );
-            if (pendingEditStateStr) {
-                const pendingEditState = JSON.parse(pendingEditStateStr);
-                const isRecent = Date.now() - pendingEditState.timestamp < 5000; // Within 5 seconds
-                const isCorrectTask = pendingEditState.taskId === uid;
-
-                if (isRecent && isCorrectTask && pendingEditState.isOpen) {
-                    // Use microtask to avoid lifecycle method warning
-                    queueMicrotask(() => {
-                        setIsTaskModalOpen(true);
-                        setFocusSubtasks(false);
-                    });
-                    sessionStorage.removeItem('pendingTaskEditModalState');
-                }
-            }
-        } catch {
-            sessionStorage.removeItem('pendingModalState');
-            sessionStorage.removeItem('pendingTaskEditModalState');
+    useEffect(() => {
+        if (!isOverdue) {
+            setIsOverdueBubbleVisible(false);
         }
-    }, [uid, tagsStore]);
+    }, [isOverdue]);
 
-    // Date and recurrence formatting functions (from TaskHeader)
-    const formatDueDate = (dueDate: string) => {
-        const today = new Date().toISOString().split('T')[0];
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split('T')[0];
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split('T')[0];
-        if (dueDate === today) return t('dateIndicators.today', 'TODAY');
-        if (dueDate === tomorrow)
-            return t('dateIndicators.tomorrow', 'TOMORROW');
-        if (dueDate === yesterday)
-            return t('dateIndicators.yesterday', 'YESTERDAY');
+    const handleOverdueIconClick = () => {
+        if (!isOverdue) {
+            return;
+        }
+        setIsOverdueBubbleVisible((prev) => !prev);
+    };
 
-        return new Date(dueDate).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
+    const handleDismissOverdueAlert = () => {
+        setIsOverdueBubbleVisible(false);
+    };
+
+    const handleRecurrenceChange = (field: string, value: any) => {
+        setRecurrenceForm((prev) => {
+            const updated = { ...prev, [field]: value };
+
+            // Set default values when switching to monthly recurrence
+            if (
+                field === 'recurrence_type' &&
+                value === 'monthly' &&
+                !prev.recurrence_month_day
+            ) {
+                updated.recurrence_month_day = new Date().getDate();
+            }
+
+            return updated;
         });
     };
 
-    const formatRecurrence = (recurrenceType: string) => {
-        switch (recurrenceType) {
-            case 'daily':
-                return t('recurrence.daily', 'Daily');
-            case 'weekly':
-                return t('recurrence.weekly', 'Weekly');
-            case 'monthly':
-                return t('recurrence.monthly', 'Monthly');
-            case 'monthly_weekday':
-                return t('recurrence.monthlyWeekday', 'Monthly');
-            case 'monthly_last_day':
-                return t('recurrence.monthlyLastDay', 'Monthly');
-            default:
-                return t('recurrence.recurring', 'Recurring');
+    const handleSaveRecurrence = async () => {
+        if (!task?.uid) {
+            setIsEditingRecurrence(false);
+            return;
         }
+
+        try {
+            const recurrencePayload: Partial<Task> = {
+                recurrence_type: recurrenceForm.recurrence_type,
+                recurrence_interval: recurrenceForm.recurrence_interval || 1,
+                recurrence_end_date: recurrenceForm.recurrence_end_date || null,
+                recurrence_weekday:
+                    recurrenceForm.recurrence_type === 'weekly' ||
+                    recurrenceForm.recurrence_type === 'monthly_weekday'
+                        ? recurrenceForm.recurrence_weekday || null
+                        : null,
+                recurrence_weekdays:
+                    recurrenceForm.recurrence_type === 'weekly'
+                        ? recurrenceForm.recurrence_weekdays || []
+                        : null,
+                recurrence_month_day:
+                    recurrenceForm.recurrence_type === 'monthly'
+                        ? recurrenceForm.recurrence_month_day || null
+                        : null,
+                recurrence_week_of_month:
+                    recurrenceForm.recurrence_type === 'monthly_weekday'
+                        ? recurrenceForm.recurrence_week_of_month || null
+                        : null,
+                completion_based: recurrenceForm.completion_based,
+            };
+
+            await updateTask(task.uid, { ...task, ...recurrencePayload });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.recurrenceUpdated', 'Recurrence updated successfully')
+            );
+            setIsEditingRecurrence(false);
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating recurrence:', error);
+            showErrorToast(
+                t('task.recurrenceUpdateError', 'Failed to update recurrence')
+            );
+            setIsEditingRecurrence(false);
+        }
+    };
+
+    const handleCancelRecurrenceEdit = () => {
+        setIsEditingRecurrence(false);
+        setRecurrenceForm({
+            recurrence_type: task?.recurrence_type || 'none',
+            recurrence_interval: task?.recurrence_interval || 1,
+            recurrence_end_date: task?.recurrence_end_date || '',
+            recurrence_weekday: task?.recurrence_weekday || null,
+            recurrence_weekdays: task?.recurrence_weekdays || [],
+            recurrence_month_day: task?.recurrence_month_day || null,
+            recurrence_week_of_month: task?.recurrence_week_of_month || null,
+            completion_based: task?.completion_based || false,
+        });
+    };
+
+    const handleStartDueDateEdit = () => {
+        setEditedDueDate(task?.due_date || '');
+        setIsEditingDueDate(true);
+    };
+
+    const handleSaveDueDate = async () => {
+        if (!task?.uid) {
+            setIsEditingDueDate(false);
+            setEditedDueDate(task?.due_date || '');
+            return;
+        }
+
+        if ((editedDueDate || '') === (task.due_date || '')) {
+            setIsEditingDueDate(false);
+            return;
+        }
+
+        if (task.defer_until && editedDueDate) {
+            const deferDate = new Date(task.defer_until);
+            const dueDate = new Date(editedDueDate);
+
+            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
+                if (deferDate > dueDate) {
+                    showErrorToast(
+                        t(
+                            'task.dueDateBeforeDeferError',
+                            'Due date cannot be before the defer until date'
+                        )
+                    );
+                    return;
+                }
+            }
+        }
+
+        // Check if due date is in the past
+        if (editedDueDate) {
+            const dueDate = new Date(editedDueDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            dueDate.setHours(0, 0, 0, 0);
+
+            if (!isNaN(dueDate.getTime()) && dueDate < today) {
+                showErrorToast(
+                    t(
+                        'task.dueDateInPastWarning',
+                        'Warning: You are setting a due date in the past'
+                    )
+                );
+            }
+        }
+
+        try {
+            await updateTask(task.uid, {
+                ...task,
+                due_date: editedDueDate || null,
+            });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.dueDateUpdated', 'Due date updated successfully')
+            );
+            setIsEditingDueDate(false);
+
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating due date:', error);
+            showErrorToast(
+                t('task.dueDateUpdateError', 'Failed to update due date')
+            );
+            setEditedDueDate(task.due_date || '');
+            setIsEditingDueDate(false);
+        }
+    };
+
+    const handleCancelDueDateEdit = () => {
+        setIsEditingDueDate(false);
+        setEditedDueDate(task?.due_date || '');
+    };
+
+    const handleStartDeferUntilEdit = () => {
+        setEditedDeferUntil(task?.defer_until || '');
+        setIsEditingDeferUntil(true);
+    };
+
+    const handleSaveDeferUntil = async () => {
+        if (!task?.uid) {
+            setIsEditingDeferUntil(false);
+            setEditedDeferUntil(task?.defer_until || '');
+            return;
+        }
+
+        if ((editedDeferUntil || '') === (task.defer_until || '')) {
+            setIsEditingDeferUntil(false);
+            return;
+        }
+
+        if (editedDeferUntil && task.due_date) {
+            const deferDate = new Date(editedDeferUntil);
+            const dueDate = new Date(task.due_date);
+
+            if (!isNaN(deferDate.getTime()) && !isNaN(dueDate.getTime())) {
+                if (deferDate > dueDate) {
+                    showErrorToast(
+                        t(
+                            'task.deferAfterDueError',
+                            'Defer until date cannot be after the due date'
+                        )
+                    );
+                    return;
+                }
+            }
+        }
+
+        try {
+            await updateTask(task.uid, {
+                defer_until: editedDeferUntil || null,
+            });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.deferUntilUpdated', 'Defer until successfully updated')
+            );
+            setIsEditingDeferUntil(false);
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error: any) {
+            console.error('Error updating defer until:', error);
+            showErrorToast(
+                error?.message ||
+                    t(
+                        'task.deferUntilUpdateError',
+                        'Failed to update defer until'
+                    )
+            );
+            setEditedDeferUntil(task?.defer_until || '');
+            setIsEditingDeferUntil(false);
+        }
+    };
+
+    const handleCancelDeferUntilEdit = () => {
+        setIsEditingDeferUntil(false);
+        setEditedDeferUntil(task?.defer_until || '');
     };
 
     useEffect(() => {
@@ -172,12 +451,10 @@ const TaskDetails: React.FC = () => {
                 return;
             }
 
-            // If task is not in store, load it
             if (!task) {
                 try {
                     setLoading(true);
                     const fetchedTask = await fetchTaskByUid(uid);
-                    // Add the task to the store
                     tasksStore.setTasks([...tasksStore.tasks, fetchedTask]);
                 } catch (fetchError) {
                     setError('Task not found');
@@ -186,17 +463,29 @@ const TaskDetails: React.FC = () => {
                     setLoading(false);
                 }
             }
-
-            // Subtasks are already loaded as part of the task data from the global store
         };
 
         fetchTaskData();
     }, [uid, task, tasksStore]);
 
-    // Load next iterations for recurring tasks (both parent tasks and child tasks)
+    // Load attachment count when task is loaded
+    useEffect(() => {
+        const loadAttachmentCount = async () => {
+            if (task?.uid) {
+                try {
+                    const attachments = await fetchAttachments(task.uid);
+                    setAttachmentCount(attachments.length);
+                } catch (error) {
+                    console.error('Error loading attachment count:', error);
+                }
+            }
+        };
+
+        loadAttachmentCount();
+    }, [task?.uid]);
+
     useEffect(() => {
         const loadNextIterations = async () => {
-            // For parent tasks, use the task's own ID
             if (
                 task?.id &&
                 task.recurrence_type &&
@@ -204,7 +493,10 @@ const TaskDetails: React.FC = () => {
             ) {
                 try {
                     setLoadingIterations(true);
-                    const iterations = await fetchTaskNextIterations(task.id);
+                    // Don't pass startFromDate - let backend default to today
+                    const iterations = await fetchTaskNextIterations(
+                        task.uid!
+                    );
                     setNextIterations(iterations);
                 } catch (error) {
                     console.error('Error loading next iterations:', error);
@@ -212,24 +504,18 @@ const TaskDetails: React.FC = () => {
                 } finally {
                     setLoadingIterations(false);
                 }
-            }
-            // For child tasks, use the parent task's ID and start from the child's due date
-            else if (
+            } else if (
                 task?.recurring_parent_id &&
-                parentTask?.id &&
+                parentTask?.uid &&
                 parentTask.recurrence_type &&
                 parentTask.recurrence_type !== 'none'
             ) {
                 try {
                     setLoadingIterations(true);
 
-                    // If child task has a due date, start iterations from that date
-                    const startFromDate = task.due_date
-                        ? task.due_date.split('T')[0]
-                        : undefined;
+                    // Don't pass startFromDate - let backend default to today
                     const iterations = await fetchTaskNextIterations(
-                        parentTask.id,
-                        startFromDate
+                        parentTask.uid
                     );
 
                     setNextIterations(iterations);
@@ -251,22 +537,19 @@ const TaskDetails: React.FC = () => {
     }, [
         task?.id,
         task?.recurrence_type,
-        task?.last_generated_date,
         task?.due_date,
         task?.recurring_parent_id,
         parentTask?.id,
         parentTask?.recurrence_type,
-        parentTask?.last_generated_date,
     ]);
 
-    // Load parent task for child tasks (recurring instances)
     useEffect(() => {
         const loadParentTask = async () => {
-            if (task?.recurring_parent_id) {
+            if (task?.recurring_parent_uid) {
                 try {
                     setLoadingParent(true);
-                    const parent = await fetchTaskById(
-                        task.recurring_parent_id
+                    const parent = await fetchTaskByUid(
+                        task.recurring_parent_uid
                     );
                     setParentTask(parent);
                 } catch (error) {
@@ -279,36 +562,23 @@ const TaskDetails: React.FC = () => {
         };
 
         loadParentTask();
-    }, [task?.recurring_parent_id]);
+    }, [task?.recurring_parent_uid]);
 
-    const handleEdit = (e?: React.MouseEvent) => {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.nativeEvent.stopImmediatePropagation();
-        }
-
-        // Store modal state in sessionStorage to persist across re-mounts
-        const modalState = {
-            isOpen: true,
-            taskId: uid,
-            timestamp: Date.now(),
-        };
-        sessionStorage.setItem(
-            'pendingTaskEditModalState',
-            JSON.stringify(modalState)
-        );
-
-        setFocusSubtasks(false);
-        setIsTaskModalOpen(true);
+    const handleStartSubtasksEdit = () => {
+        setIsEditingSubtasks(true);
+        setEditedSubtasks([...subtasks]);
     };
 
-    const handleToggleCompletion = async () => {
-        if (!task?.id) return;
+    const handleSaveSubtasks = async () => {
+        if (!task?.uid) {
+            setIsEditingSubtasks(false);
+            setEditedSubtasks([]);
+            return;
+        }
 
         try {
-            const updatedTask = await toggleTaskCompletion(task.id);
-            // Update the task in the global store
+            await updateTask(task.uid, { ...task, subtasks: editedSubtasks });
+
             if (uid) {
                 const updatedTask = await fetchTaskByUid(uid);
                 const existingIndex = tasksStore.tasks.findIndex(
@@ -321,49 +591,246 @@ const TaskDetails: React.FC = () => {
                 }
             }
 
-            const statusMessage =
-                updatedTask.status === 'done' || updatedTask.status === 2
-                    ? t('task.completedSuccess', 'Task marked as completed')
-                    : t('task.reopenedSuccess', 'Task reopened');
+            showSuccessToast(
+                t('task.subtasksUpdated', 'Subtasks updated successfully')
+            );
+            setIsEditingSubtasks(false);
 
-            showSuccessToast(statusMessage);
-
-            // Refresh timeline to show status change activity
             setTimelineRefreshKey((prev) => prev + 1);
         } catch (error) {
-            console.error('Error toggling task completion:', error);
+            console.error('Error updating subtasks:', error);
             showErrorToast(
-                t('task.toggleError', 'Failed to update task status')
+                t('task.subtasksUpdateError', 'Failed to update subtasks')
+            );
+            setEditedSubtasks([...subtasks]);
+            setIsEditingSubtasks(false);
+        }
+    };
+
+    const handleCancelSubtasksEdit = () => {
+        setIsEditingSubtasks(false);
+        setEditedSubtasks([]);
+    };
+
+    const handleToggleSubtaskCompletion = async (subtask: Task) => {
+        if (!subtask.uid) return;
+        try {
+            await toggleTaskCompletion(subtask.uid, subtask);
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error toggling subtask completion:', error);
+        }
+    };
+
+    const handleProjectSelection = async (project: Project) => {
+        if (!task?.uid) return;
+
+        try {
+            await updateTask(task.uid, { ...task, project_id: project.id });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.projectUpdated', 'Project updated successfully')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating project:', error);
+            showErrorToast(
+                t('task.projectUpdateError', 'Failed to update project')
             );
         }
     };
 
-    const handleTaskUpdate = async (updatedTask: Task) => {
+    const handleClearProject = async () => {
+        if (!task?.uid) return;
+
         try {
-            if (task?.id) {
-                await updateTask(task.id, updatedTask);
-                // Update the task in the global store
-                if (uid) {
-                    const updatedTaskFromServer = await fetchTaskByUid(uid);
-                    const existingIndex = tasksStore.tasks.findIndex(
-                        (t: Task) => t.uid === uid
-                    );
-                    if (existingIndex >= 0) {
-                        const updatedTasks = [...tasksStore.tasks];
-                        updatedTasks[existingIndex] = updatedTaskFromServer;
-                        tasksStore.setTasks(updatedTasks);
-                    }
+            await updateTask(task.uid, { ...task, project_id: null });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
                 }
-
-                // Subtasks will be automatically updated when the task is reloaded from the global store
-
-                // Refresh timeline to show new activity
-                setTimelineRefreshKey((prev) => prev + 1);
             }
-            setIsTaskModalOpen(false);
+
+            showSuccessToast(
+                t('task.projectCleared', 'Project cleared successfully')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
         } catch (error) {
-            console.error('Error updating task:', error);
-            showErrorToast(t('task.updateError', 'Failed to update task'));
+            console.error('Error clearing project:', error);
+            showErrorToast(
+                t('task.projectClearError', 'Failed to clear project')
+            );
+        }
+    };
+
+    const refreshRecurringSetup = useCallback(
+        async (latestTask?: Task | null) => {
+            if (!latestTask) {
+                setNextIterations([]);
+                return;
+            }
+
+            const isTemplateTask =
+                latestTask.recurrence_type &&
+                latestTask.recurrence_type !== 'none' &&
+                !latestTask.recurring_parent_id;
+            const canUseParentIterations =
+                !!latestTask.recurring_parent_id &&
+                !!parentTask?.id &&
+                parentTask?.recurrence_type &&
+                parentTask.recurrence_type !== 'none';
+
+            if (!isTemplateTask && !canUseParentIterations) {
+                setNextIterations([]);
+                return;
+            }
+
+            try {
+                setLoadingIterations(true);
+                if (isTemplateTask) {
+                    // Don't pass startFromDate - let backend default to today
+                    const iterations = await fetchTaskNextIterations(
+                        latestTask.uid!
+                    );
+                    setNextIterations(iterations);
+                } else if (canUseParentIterations && parentTask?.uid) {
+                    // Don't pass startFromDate - let backend default to today
+                    const iterations = await fetchTaskNextIterations(
+                        parentTask.uid
+                    );
+                    setNextIterations(iterations);
+                }
+            } catch (error) {
+                console.error('Error refreshing recurring setup:', error);
+                setNextIterations([]);
+            } finally {
+                setLoadingIterations(false);
+            }
+        },
+        [parentTask?.id, parentTask?.recurrence_type]
+    );
+
+    const handleQuickStatusToggle = async () => {
+        if (!task?.uid) {
+            return;
+        }
+
+        const isCurrentlyInProgress =
+            task.status === 'in_progress' || task.status === 1;
+        const isToggleable =
+            task.status === 'not_started' ||
+            task.status === 0 ||
+            isCurrentlyInProgress;
+
+        if (!isToggleable) {
+            return;
+        }
+
+        try {
+            const nextStatusPayload: Task = {
+                ...task,
+                status: isCurrentlyInProgress ? 0 : 1, // 0=not_started, 1=in_progress
+            };
+
+            await updateTask(task.uid, nextStatusPayload);
+
+            let latestTaskData: Task | null = null;
+
+            if (uid) {
+                const updatedTaskFromServer = await fetchTaskByUid(uid);
+                latestTaskData = updatedTaskFromServer;
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTaskFromServer;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            if (!latestTaskData) {
+                latestTaskData = nextStatusPayload;
+            }
+
+            await refreshRecurringSetup(latestTaskData);
+            setTimelineRefreshKey((prev) => prev + 1);
+            showSuccessToast(
+                isCurrentlyInProgress
+                    ? t('tasks.setNotStarted', 'Set to not started')
+                    : t('tasks.setInProgress', 'Set in progress')
+            );
+        } catch (error) {
+            console.error('Error toggling in-progress status:', error);
+            showErrorToast(
+                t('task.statusUpdateError', 'Failed to update status')
+            );
+        }
+    };
+
+    const handleStatusUpdate = async (newStatus: number) => {
+        if (!task?.uid) return;
+
+        try {
+            await updateTask(task.uid, {
+                ...task,
+                status: newStatus,
+            });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.statusUpdated', 'Status updated successfully')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            showErrorToast(
+                t('task.statusUpdateError', 'Failed to update status')
+            );
         }
     };
 
@@ -375,13 +842,13 @@ const TaskDetails: React.FC = () => {
     };
 
     const handleDeleteConfirm = async () => {
-        if (taskToDelete?.id) {
+        if (taskToDelete?.uid) {
             try {
-                await deleteTask(taskToDelete.id);
+                await deleteTask(taskToDelete.uid);
                 showSuccessToast(
                     t('task.deleteSuccess', 'Task deleted successfully')
                 );
-                navigate('/today'); // Navigate back to today view after deletion
+                navigate('/today');
             } catch (error) {
                 console.error('Error deleting task:', error);
                 showErrorToast(t('task.deleteError', 'Failed to delete task'));
@@ -391,11 +858,204 @@ const TaskDetails: React.FC = () => {
         setTaskToDelete(null);
     };
 
-    const handleCreateProject = async (name: string): Promise<Project> => {
+    const getProjectLink = (project: Project) => {
+        if (project.uid) {
+            const slug = project.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            return `/project/${project.uid}-${slug}`;
+        }
+        return `/project/${project.id}`;
+    };
+
+    const getTagLink = (tag: any) => {
+        if (tag.uid) {
+            const slug = tag.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            return `/tag/${tag.uid}-${slug}`;
+        }
+        return `/tag/${encodeURIComponent(tag.name)}`;
+    };
+
+    const handleTitleUpdate = async (newTitle: string) => {
+        if (!task?.uid || !newTitle.trim()) {
+            return;
+        }
+
+        if (newTitle.trim() === task.name) {
+            return;
+        }
+
         try {
-            return await createProject({ name });
+            await updateTask(task.uid, { ...task, name: newTitle.trim() });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.titleUpdated', 'Task title updated successfully')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating task title:', error);
+            showErrorToast(
+                t('task.titleUpdateError', 'Failed to update task title')
+            );
+            throw error;
+        }
+    };
+
+    const handleContentUpdate = async (newContent: string) => {
+        if (!task?.uid) {
+            return;
+        }
+
+        const trimmedContent = newContent.trim();
+
+        if (trimmedContent === (task.note || '').trim()) {
+            return;
+        }
+
+        try {
+            await updateTask(task.uid, { ...task, note: trimmedContent });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.contentUpdated', 'Task content updated successfully')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating task content:', error);
+            showErrorToast(
+                t('task.contentUpdateError', 'Failed to update task content')
+            );
+            throw error;
+        }
+    };
+
+    const handleProjectCreateInlineWrapper = async (name: string) => {
+        if (!task?.uid || !name.trim()) return;
+
+        try {
+            const newProject = await createProject({ name });
+
+            projectsStore.setProjects([...projectsStore.projects, newProject]);
+
+            await updateTask(task.uid, { ...task, project_id: newProject.id });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('project.createdAndAssigned', 'Project created and assigned')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
         } catch (error) {
             console.error('Error creating project:', error);
+            showErrorToast(
+                t('project.createError', 'Failed to create project')
+            );
+            throw error;
+        }
+    };
+
+    const handleTagsUpdate = async (tags: string[]) => {
+        if (!task?.uid) {
+            return;
+        }
+
+        const currentTags = task.tags?.map((tag: any) => tag.name) || [];
+        if (
+            tags.length === currentTags.length &&
+            tags.every((tag, idx) => tag === currentTags[idx])
+        ) {
+            return;
+        }
+
+        try {
+            await updateTask(task.uid, {
+                ...task,
+                tags: tags.map((name) => ({ name })),
+            });
+
+            if (uid) {
+                const updatedTask = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = updatedTask;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+
+            showSuccessToast(
+                t('task.tagsUpdated', 'Tags updated successfully')
+            );
+
+            setTimelineRefreshKey((prev) => prev + 1);
+        } catch (error) {
+            console.error('Error updating tags:', error);
+            showErrorToast(t('task.tagsUpdateError', 'Failed to update tags'));
+            throw error;
+        }
+    };
+
+    const handlePriorityUpdate = async (priority: any) => {
+        if (!task?.uid) return;
+
+        try {
+            await updateTask(task.uid, {
+                ...task,
+                priority: priority,
+            });
+            const updatedTask = await fetchTaskByUid(uid!);
+            tasksStore.updateTaskInStore(updatedTask);
+            setTimelineRefreshKey((prev) => prev + 1);
+            showSuccessToast(
+                t('task.priorityUpdated', 'Priority updated successfully')
+            );
+        } catch (error) {
+            console.error('Error updating priority:', error);
+            showErrorToast(
+                t('task.priorityUpdateError', 'Failed to update priority')
+            );
             throw error;
         }
     };
@@ -518,669 +1178,152 @@ const TaskDetails: React.FC = () => {
     }
 
     return (
-        <div className="flex justify-center px-4 lg:px-2">
-            <div className="w-full max-w-5xl">
+        <div className="px-4 lg:px-6 pt-4">
+            <div className="w-full">
                 {/* Header Section with Title and Action Buttons */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                        <TaskPriorityIcon
-                            priority={task.priority}
-                            status={task.status}
-                            onToggleCompletion={handleToggleCompletion}
-                        />
-                        <div className="flex flex-col">
-                            <h2 className="text-2xl font-normal text-gray-900 dark:text-gray-100">
-                                {task.name}
-                            </h2>
-                            {/* Project, tags, due date, and recurrence under title */}
-                            {(task.Project ||
-                                (task.tags && task.tags.length > 0) ||
-                                task.due_date ||
-                                (task.recurrence_type &&
-                                    task.recurrence_type !== 'none') ||
-                                task.recurring_parent_id) && (
-                                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    {task.Project && (
-                                        <div className="flex items-center">
-                                            <FolderIcon className="h-3 w-3 mr-1" />
-                                            <Link
-                                                to={
-                                                    task.Project.uid
-                                                        ? `/project/${task.Project.uid}-${task.Project.name
-                                                              .toLowerCase()
-                                                              .replace(
-                                                                  /[^a-z0-9]+/g,
-                                                                  '-'
-                                                              )
-                                                              .replace(
-                                                                  /^-|-$/g,
-                                                                  ''
-                                                              )}`
-                                                        : `/project/${task.Project.id}`
-                                                }
-                                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:underline"
-                                            >
-                                                {task.Project.name}
-                                            </Link>
-                                        </div>
-                                    )}
-                                    {task.Project &&
-                                        task.tags &&
-                                        task.tags.length > 0 && (
-                                            <span className="mx-2">•</span>
-                                        )}
-                                    {task.tags && task.tags.length > 0 && (
-                                        <div className="flex items-center">
-                                            <TagIcon className="h-3 w-3 mr-1" />
-                                            <span>
-                                                {task.tags.map(
-                                                    (
-                                                        tag: any,
-                                                        index: number
-                                                    ) => (
-                                                        <React.Fragment
-                                                            key={
-                                                                tag.uid ||
-                                                                tag.id ||
-                                                                tag.name
-                                                            }
-                                                        >
-                                                            <Link
-                                                                to={
-                                                                    tag.uid
-                                                                        ? `/tag/${tag.uid}-${tag.name
-                                                                              .toLowerCase()
-                                                                              .replace(
-                                                                                  /[^a-z0-9]+/g,
-                                                                                  '-'
-                                                                              )
-                                                                              .replace(
-                                                                                  /^-|-$/g,
-                                                                                  ''
-                                                                              )}`
-                                                                        : `/tag/${encodeURIComponent(tag.name)}`
-                                                                }
-                                                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:underline"
-                                                            >
-                                                                {tag.name}
-                                                            </Link>
-                                                            {index <
-                                                                task.tags!
-                                                                    .length -
-                                                                    1 && ', '}
-                                                        </React.Fragment>
-                                                    )
-                                                )}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(task.Project ||
-                                        (task.tags && task.tags.length > 0)) &&
-                                        task.due_date && (
-                                            <span className="mx-2">•</span>
-                                        )}
-                                    {task.due_date && (
-                                        <div className="flex items-center">
-                                            <CalendarIcon className="h-3 w-3 mr-1" />
-                                            <span>
-                                                {formatDueDate(task.due_date)}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {(task.Project ||
-                                        (task.tags && task.tags.length > 0) ||
-                                        task.due_date) &&
-                                        task.recurrence_type &&
-                                        task.recurrence_type !== 'none' && (
-                                            <span className="mx-2">•</span>
-                                        )}
-                                    {task.recurrence_type &&
-                                        task.recurrence_type !== 'none' && (
-                                            <div className="flex items-center">
-                                                <ArrowPathIcon className="h-3 w-3 mr-1" />
-                                                <span>
-                                                    {formatRecurrence(
-                                                        task.recurrence_type
-                                                    )}
-                                                </span>
-                                            </div>
-                                        )}
-                                    {(task.Project ||
-                                        (task.tags && task.tags.length > 0) ||
-                                        task.due_date ||
-                                        (task.recurrence_type &&
-                                            task.recurrence_type !== 'none')) &&
-                                        task.recurring_parent_id && (
-                                            <span className="mx-2">•</span>
-                                        )}
-                                    {task.recurring_parent_id && (
-                                        <div className="flex items-center">
-                                            <ArrowPathIcon className="h-3 w-3 mr-1" />
-                                            <span>
-                                                {t(
-                                                    'recurrence.instance',
-                                                    'Recurring task instance'
-                                                )}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex space-x-1">
-                        <button
-                            onClick={handleBackgroundAgentClick}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 rounded-full transition-colors duration-200"
-                            title={t('tasks.backgroundAgent', 'Background Agent (BETA)')}
-                        >
-                            <MagnifyingGlassIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                            onClick={handleEdit}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors duration-200"
-                        >
-                            <PencilSquareIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDeleteClick();
-                            }}
-                            className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-full transition-colors duration-200"
-                        >
-                            <TrashIcon className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
+                <TaskDetailsHeader
+                    task={task}
+                    onTitleUpdate={handleTitleUpdate}
+                    onStatusUpdate={handleStatusUpdate}
+                    onPriorityUpdate={handlePriorityUpdate}
+                    onDelete={handleDeleteClick}
+                    getProjectLink={getProjectLink}
+                    getTagLink={getTagLink}
+                    activePill={activePill}
+                    onPillChange={setActivePill}
+                    showOverdueIcon={isOverdue}
+                    showPastDueBadge={isPastDue}
+                    onOverdueIconClick={handleOverdueIconClick}
+                    isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
+                    onDismissOverdueAlert={handleDismissOverdueAlert}
+                    onQuickStatusToggle={handleQuickStatusToggle}
+                    attachmentCount={attachmentCount}
+                    subtasksCount={subtasks.length}
+                />
 
-                {/* Overdue Alert */}
-                {isTaskOverdue(task) && !isOverdueAlertDismissed && (
-                    <div className="mb-6 mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 rounded-r-lg relative">
-                        <button
-                            onClick={() => setIsOverdueAlertDismissed(true)}
-                            className="absolute top-2 right-2 p-1 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
-                            aria-label={t('common.close', 'Close')}
-                        >
-                            <XMarkIcon className="h-4 w-4" />
-                        </button>
-                        <div className="flex items-start pr-8">
-                            <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 dark:text-amber-400 mr-3 flex-shrink-0 mt-0.5" />
-                            <div>
-                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                    {t(
-                                        'task.overdueAlert',
-                                        "This task was in your plan yesterday and wasn't completed."
-                                    )}
-                                </p>
-                                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                                    {task.today_move_count &&
-                                    task.today_move_count > 1
-                                        ? t(
-                                              'task.overdueMultipleDays',
-                                              `This task has been postponed ${task.today_move_count} times.`
-                                          )
-                                        : t(
-                                              'task.overdueYesterday',
-                                              'Consider prioritizing this task or breaking it into smaller steps.'
-                                          )}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Content - Two column layout */}
-                <div className="mb-8 mt-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Left Column - Notes and Subtasks */}
-                        <div className="lg:col-span-2 space-y-8">
-                            {/* Notes Section - Always Visible */}
-                            <div>
-                                <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    {t('task.content', 'Content')}
-                                </h4>
-                                {task.note ? (
-                                    <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
-                                        <MarkdownRenderer
-                                            content={task.note}
-                                            className="prose dark:prose-invert max-w-none"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
-                                        <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                                            <PencilSquareIcon className="h-12 w-12 mb-3 opacity-50" />
-                                            <span className="text-sm text-center">
-                                                {t(
-                                                    'task.noNotes',
-                                                    'No content added yet'
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
+                {/* Content - Full width layout */}
+                <div className="mb-6 mt-6">
+                    {/* Overview Pill */}
+                    {activePill === 'overview' && (
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                            {/* Left Column - Main Content */}
+                            <div className="lg:col-span-3 space-y-8">
+                                <TaskContentCard
+                                    content={task.note || ''}
+                                    onUpdate={handleContentUpdate}
+                                />
+                                {/* Background Agent Results Section */}
+                                {task?.id && (
+                                    <BackgroundAgentResults taskId={task.id} />
                                 )}
                             </div>
 
-                            {/* Background Agent Results Section */}
-                            {task?.id && (
-                                <BackgroundAgentResults taskId={task.id} />
-                            )}
+                            {/* Right Column - Project and Tags */}
+                            <div className="space-y-6">
+                                <TaskProjectCard
+                                    task={task}
+                                    projects={projectsStore.projects}
+                                    onProjectSelect={handleProjectSelection}
+                                    onProjectClear={handleClearProject}
+                                    onProjectCreate={
+                                        handleProjectCreateInlineWrapper
+                                    }
+                                    getProjectLink={getProjectLink}
+                                />
 
-                            {/* Subtasks Section - Always Visible */}
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                                        {t('task.subtasks', 'Subtasks')}
-                                    </h4>
-                                    <button
-                                        onClick={() => setIsSubtaskModalOpen(true)}
-                                        className="p-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-full transition-colors duration-200"
-                                        title={t('task.addSubtask', 'Add subtask')}
-                                    >
-                                        <PlusIcon className="h-5 w-5" />
-                                    </button>
-                                </div>
-                                {subtasks.length > 0 ? (
-                                    <div className="space-y-1">
-                                        {subtasks.map((subtask: Task) => (
-                                            <div
-                                                key={subtask.id}
-                                                className="group"
-                                            >
-                                                <div
-                                                    onClick={(e) => handleSubtaskClick(e, subtask)}
-                                                    className={`rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 cursor-pointer transition-all duration-200 ${
-                                                        subtask.status ===
-                                                            'in_progress' ||
-                                                        subtask.status === 1
-                                                            ? 'border-green-400/60 dark:border-green-500/60'
-                                                            : 'border-gray-50 dark:border-gray-800'
-                                                    }`}
-                                                >
-                                                    <div className="px-4 py-2.5 flex items-center space-x-3">
-                                                        <div
-                                                            className="flex-shrink-0"
-                                                            onClick={(e) =>
-                                                                e.stopPropagation()
-                                                            }
-                                                        >
-                                                            <TaskPriorityIcon
-                                                                priority={
-                                                                    subtask.priority
-                                                                }
-                                                                status={
-                                                                    subtask.status
-                                                                }
-                                                                onToggleCompletion={async (
-                                                                    e?: React.MouseEvent
-                                                                ) => {
-                                                                    e?.stopPropagation();
-                                                                    if (
-                                                                        subtask.id
-                                                                    ) {
-                                                                        try {
-                                                                            await toggleTaskCompletion(
-                                                                                subtask.id
-                                                                            );
-                                                                            // Reload subtasks after toggling completion
-                                                                            if (
-                                                                                task?.id
-                                                                            ) {
-                                                                                // Refresh task data which includes updated subtasks
-                                                                                if (
-                                                                                    uid
-                                                                                ) {
-                                                                                    const updatedTask =
-                                                                                        await fetchTaskByUid(
-                                                                                            uid
-                                                                                        );
-                                                                                    const existingIndex =
-                                                                                        tasksStore.tasks.findIndex(
-                                                                                            (
-                                                                                                t: Task
-                                                                                            ) =>
-                                                                                                t.uid ===
-                                                                                                uid
-                                                                                        );
-                                                                                    if (
-                                                                                        existingIndex >=
-                                                                                        0
-                                                                                    ) {
-                                                                                        const updatedTasks =
-                                                                                            [
-                                                                                                ...tasksStore.tasks,
-                                                                                            ];
-                                                                                        updatedTasks[
-                                                                                            existingIndex
-                                                                                        ] =
-                                                                                            updatedTask;
-                                                                                        tasksStore.setTasks(
-                                                                                            updatedTasks
-                                                                                        );
-                                                                                    }
-                                                                                }
+                                <TaskTagsCard
+                                    task={task}
+                                    availableTags={tagsStore.tags}
+                                    hasLoadedTags={tagsStore.hasLoaded}
+                                    isLoadingTags={tagsStore.isLoading}
+                                    onUpdate={handleTagsUpdate}
+                                    onLoadTags={() => tagsStore.loadTags()}
+                                    getTagLink={getTagLink}
+                                />
 
-                                                                                // Refresh timeline to show subtask completion activity
-                                                                                setTimelineRefreshKey(
-                                                                                    (
-                                                                                        prev
-                                                                                    ) =>
-                                                                                        prev +
-                                                                                        1
-                                                                                );
-                                                                            }
-                                                                        } catch (error) {
-                                                                            console.error(
-                                                                                'Error toggling subtask completion:',
-                                                                                error
-                                                                            );
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        <span
-                                                            className={`text-base flex-1 truncate ${
-                                                                subtask.status ===
-                                                                    'done' ||
-                                                                subtask.status ===
-                                                                    2 ||
-                                                                subtask.status ===
-                                                                    'archived' ||
-                                                                subtask.status ===
-                                                                    3
-                                                                    ? 'text-gray-500 dark:text-gray-400'
-                                                                    : 'text-gray-900 dark:text-gray-100'
-                                                            }`}
-                                                        >
-                                                            {subtask.name}
-                                                        </span>
-                                                        <div className="flex items-center space-x-1">
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    e.stopPropagation();
-                                                                    handleSubtaskBackgroundAgentClick(subtask);
-                                                                }}
-                                                                className="p-1 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 rounded-full transition-colors duration-200 opacity-0 group-hover:opacity-100"
-                                                                title={t('tasks.backgroundAgent', 'Background Agent (BETA)')}
-                                                            >
-                                                                <MagnifyingGlassIcon className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
-                                        <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400">
-                                            <ListBulletIcon className="h-12 w-12 mb-3 opacity-50" />
-                                            <span className="text-sm text-center">
-                                                {t(
-                                                    'task.noSubtasks',
-                                                    'No subtasks yet'
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                <TaskDueDateCard
+                                    task={task}
+                                    isEditing={isEditingDueDate}
+                                    editedDueDate={editedDueDate}
+                                    onChangeDate={setEditedDueDate}
+                                    onStartEdit={handleStartDueDateEdit}
+                                    onSave={handleSaveDueDate}
+                                    onCancel={handleCancelDueDateEdit}
+                                />
 
-                            {/* Recurring Setup Section - Show for recurring tasks or child tasks */}
-                            {((task.recurrence_type &&
-                                task.recurrence_type !== 'none') ||
-                                task.recurring_parent_id) && (
-                                <div>
-                                    <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                        {t(
-                                            'task.recurringSetup',
-                                            'Recurring Setup'
-                                        )}
-                                    </h4>
-                                    <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
-                                        {/* Show info for child tasks */}
-                                        {task.recurring_parent_id && (
-                                            <div className="mb-4">
-                                                <div className="flex items-center mb-2">
-                                                    <ArrowPathIcon className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        {t(
-                                                            'task.instanceOf',
-                                                            'This is an instance of a recurring task'
-                                                        )}
-                                                    </span>
-                                                </div>
-                                                {loadingParent && (
-                                                    <div className="flex items-center py-2">
-                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500 mr-2"></div>
-                                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                                            {t(
-                                                                'common.loading',
-                                                                'Loading parent task...'
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {parentTask && (
-                                                    <div className="ml-6">
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                                            <strong>
-                                                                {t(
-                                                                    'task.parentTask',
-                                                                    'Parent Task'
-                                                                )}
-                                                                :
-                                                            </strong>{' '}
-                                                            <Link
-                                                                to={`/task/${parentTask.uid}`}
-                                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium"
-                                                            >
-                                                                {
-                                                                    parentTask.name
-                                                                }
-                                                            </Link>
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Recurrence Configuration - Use parent task data for child tasks */}
-                                        {(task.recurrence_type &&
-                                            task.recurrence_type !== 'none') ||
-                                        (parentTask?.recurrence_type &&
-                                            parentTask.recurrence_type !==
-                                                'none') ? (
-                                            <div className="mb-4">
-                                                <div className="flex items-center mb-2">
-                                                    <ArrowPathIcon className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        {formatRecurrence(
-                                                            task.recurring_parent_id &&
-                                                                parentTask?.recurrence_type
-                                                                ? parentTask.recurrence_type
-                                                                : task.recurrence_type
-                                                        )}
-                                                    </span>
-                                                    {((task.recurring_parent_id &&
-                                                        parentTask?.recurrence_interval &&
-                                                        parentTask.recurrence_interval >
-                                                            1) ||
-                                                        (!task.recurring_parent_id &&
-                                                            task.recurrence_interval &&
-                                                            task.recurrence_interval >
-                                                                1)) && (
-                                                        <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                                                            (
-                                                            {t(
-                                                                'recurrence.every',
-                                                                'Every'
-                                                            )}{' '}
-                                                            {task.recurring_parent_id &&
-                                                            parentTask?.recurrence_interval
-                                                                ? parentTask.recurrence_interval
-                                                                : task.recurrence_interval}
-                                                            )
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {((task.recurring_parent_id &&
-                                                    parentTask?.recurrence_end_date) ||
-                                                    (!task.recurring_parent_id &&
-                                                        task.recurrence_end_date)) && (
-                                                    <div className="flex items-center text-sm">
-                                                        <CalendarIcon className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                                                        <span className="text-gray-500 dark:text-gray-400">
-                                                            {t(
-                                                                'recurrence.endsOn',
-                                                                'Ends on'
-                                                            )}{' '}
-                                                            {formatDueDate(
-                                                                task.recurring_parent_id &&
-                                                                    parentTask?.recurrence_end_date
-                                                                    ? parentTask.recurrence_end_date
-                                                                    : task.recurrence_end_date!
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {((task.recurring_parent_id &&
-                                                    parentTask?.completion_based) ||
-                                                    (!task.recurring_parent_id &&
-                                                        task.completion_based)) && (
-                                                    <div className="flex items-center mt-2">
-                                                        <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-                                                            {t(
-                                                                'recurrence.completionBased',
-                                                                'Completion-based'
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : null}
-
-                                        {/* Next Iterations - Show for both parent and child tasks */}
-                                        {((task.recurrence_type &&
-                                            task.recurrence_type !== 'none') ||
-                                            (task.recurring_parent_id &&
-                                                parentTask?.recurrence_type &&
-                                                parentTask.recurrence_type !==
-                                                    'none')) && (
-                                            <div>
-                                                <div className="flex items-center mb-3">
-                                                    <ClockIcon className="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                        {task.recurring_parent_id
-                                                            ? t(
-                                                                  'task.nextOccurrencesAfterThis',
-                                                                  'Next 5 Occurrences After This'
-                                                              )
-                                                            : t(
-                                                                  'task.nextOccurrences',
-                                                                  'Next 5 Occurrences'
-                                                              )}
-                                                    </span>
-                                                </div>
-
-                                                {loadingIterations ? (
-                                                    <div className="flex items-center justify-center py-4">
-                                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                                                        <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                                                            {t(
-                                                                'common.loading',
-                                                                'Loading...'
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                ) : nextIterations.length >
-                                                  0 ? (
-                                                    <div className="space-y-2">
-                                                        {nextIterations.map(
-                                                            (
-                                                                iteration,
-                                                                index
-                                                            ) => (
-                                                                <div
-                                                                    key={index}
-                                                                    className="flex items-center py-1 px-2 rounded bg-gray-50 dark:bg-gray-800"
-                                                                >
-                                                                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-                                                                        <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                                                                            {index +
-                                                                                1}
-                                                                        </span>
-                                                                    </div>
-                                                                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                                                                        {formatDueDate(
-                                                                            iteration.date
-                                                                        )}
-                                                                    </span>
-                                                                </div>
-                                                            )
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                                                        {t(
-                                                            'task.noMoreIterations',
-                                                            'No more iterations scheduled'
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Column - Recent Activity */}
-                        <div>
-                            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {t('task.recentActivity', 'Recent Activity')}
-                            </h4>
-                            <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
-                                <TaskTimeline
-                                    taskUid={task.uid}
-                                    refreshKey={timelineRefreshKey}
+                                <TaskDeferUntilCard
+                                    task={task}
+                                    isEditing={isEditingDeferUntil}
+                                    editedDeferUntil={editedDeferUntil}
+                                    onChangeDateTime={setEditedDeferUntil}
+                                    onStartEdit={handleStartDeferUntilEdit}
+                                    onSave={handleSaveDeferUntil}
+                                    onCancel={handleCancelDeferUntilEdit}
                                 />
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Recurrence Pill */}
+                    {activePill === 'recurrence' && (
+                        <div className="grid grid-cols-1">
+                            <TaskRecurrenceCard
+                                task={task}
+                                parentTask={parentTask}
+                                loadingParent={loadingParent}
+                                isEditing={isEditingRecurrence}
+                                recurrenceForm={recurrenceForm}
+                                onStartEdit={handleStartRecurrenceEdit}
+                                onChange={handleRecurrenceChange}
+                                onSave={handleSaveRecurrence}
+                                onCancel={handleCancelRecurrenceEdit}
+                                loadingIterations={loadingIterations}
+                                nextIterations={nextIterations}
+                                canEdit={!task.recurring_parent_id}
+                            />
+                        </div>
+                    )}
+
+                    {/* Subtasks Pill */}
+                    {activePill === 'subtasks' && (
+                        <div className="grid grid-cols-1">
+                            <TaskSubtasksCard
+                                task={task}
+                                subtasks={subtasks}
+                                isEditing={isEditingSubtasks}
+                                editedSubtasks={editedSubtasks}
+                                onSubtasksChange={setEditedSubtasks}
+                                onStartEdit={handleStartSubtasksEdit}
+                                onSave={handleSaveSubtasks}
+                                onCancel={handleCancelSubtasksEdit}
+                                onToggleSubtaskCompletion={
+                                    handleToggleSubtaskCompletion
+                                }
+                            />
+                        </div>
+                    )}
+
+                    {/* Attachments Pill */}
+                    {activePill === 'attachments' && (
+                        <div className="grid grid-cols-1">
+                            <TaskAttachmentsCard
+                                taskUid={task.uid}
+                                onAttachmentsCountChange={setAttachmentCount}
+                            />
+                        </div>
+                    )}
+
+                    {/* Activity Pill */}
+                    {activePill === 'activity' && (
+                        <div className="rounded-lg shadow-sm bg-white dark:bg-gray-900 border-2 border-gray-50 dark:border-gray-800 p-6">
+                            <TaskTimeline
+                                taskUid={task.uid}
+                                refreshKey={timelineRefreshKey}
+                            />
+                        </div>
+                    )}
                 </div>
                 {/* End of main content sections */}
-
-                {/* Task Modal for Editing - Only render when we have task data */}
-                {task && (
-                    <TaskModal
-                        isOpen={isTaskModalOpen}
-                        task={task}
-                        onClose={() => {
-                            setIsTaskModalOpen(false);
-                            setFocusSubtasks(false);
-                            // Clear pending state when modal is closed
-                            sessionStorage.removeItem('pendingModalState');
-                            sessionStorage.removeItem(
-                                'pendingTaskEditModalState'
-                            );
-                        }}
-                        onSave={handleTaskUpdate}
-                        onDelete={async (taskId: number) => {
-                            await deleteTask(taskId);
-                            navigate('/today');
-                        }}
-                        projects={projects}
-                        onCreateProject={handleCreateProject}
-                        showToast={false}
-                        initialSubtasks={task.subtasks || task.Subtasks || []}
-                        autoFocusSubtasks={focusSubtasks}
-                    />
-                )}
 
                 {/* Confirm Delete Dialog */}
                 {isConfirmDialogOpen && taskToDelete && (

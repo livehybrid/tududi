@@ -4,13 +4,14 @@ import { CalendarDaysIcon } from '@heroicons/react/24/outline';
 import TaskList from './TaskList';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
+import { sortTasksByPriorityDueDateProject } from '../../utils/taskSortUtils';
 
 interface TodayPlanProps {
     todayPlanTasks: Task[] | undefined;
     projects: Project[];
     onTaskUpdate: (task: Task) => Promise<void>;
-    onTaskDelete: (taskId: number) => Promise<void>;
-    onToggleToday?: (taskId: number) => Promise<void>;
+    onTaskDelete: (taskUid: string) => Promise<void>;
+    onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     onTaskCompletionToggle?: (task: Task) => void; // New prop
 }
 
@@ -27,30 +28,25 @@ const TodayPlan: React.FC<TodayPlanProps> = ({
     // Handle undefined or null todayPlanTasks
     const safeTodayPlanTasks = todayPlanTasks || [];
 
-    // Sort tasks to move in-progress tasks to the top
+    // Sort tasks to move in-progress tasks to the top, then apply multi-criteria sorting
     const sortedTasks = React.useMemo(() => {
         if (safeTodayPlanTasks.length === 0) return [];
 
-        return [...safeTodayPlanTasks].sort((a, b) => {
-            const aInProgress = a.status === 'in_progress' || a.status === 1;
-            const bInProgress = b.status === 'in_progress' || b.status === 1;
+        // Separate in-progress and non-in-progress tasks
+        const inProgressTasks = safeTodayPlanTasks.filter(
+            (task) => task.status === 'in_progress' || task.status === 1
+        );
+        const otherTasks = safeTodayPlanTasks.filter(
+            (task) => task.status !== 'in_progress' && task.status !== 1
+        );
 
-            // If both are in progress, sort by updated_at (recently updated to bottom)
-            if (aInProgress && bInProgress) {
-                // Recently updated tasks should be at the bottom of in-progress group
-                const aUpdated = new Date(a.updated_at || a.created_at || 0);
-                const bUpdated = new Date(b.updated_at || b.created_at || 0);
-                return aUpdated.getTime() - bUpdated.getTime(); // Older tasks first, newer to bottom
-            }
+        // Sort each group using multi-criteria sorting
+        const sortedInProgress =
+            sortTasksByPriorityDueDateProject(inProgressTasks);
+        const sortedOthers = sortTasksByPriorityDueDateProject(otherTasks);
 
-            // If both are not in progress, maintain original order
-            if (!aInProgress && !bInProgress) {
-                return 0;
-            }
-
-            // Put in-progress tasks first
-            return aInProgress ? -1 : 1;
-        });
+        // Return in-progress tasks first, followed by others
+        return [...sortedInProgress, ...sortedOthers];
     }, [safeTodayPlanTasks]);
 
     if (sortedTasks.length === 0) {

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const {
     User,
     Area,
@@ -6,8 +7,10 @@ const {
     Tag,
     Note,
     InboxItem,
+    Role,
 } = require('../models');
 const bcrypt = require('bcrypt');
+const { faker } = require('@faker-js/faker');
 const { createMassiveTaskData } = require('./massive-tasks');
 
 async function seedDatabase() {
@@ -40,6 +43,23 @@ async function seedDatabase() {
             await Tag.destroy({ where: { user_id: testUser.id } });
             await Note.destroy({ where: { user_id: testUser.id } });
             await InboxItem.destroy({ where: { user_id: testUser.id } });
+        }
+
+        // Ensure test user has an admin role
+        console.log('👑 Ensuring test user has admin role...');
+        const [role, roleCreated] = await Role.findOrCreate({
+            where: { user_id: testUser.id },
+            defaults: { user_id: testUser.id, is_admin: true },
+        });
+        if (roleCreated) {
+            console.log('✅ Created admin role for test user');
+        } else if (role.is_admin) {
+            console.log('✅ Test user already has admin role');
+        } else {
+            // Update existing role to be admin
+            role.is_admin = true;
+            await role.save();
+            console.log('✅ Updated test user role to admin');
         }
 
         // Create areas
@@ -293,6 +313,33 @@ async function seedDatabase() {
             tasks.push(backlogTask);
         }
 
+        // Create tasks marked for today (today = true) to test pagination
+        console.log('📅 Creating tasks marked for today...');
+        const todayMarkedTasks = Array.from({ length: 30 }, (_, i) => ({
+            name: `${faker.lorem.sentence({ min: 3, max: 6 })} #${i + 1}`,
+            description: faker.lorem.paragraph(),
+            note:
+                Math.random() < 0.3
+                    ? `${faker.lorem.sentence()}\n\n- ${faker.lorem.sentence()}\n- ${faker.lorem.sentence()}`
+                    : null,
+            priority: Math.floor(Math.random() * 3),
+            status: Math.floor(Math.random() * 3), // 0, 1, or 2
+            user_id: testUser.id,
+            today: true, // Mark for today
+            project_id:
+                Math.random() < 0.3
+                    ? projects[Math.floor(Math.random() * projects.length)].id
+                    : null,
+        }));
+
+        for (const taskData of todayMarkedTasks) {
+            const task = await Task.create(taskData);
+            tasks.push(task);
+        }
+        console.log(
+            `   ✅ Created ${todayMarkedTasks.length} tasks marked for today\n`
+        );
+
         // Create tasks due today for realistic "Due Today" section
         console.log('📅 Creating tasks due today...');
         const todayTaskNames = [
@@ -328,6 +375,49 @@ async function seedDatabase() {
             });
             tasks.push(todayTask);
         }
+
+        // Create subtasks for some tasks
+        console.log('📋 Creating subtasks for parent tasks...');
+
+        // Select 15-20 random tasks to have subtasks
+        const parentTaskIndices = [];
+        while (parentTaskIndices.length < 15) {
+            const randomIndex = Math.floor(Math.random() * tasks.length);
+            if (
+                !parentTaskIndices.includes(randomIndex) &&
+                tasks[randomIndex].status !== 2
+            ) {
+                // Don't add subtasks to completed tasks
+                parentTaskIndices.push(randomIndex);
+            }
+        }
+
+        for (const parentIndex of parentTaskIndices) {
+            const parentTask = tasks[parentIndex];
+            const numSubtasks = Math.floor(Math.random() * 4) + 2; // 2-5 subtasks
+
+            for (let i = 0; i < numSubtasks; i++) {
+                const subtask = await Task.create({
+                    name: faker.lorem.sentence({ min: 3, max: 6 }),
+                    description:
+                        Math.random() < 0.5 ? faker.lorem.paragraph() : null,
+                    priority: Math.floor(Math.random() * 3),
+                    status: Math.floor(Math.random() * 3), // 0, 1, or 2
+                    user_id: testUser.id,
+                    parent_task_id: parentTask.id,
+                    order: i,
+                    note:
+                        Math.random() < 0.3
+                            ? `${faker.lorem.sentence()}\n\n- ${faker.lorem.sentence()}\n- ${faker.lorem.sentence()}`
+                            : null,
+                });
+                tasks.push(subtask);
+            }
+        }
+
+        console.log(
+            `   ✅ Created subtasks for ${parentTaskIndices.length} parent tasks`
+        );
 
         // Create intelligent task-tag associations
         console.log('🔗 Creating intelligent task-tag associations...');

@@ -1,249 +1,437 @@
 import { test, expect } from '@playwright/test';
 
-// Shared login function
-async function loginAndNavigateToInbox(page, baseURL) {
-  const appUrl = baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
-  
-  // Go directly to login page first
-  await page.goto(appUrl + '/login');
+test.describe('Inbox', () => {
+    async function loginViaUI(page, baseURL) {
+        const appUrl =
+            baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+        await page.goto(`${appUrl}/login`);
 
-  // Fill credentials and login
-  const email = process.env.E2E_EMAIL || 'test@tududi.com';
-  const password = process.env.E2E_PASSWORD || 'password123';
+        await page
+            .getByTestId('login-email')
+            .fill(process.env.E2E_EMAIL || 'test@tududi.com');
+        await page
+            .getByTestId('login-password')
+            .fill(process.env.E2E_PASSWORD || 'password123');
+        await page.getByTestId('login-submit').click();
 
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: /login/i }).click();
+        await page.waitForURL(/\/(dashboard|today)/, { timeout: 10000 });
+    }
 
-  // Wait for redirect to Today view
-  await expect(page).toHaveURL(/\/today$/);
+    async function cleanupInboxItems(context, appUrl, contentPattern: string) {
+        const response = await context.request.get(`${appUrl}/api/inbox`);
+        if (response.ok()) {
+            const data = await response.json();
+            const items = data.items || data;
+            for (const item of items) {
+                if (item.content.includes(contentPattern)) {
+                    await context.request.delete(
+                        `${appUrl}/api/inbox/${item.uid}`
+                    );
+                }
+            }
+        }
+    }
 
-  // Navigate to inbox page
-  await page.goto(appUrl + '/inbox');
-  await expect(page).toHaveURL(/\/inbox$/);
+    async function cleanupTags(context, appUrl, tagNames: string[]) {
+        const response = await context.request.get(`${appUrl}/api/tags`);
+        if (response.ok()) {
+            const tags = await response.json();
+            for (const tagName of tagNames) {
+                const tag = tags.find(
+                    (t) => t.name.toLowerCase() === tagName.toLowerCase()
+                );
+                if (tag) {
+                    await context.request.delete(`${appUrl}/api/tags/${tag.id}`);
+                }
+            }
+        }
+    }
 
-  return appUrl;
-}
+    async function cleanupProjects(context, appUrl, projectNames: string[]) {
+        const response = await context.request.get(`${appUrl}/api/projects`);
+        if (response.ok()) {
+            const data = await response.json();
+            const projects = data.projects || data;
+            for (const projectName of projectNames) {
+                const project = projects.find(
+                    (p) => p.name.toLowerCase() === projectName.toLowerCase()
+                );
+                if (project) {
+                    await context.request.delete(
+                        `${appUrl}/api/projects/${project.id}`
+                    );
+                }
+            }
+        }
+    }
 
-// Shared function to create an inbox item
-async function createInboxItem(page, content) {
-  // Click the Quick Inbox Capture button in the navbar
-  await page.getByRole('button', { name: 'Quick Inbox Capture' }).click();
+    test.describe('Navigation', () => {
+        test('clicking inbox button navigates to inbox and focuses input', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Wait for the InboxModal to appear
-  await expect(page.locator('input[name="text"]')).toBeVisible();
+            const inboxNavButton = page.getByTestId('sidebar-nav-inbox');
+            await expect(inboxNavButton).toBeVisible({ timeout: 5000 });
+            await inboxNavButton.click();
 
-  // Add the test item
-  await page.locator('input[name="text"]').fill(content);
+            await page.waitForURL(/\/inbox/, { timeout: 10000 });
 
-  // Submit the form by pressing Enter
-  await page.locator('input[name="text"]').press('Enter');
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
+            await expect(quickCaptureInput).toBeFocused({ timeout: 5000 });
+        });
+    });
 
-  // Wait for the modal to close
-  await expect(page.locator('input[name="text"]')).not.toBeVisible();
+    test.describe('Plain Text Input', () => {
+        test('can add inbox item with plain text', async ({
+            page,
+            context,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Verify the item appears in the inbox list
-  await expect(page.locator('text=' + content)).toBeVisible();
-}
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const testContent = `Plain text item ${timestamp}`;
 
-test('user can add a new inbox item and verify it has been added', async ({ page, baseURL }) => {
-  await loginAndNavigateToInbox(page, baseURL);
+            await page.goto(`${appUrl}/inbox`);
 
-  // Add a unique test item
-  const testContent = `Test inbox item ${Date.now()}`;
-  await createInboxItem(page, testContent);
-});
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
 
-test('user can edit an inbox item', async ({ page, baseURL }) => {
-  await loginAndNavigateToInbox(page, baseURL);
+            await quickCaptureInput.fill(testContent);
+            await quickCaptureInput.press('Enter');
 
-  // Create an initial item
-  const timestamp = Date.now();
-  const originalContent = `Test item to edit ${timestamp}`;
-  await createInboxItem(page, originalContent);
+            await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });
 
-  // Find the inbox item container and hover to show edit button
-  const inboxItemContainer = page.locator('.rounded-lg.shadow-sm').filter({ hasText: originalContent });
-  await inboxItemContainer.hover();
+            await cleanupInboxItems(context, appUrl, testContent);
+        });
 
-  // Click the edit button (pencil icon) - it has title="Edit"
-  await inboxItemContainer.locator('button[title="Edit"]').click();
+        test('can add inbox item with long text', async ({
+            page,
+            context,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Wait for the edit modal to appear
-  await expect(page.locator('input[name="text"]')).toBeVisible();
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const longText = `This is a very long inbox entry ${timestamp} that exceeds typical lengths. `.repeat(
+                10
+            );
 
-  // Edit the content
-  const editedContent = `Edited test item ${timestamp}`;
-  await page.locator('input[name="text"]').clear();
-  await page.locator('input[name="text"]').fill(editedContent);
-  await page.locator('input[name="text"]').press('Enter');
+            await page.goto(`${appUrl}/inbox`);
 
-  // Wait for the modal to close
-  await expect(page.locator('input[name="text"]')).not.toBeVisible();
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
 
-  // Verify the edited content appears in the inbox item
-  await expect(page.locator('.rounded-lg.shadow-sm').filter({ hasText: editedContent })).toBeVisible();
-  
-  // Verify the original content is no longer visible in inbox items
-  await expect(page.locator('.rounded-lg.shadow-sm').filter({ hasText: originalContent })).not.toBeVisible();
-});
+            await quickCaptureInput.fill(longText);
+            await quickCaptureInput.press('Enter');
 
-test('user can delete an inbox item', async ({ page, baseURL }) => {
-  await loginAndNavigateToInbox(page, baseURL);
+            await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });
 
-  // Create an initial item
-  const timestamp = Date.now();
-  const testContent = `Test item to delete ${timestamp}`;
-  await createInboxItem(page, testContent);
+            await cleanupInboxItems(context, appUrl, String(timestamp));
+        });
+    });
 
-  // Find the inbox item container and hover to show delete button
-  const inboxItemContainer = page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent });
-  await inboxItemContainer.hover();
+    test.describe('Tags', () => {
+        test('shows new tag chip when typing non-existing tag', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Click the delete button (trash icon) - it has title="Delete"
-  await inboxItemContainer.locator('button[title="Delete"]').click();
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const newTagName = `newtag${timestamp}`;
 
-  // Wait for and handle the confirmation dialog
-  await expect(page.locator('text=Delete Item')).toBeVisible();
-  // Click the red "Delete" button in the confirmation dialog
-  await page.locator('.bg-red-500.text-white').click();
+            await page.goto(`${appUrl}/inbox`);
 
-  // Verify the item is no longer visible
-  await expect(page.locator('text=' + testContent)).not.toBeVisible();
-});
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
 
-test('user can create task from inbox item', async ({ page, baseURL }) => {
-  const appUrl = await loginAndNavigateToInbox(page, baseURL);
+            await quickCaptureInput.fill(`Test item #${newTagName}`);
 
-  // Create an initial item
-  const timestamp = Date.now();
-  const testContent = `Test item to convert to task ${timestamp}`;
-  await createInboxItem(page, testContent);
+            const tagChip = page.getByTestId(`selected-tag-${newTagName}`);
+            await expect(tagChip).toBeVisible({ timeout: 5000 });
 
-  // Find the inbox item container and hover to show convert buttons
-  const inboxItemContainer = page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent });
-  await inboxItemContainer.hover();
+            await expect(tagChip).toHaveAttribute('data-tag-exists', 'false');
+        });
 
-  // Click the "Convert to Task" button (clipboard icon with title="Create task")
-  await inboxItemContainer.locator('button[title="Create task"]').click();
+        test('creates new tag when submitting with non-existing tag', async ({
+            page,
+            context,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Wait for the Task Modal to appear
-  await expect(page.locator('input[name="name"], input[placeholder*="task" i], input[placeholder*="name" i]')).toBeVisible({ timeout: 10000 });
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const newTagName = `newtag${timestamp}`;
 
-  // Verify the task name field is pre-filled with the inbox item content
-  const taskNameInput = page.locator('input[name="name"], input[placeholder*="task" i], input[placeholder*="name" i]').first();
-  await expect(taskNameInput).toHaveValue(testContent);
+            await page.goto(`${appUrl}/inbox`);
 
-  // Save the task - Use a more specific selector within the modal
-  await page.locator('.bg-blue-600.text-white').filter({ hasText: 'Save' }).click();
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await quickCaptureInput.fill(`Test item #${newTagName}`);
+            await quickCaptureInput.press('Enter');
 
-  // Wait for success message or modal to close
-  await expect(page.locator('input[name="name"], input[placeholder*="task" i], input[placeholder*="name" i]')).not.toBeVisible({ timeout: 10000 });
+            await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });
 
-  // Navigate back to inbox to verify the item was processed
-  await page.goto(appUrl + '/inbox');
-  
-  // Verify the original inbox item is no longer in the inbox (successfully converted to task)
-  await expect(page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent })).not.toBeVisible();
+            const tagsResponse = await context.request.get(
+                `${appUrl}/api/tags`
+            );
+            const tags = await tagsResponse.json();
+            const createdTag = tags.find((t) => t.name === newTagName);
+            expect(createdTag).toBeTruthy();
 
-  // Navigate to tasks page to verify the task was created there
-  await page.goto(appUrl + '/tasks');
-  await expect(page).toHaveURL(/\/tasks$/);
-  
-  // Verify the created task appears in the tasks list using the task-item-wrapper class
-  await expect(page.locator('.task-item-wrapper').filter({ hasText: testContent })).toBeVisible();
-});
+            await cleanupInboxItems(context, appUrl, String(timestamp));
+            await cleanupTags(context, appUrl, [newTagName]);
+        });
 
-test('user can create project from inbox item', async ({ page, baseURL }) => {
-  const appUrl = await loginAndNavigateToInbox(page, baseURL);
+    });
 
-  // Create an initial item
-  const timestamp = Date.now();
-  const testContent = `Test project from inbox ${timestamp}`;
-  await createInboxItem(page, testContent);
+    test.describe('Projects', () => {
+        test('shows new project chip when typing non-existing project', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Find the inbox item container and hover to show convert buttons
-  const inboxItemContainer = page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent });
-  await inboxItemContainer.hover();
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const newProjectName = `NewProject${timestamp}`;
 
-  // Click the "Create project" button
-  await inboxItemContainer.locator('button[title="Create project"]').click();
+            await page.goto(`${appUrl}/inbox`);
 
-  // Wait for the Project Modal to appear
-  await expect(page.locator('input[name="name"], input[placeholder*="project" i], input[placeholder*="name" i]')).toBeVisible({ timeout: 10000 });
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
 
-  // Verify the project name field is pre-filled with the inbox item content
-  const projectNameInput = page.locator('input[name="name"], input[placeholder*="project" i], input[placeholder*="name" i]').first();
-  await expect(projectNameInput).toHaveValue(testContent);
+            await quickCaptureInput.fill(`Test item +${newProjectName}`);
 
-  // Save the project - Use the specific test ID
-  await page.locator('[data-testid="project-save-button"]').click();
+            const projectChip = page.getByTestId(
+                `selected-project-${newProjectName}`
+            );
+            await expect(projectChip).toBeVisible({ timeout: 5000 });
 
-  // Wait for success message or modal to close
-  await expect(page.locator('input[name="name"], input[placeholder*="project" i], input[placeholder*="name" i]')).not.toBeVisible({ timeout: 10000 });
+            await expect(projectChip).toHaveAttribute(
+                'data-project-exists',
+                'false'
+            );
+        });
 
-  // Navigate back to inbox to verify the item was processed
-  await page.goto(appUrl + '/inbox');
-  
-  // Verify the original inbox item is no longer in the inbox (successfully converted to project)
-  await expect(page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent })).not.toBeVisible();
+        test('creates new project when submitting with non-existing project', async ({
+            page,
+            context,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Navigate to projects page to verify the project was created there
-  await page.goto(appUrl + '/projects');
-  await expect(page).toHaveURL(/\/projects$/);
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const newProjectName = `NewProject${timestamp}`;
 
-  // Wait a moment for the page to load
-  await page.waitForTimeout(2000);
+            await page.goto(`${appUrl}/inbox`);
 
-  // Verify the created project appears - use a more specific selector
-  await expect(page.getByRole('link', { name: new RegExp(testContent) }).first()).toBeVisible({ timeout: 10000 });
-});
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await quickCaptureInput.fill(`Test item +${newProjectName}`);
+            await quickCaptureInput.press('Enter');
 
-test('user can create note from inbox item', async ({ page, baseURL }) => {
-  const appUrl = await loginAndNavigateToInbox(page, baseURL);
+            await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });
 
-  // Create an initial item
-  const timestamp = Date.now();
-  const testContent = `Test note from inbox ${timestamp}`;
-  await createInboxItem(page, testContent);
+            const projectsResponse = await context.request.get(
+                `${appUrl}/api/projects`
+            );
+            const data = await projectsResponse.json();
+            const projects = data.projects || data;
+            const createdProject = projects.find(
+                (p) => p.name === newProjectName
+            );
+            expect(createdProject).toBeTruthy();
 
-  // Find the inbox item container and hover to show convert buttons
-  const inboxItemContainer = page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent });
-  await inboxItemContainer.hover();
+            await cleanupInboxItems(context, appUrl, String(timestamp));
+            await cleanupProjects(context, appUrl, [newProjectName]);
+        });
+    });
 
-  // Click the "Create note" button
-  await inboxItemContainer.locator('button[title="Create note"]').click();
+    test.describe('Combinations', () => {
+        test('multiple tags and project combination saves successfully', async ({
+            page,
+            context,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
 
-  // Wait for the Note Modal to appear
-  await expect(page.locator('input[name="title"], input[placeholder*="note" i], input[placeholder*="title" i]')).toBeVisible({ timeout: 10000 });
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const tag1 = `tag1_${timestamp}`;
+            const tag2 = `tag2_${timestamp}`;
+            const projectName = `ComboProject${timestamp}`;
 
-  // Verify the note title field is pre-filled with the inbox item content
-  const noteTitleInput = page.locator('input[name="title"], input[placeholder*="note" i], input[placeholder*="title" i]').first();
-  await expect(noteTitleInput).toHaveValue(testContent);
+            await page.goto(`${appUrl}/inbox`);
 
-  // Save the note - Find submit button, force click through backdrop
-  await page.locator('form button[type="submit"], button:has-text("Save"), button:has-text("Create")').first().click({ force: true });
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
 
-  // Wait for success message or modal to close
-  await expect(page.locator('input[name="title"], input[placeholder*="note" i], input[placeholder*="title" i]')).not.toBeVisible({ timeout: 10000 });
+            await quickCaptureInput.fill(
+                `Multi combo test #${tag1} #${tag2} +${projectName}`
+            );
 
-  // Navigate back to inbox to verify the item was processed
-  await page.goto(appUrl + '/inbox');
-  
-  // Verify the original inbox item is no longer in the inbox (successfully converted to note)
-  await expect(page.locator('.rounded-lg.shadow-sm').filter({ hasText: testContent })).not.toBeVisible();
+            await expect(
+                page.getByTestId(`selected-tag-${tag1}`)
+            ).toBeVisible();
+            await expect(
+                page.getByTestId(`selected-tag-${tag2}`)
+            ).toBeVisible();
+            await expect(
+                page.getByTestId(`selected-project-${projectName}`)
+            ).toBeVisible();
 
-  // Navigate to notes page to verify the note was created there
-  await page.goto(appUrl + '/notes');
-  await expect(page).toHaveURL(/\/notes$/);
-  
-  // Wait a moment for the page to load, then check if note exists (more lenient check)
-  await page.waitForTimeout(2000);
-  const noteExists = await page.locator('*').filter({ hasText: testContent }).count() > 0;
-  if (!noteExists) {
-    // If exact match fails, just verify we're on notes page
-    await expect(page.locator('h1, h2, h3').filter({ hasText: /notes/i }).first()).toBeVisible();
-  } else {
-    await expect(page.locator('*').filter({ hasText: testContent })).toBeVisible();
-  }
+            await quickCaptureInput.press('Enter');
+            await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });
+
+            await cleanupInboxItems(context, appUrl, String(timestamp));
+            await cleanupTags(context, appUrl, [tag1, tag2]);
+            await cleanupProjects(context, appUrl, [projectName]);
+        });
+    });
+
+    test.describe('URL/Bookmark', () => {
+        test('URL input automatically adds bookmark tag', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
+
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+
+            await page.goto(`${appUrl}/inbox`);
+
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
+
+            await quickCaptureInput.fill('https://example.com/test-page');
+
+            const bookmarkChip = page.getByTestId('selected-tag-bookmark');
+            await expect(bookmarkChip).toBeVisible({ timeout: 10000 });
+        });
+
+        test('URL with existing tags shows both bookmark and custom tags', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
+
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const customTag = `customtag${timestamp}`;
+
+            await page.goto(`${appUrl}/inbox`);
+
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
+
+            await quickCaptureInput.fill(
+                `https://example.com/page #${customTag}`
+            );
+
+            await expect(
+                page.getByTestId(`selected-tag-${customTag}`)
+            ).toBeVisible({ timeout: 5000 });
+            await expect(
+                page.getByTestId('selected-tag-bookmark')
+            ).toBeVisible({ timeout: 10000 });
+        });
+
+        test('URL bookmark saves successfully', async ({
+            page,
+            context,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
+
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+            const timestamp = Date.now();
+            const testUrl = `https://example.com/test-${timestamp}`;
+
+            await page.goto(`${appUrl}/inbox`);
+
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
+
+            await quickCaptureInput.fill(testUrl);
+
+            await expect(
+                page.getByTestId('selected-tag-bookmark')
+            ).toBeVisible({ timeout: 10000 });
+
+            await quickCaptureInput.press('Enter');
+            await expect(quickCaptureInput).toHaveValue('', { timeout: 5000 });
+
+            await cleanupInboxItems(context, appUrl, String(timestamp));
+        });
+    });
+
+    test.describe('Containers', () => {
+        test('tags container appears when tags are present', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
+
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+
+            await page.goto(`${appUrl}/inbox`);
+
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
+
+            await expect(
+                page.getByTestId('selected-tags-container')
+            ).not.toBeVisible();
+
+            await quickCaptureInput.fill('Test #mytag');
+
+            await expect(
+                page.getByTestId('selected-tags-container')
+            ).toBeVisible({ timeout: 5000 });
+        });
+
+        test('projects container appears when projects are present', async ({
+            page,
+            baseURL,
+        }) => {
+            await loginViaUI(page, baseURL);
+
+            const appUrl =
+                baseURL ?? process.env.APP_URL ?? 'http://localhost:8080';
+
+            await page.goto(`${appUrl}/inbox`);
+
+            const quickCaptureInput = page.getByTestId('quick-capture-input');
+            await expect(quickCaptureInput).toBeVisible({ timeout: 5000 });
+
+            await expect(
+                page.getByTestId('selected-projects-container')
+            ).not.toBeVisible();
+
+            await quickCaptureInput.fill('Test +MyProject');
+
+            await expect(
+                page.getByTestId('selected-projects-container')
+            ).toBeVisible({ timeout: 5000 });
+        });
+    });
 });

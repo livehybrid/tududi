@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import TaskModal from './Task/TaskModal';
 import { Task } from '../entities/Task';
 import { Project } from '../entities/Project';
-import { deleteTask } from '../utils/tasksService';
+import { updateTask } from '../utils/tasksService';
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -16,6 +15,9 @@ import { el, enUS, es, ja, uk, de } from 'date-fns/locale';
 import CalendarMonthView from './Calendar/CalendarMonthView';
 import CalendarWeekView from './Calendar/CalendarWeekView';
 import CalendarDayView from './Calendar/CalendarDayView';
+import { getApiPath } from '../config/paths';
+import { Link, useNavigate } from 'react-router-dom';
+import { parseDateString } from '../utils/dateUtils';
 
 const getLocale = (language: string) => {
     switch (language) {
@@ -39,78 +41,36 @@ interface CalendarEvent {
     title: string;
     start: Date;
     end: Date;
-    type: 'task' | 'event' | 'google';
+    type: 'task' | 'event';
     color?: string;
-}
-
-interface GoogleCalendarStatus {
-    connected: boolean;
-    email?: string;
 }
 
 const Calendar: React.FC = () => {
     const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-    const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus>({
-        connected: false,
-    });
-    const [isConnecting, setIsConnecting] = useState(false);
-    const [isDemoMode, setIsDemoMode] = useState(false);
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [isLoadingTasks, setIsLoadingTasks] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [allTasks, setAllTasks] = useState<any[]>([]);
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [, setProjects] = useState<Project[]>([]);
     const [isEventDetailModalOpen, setIsEventDetailModalOpen] = useState(false);
 
     // Dispatch global modal events
 
     const locale = getLocale(i18n.language);
 
-    // Load Google Calendar status and tasks on component mount
+    // Load tasks and projects on component mount
     useEffect(() => {
-        checkGoogleCalendarStatus();
         loadTasks();
         loadProjects();
-
-        // Check URL parameters for demo mode
-        const urlParams = new URLSearchParams(window.location.search);
-        if (
-            urlParams.get('demo') === 'true' &&
-            urlParams.get('connected') === 'true'
-        ) {
-            setGoogleStatus({ connected: true, email: 'demo@example.com' });
-            setIsDemoMode(true);
-            // Clean up URL
-            window.history.replaceState(
-                {},
-                document.title,
-                window.location.pathname
-            );
-        }
     }, []);
-
-    const checkGoogleCalendarStatus = async () => {
-        try {
-            const response = await fetch('/api/calendar/status', {
-                credentials: 'include',
-            });
-            if (response.ok) {
-                const status = await response.json();
-                setGoogleStatus(status);
-                setIsDemoMode(status.demo || false);
-            }
-        } catch (error) {
-            console.error('Error checking Google Calendar status:', error);
-        }
-    };
 
     const loadTasks = async () => {
         setIsLoadingTasks(true);
         try {
-            const response = await fetch('/api/tasks', {
+            const response = await fetch(getApiPath('tasks'), {
                 credentials: 'include',
             });
             if (response.ok) {
@@ -153,22 +113,38 @@ const Calendar: React.FC = () => {
         }
 
         tasks.forEach((task) => {
-            // Add tasks with due dates
-            if (task.due_date) {
-                const dueDate = new Date(task.due_date);
+            // Add deferred tasks with defer_until dates
+            if (task.defer_until) {
+                const deferDate = new Date(task.defer_until);
                 const taskEvent = {
-                    id: `task-${task.id}`,
-                    title: task.name || task.title || `Task ${task.id}`,
-                    start: dueDate,
-                    end: new Date(dueDate.getTime() + 60 * 60 * 1000), // 1 hour duration
+                    id: `task-defer-${task.id}`,
+                    title: `⏰ ${task.name || task.title || `Task ${task.id}`}`,
+                    start: deferDate,
+                    end: new Date(deferDate.getTime() + 60 * 60 * 1000), // 1 hour duration
                     type: 'task' as const,
-                    color: task.completed_at ? '#22c55e' : '#ef4444', // Green if completed, red if not
+                    color: task.completed_at ? '#22c55e' : '#f59e0b', // Green if completed, amber if deferred
                 };
                 taskEvents.push(taskEvent);
             }
 
-            // Add tasks scheduled for today (if they don't have due_date)
-            if (!task.due_date && task.created_at) {
+            // Add tasks with due dates
+            if (task.due_date) {
+                const dueDate = parseDateString(task.due_date);
+                if (dueDate) {
+                    const taskEvent = {
+                        id: `task-${task.id}`,
+                        title: task.name || task.title || `Task ${task.id}`,
+                        start: dueDate,
+                        end: new Date(dueDate.getTime() + 60 * 60 * 1000), // 1 hour duration
+                        type: 'task' as const,
+                        color: task.completed_at ? '#22c55e' : '#3b82f6', // Green if completed, blue if not
+                    };
+                    taskEvents.push(taskEvent);
+                }
+            }
+
+            // Add tasks scheduled for today (if they don't have defer_until or due_date)
+            if (!task.defer_until && !task.due_date && task.created_at) {
                 const createdDate = new Date(task.created_at);
                 const today = new Date();
 
@@ -186,8 +162,8 @@ const Calendar: React.FC = () => {
                 }
             }
 
-            // Always add tasks to calendar for easier debugging
-            if (!task.due_date && !task.created_at) {
+            // Always add tasks to calendar for easier debugging (only if no defer_until, due_date, or created_at)
+            if (!task.defer_until && !task.due_date && !task.created_at) {
                 const taskEvent = {
                     id: `task-fallback-${task.id}`,
                     title: `📌 ${task.name || task.title || `Task ${task.id}`}`,
@@ -205,7 +181,7 @@ const Calendar: React.FC = () => {
 
     const loadProjects = async () => {
         try {
-            const response = await fetch('/api/projects', {
+            const response = await fetch(getApiPath('projects'), {
                 credentials: 'include',
             });
             if (response.ok) {
@@ -217,64 +193,7 @@ const Calendar: React.FC = () => {
         }
     };
 
-    const connectGoogleCalendar = async () => {
-        if (isConnecting) return;
-
-        setIsConnecting(true);
-        try {
-            const response = await fetch('/api/calendar/auth', {
-                credentials: 'include',
-            });
-            if (response.ok) {
-                const result = await response.json();
-                if (result.demo) {
-                    // Demo mode - simulate connection
-                    setGoogleStatus({
-                        connected: true,
-                        email: 'demo@example.com',
-                    });
-                    setIsDemoMode(true);
-                } else {
-                    // Real Google OAuth - redirect to auth URL
-                    window.location.href = result.authUrl;
-                }
-            } else {
-                throw new Error('Failed to get authorization URL');
-            }
-        } catch (error) {
-            console.error('Error connecting to Google Calendar:', error);
-            alert(t('calendar.connectionError'));
-        } finally {
-            setIsConnecting(false);
-        }
-    };
-
-    const disconnectGoogleCalendar = async () => {
-        try {
-            if (isDemoMode) {
-                // Demo mode - just update local state
-                setGoogleStatus({ connected: false });
-                setIsDemoMode(false);
-                return;
-            }
-
-            // Real disconnect API call
-            const response = await fetch('/api/calendar/disconnect', {
-                method: 'POST',
-                credentials: 'include',
-            });
-            if (response.ok) {
-                setGoogleStatus({ connected: false });
-            } else {
-                throw new Error('Failed to disconnect');
-            }
-        } catch (error) {
-            console.error('Error disconnecting Google Calendar:', error);
-            alert(t('calendar.disconnectionError'));
-        }
-    };
-
-    const navigate = (direction: 'prev' | 'next') => {
+    const navigateView = (direction: 'prev' | 'next') => {
         setCurrentDate((prev) => {
             if (view === 'month') {
                 const newDate = new Date(prev);
@@ -308,12 +227,15 @@ const Calendar: React.FC = () => {
     const handleEventClick = (event: CalendarEvent) => {
         // Handle task events
         if (event.type === 'task') {
-            // Extract task ID from event ID
-            const taskId = event.id.replace(/^task(-created|-fallback)?-/, '');
+            // Extract task ID from event ID (handles task-, task-defer-, task-created-, task-fallback-)
+            const taskId = event.id.replace(
+                /^task(-defer|-created|-fallback)?-/,
+                ''
+            );
             const task = allTasks.find((t) => t.id.toString() === taskId);
 
             if (task) {
-                // Convert task to proper Task entity format for TaskModal
+                // Normalize task shape before opening TaskDetails
                 const taskEntity: Task = {
                     ...task,
                     name: task.name || task.title || `Task ${task.id}`,
@@ -339,77 +261,133 @@ const Calendar: React.FC = () => {
     };
 
     const handleEditTask = () => {
-        setIsEventDetailModalOpen(false);
-        setIsTaskModalOpen(true);
-    };
-
-    const handleTaskSave = (updatedTask: Task) => {
-        // Update the task in allTasks
-        setAllTasks((prev) =>
-            prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
-        );
-        // Refresh calendar
-        loadTasks();
-        // Close modal
-        setIsTaskModalOpen(false);
-        setSelectedTask(null);
-    };
-
-    const handleTaskDelete = async (taskId: number) => {
-        try {
-            await deleteTask(taskId);
-            // Remove task from allTasks
-            setAllTasks((prev) => prev.filter((t) => t.id !== taskId));
-            // Refresh calendar
-            loadTasks();
-            // Close modal
-            setIsTaskModalOpen(false);
+        if (selectedTask?.uid) {
+            setIsEventDetailModalOpen(false);
+            const targetUid = selectedTask.uid;
             setSelectedTask(null);
-        } catch (error) {
-            console.error('Failed to delete task:', error);
+            navigate(`/task/${targetUid}`);
         }
     };
 
-    const handleCreateProject = async (name: string): Promise<Project> => {
-        try {
-            const response = await fetch('/api/projects', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ name, description: '' }),
-            });
+    const handleEventDrop = async (
+        eventId: string,
+        newDate: Date,
+        newHour?: number
+    ) => {
+        console.log('Event drop:', { eventId, newDate, newHour });
 
-            if (response.ok) {
-                const newProject = await response.json();
-                setProjects((prev) => [...prev, newProject]);
-                return newProject;
+        // Extract task ID from event ID
+        const taskId = eventId.replace(
+            /^task(-defer|-created|-fallback)?-/,
+            ''
+        );
+        const task = allTasks.find((t) => t.id.toString() === taskId);
+
+        if (!task) {
+            console.error('Task not found:', taskId);
+            return;
+        }
+
+        if (!task.uid) {
+            console.error('Task has no uid:', task);
+            return;
+        }
+
+        console.log('Found task:', task);
+
+        // Calculate new date/time
+        const newDateTime = new Date(newDate);
+        if (newHour !== undefined) {
+            newDateTime.setHours(newHour, 0, 0, 0);
+        } else {
+            // If no hour specified (month view), keep the original time or set to start of day
+            if (task.due_date) {
+                const originalTime = parseDateString(task.due_date);
+                if (originalTime) {
+                    newDateTime.setHours(
+                        originalTime.getHours(),
+                        originalTime.getMinutes(),
+                        0,
+                        0
+                    );
+                } else {
+                    newDateTime.setHours(0, 0, 0, 0);
+                }
             } else {
-                throw new Error('Failed to create project');
+                newDateTime.setHours(0, 0, 0, 0);
             }
+        }
+
+        // Determine which field to update based on event type
+        const isDeferEvent = eventId.startsWith('task-defer-');
+        const fieldToUpdate = isDeferEvent ? 'defer_until' : 'due_date';
+
+        console.log('Updating task:', {
+            uid: task.uid,
+            field: fieldToUpdate,
+            newDateTime: newDateTime.toISOString(),
+        });
+
+        // Optimistically update the UI first
+        const updatedTask = {
+            ...task,
+            [fieldToUpdate]: newDateTime.toISOString(),
+        };
+
+        // Update local tasks state
+        setAllTasks((prev) =>
+            prev.map((t) => (t.id === task.id ? updatedTask : t))
+        );
+
+        // Update events state
+        setEvents((prevEvents) =>
+            prevEvents.map((event) => {
+                if (event.id === eventId) {
+                    return {
+                        ...event,
+                        start: newDateTime,
+                        end: new Date(newDateTime.getTime() + 60 * 60 * 1000),
+                    };
+                }
+                return event;
+            })
+        );
+
+        // Update in background
+        try {
+            await updateTask(task.uid, {
+                [fieldToUpdate]: newDateTime.toISOString(),
+            });
+            console.log('Task updated successfully');
         } catch (error) {
-            console.error('Error creating project:', error);
-            throw error;
+            console.error('Error updating task:', error);
+            // Revert on error
+            await loadTasks();
         }
     };
 
     return (
-        <div className="flex justify-center px-4 lg:px-2">
-            <div className="w-full max-w-6xl">
+        <div className="h-full flex flex-col px-4 py-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+            <div className="w-full flex-1 flex flex-col min-h-0">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-4">
-                        <h2 className="text-2xl font-light flex items-center">
-                            <CalendarIcon className="h-6 w-6 mr-2" />
-                            {t('sidebar.calendar')}
-                        </h2>
-                        <span className="text-lg text-gray-600 dark:text-gray-400">
-                            {format(currentDate, 'MMMM yyyy', { locale })}
-                        </span>
+                        <div className="flex items-center bg-gradient-to-br from-blue-500 to-blue-600 p-2.5 rounded-lg shadow-md">
+                            <CalendarIcon className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                                {t('sidebar.calendar')}
+                            </h2>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                {format(currentDate, 'MMMM yyyy', { locale })}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                         {/* View selector */}
-                        <div className="flex rounded-lg border border-gray-300 dark:border-gray-600">
+                        <div className="flex rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 p-0.5 shadow-inner">
                             {['month', 'week', 'day'].map((viewType) => (
                                 <button
                                     key={viewType}
@@ -418,11 +396,11 @@ const Calendar: React.FC = () => {
                                             viewType as 'month' | 'week' | 'day'
                                         )
                                     }
-                                    className={`px-3 py-1 text-sm font-medium capitalize ${
+                                    className={`px-4 py-2 text-sm font-semibold capitalize transition-all duration-200 ${
                                         view === viewType
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                    } ${viewType === 'month' ? 'rounded-l-lg' : ''} ${viewType === 'day' ? 'rounded-r-lg' : ''}`}
+                                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                    } ${viewType === 'month' ? 'rounded-l-md' : ''} ${viewType === 'day' ? 'rounded-r-md' : ''}`}
                                 >
                                     {t(`calendar.${viewType}`)}
                                 </button>
@@ -431,110 +409,69 @@ const Calendar: React.FC = () => {
 
                         {/* Navigation */}
                         <button
-                            onClick={() => navigate('prev')}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                            onClick={() => navigateView('prev')}
+                            className="p-2.5 rounded-lg bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 hover:shadow-md"
                         >
-                            <ChevronLeftIcon className="h-5 w-5" />
+                            <ChevronLeftIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                         </button>
 
                         <button
                             onClick={goToToday}
-                            className="px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            className="px-4 py-2.5 text-sm font-semibold bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
                         >
                             {t('calendar.today')}
                         </button>
 
                         <button
-                            onClick={() => navigate('next')}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                            onClick={() => navigateView('next')}
+                            className="p-2.5 rounded-lg bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 hover:shadow-md"
                         >
-                            <ChevronRightIcon className="h-5 w-5" />
+                            <ChevronRightIcon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                         </button>
                     </div>
                 </div>
 
                 {/* Loading indicator */}
                 {isLoadingTasks && (
-                    <div className="text-center py-4 text-gray-500">
-                        {t('calendar.loadingTasks')}
+                    <div className="text-center py-4 px-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 mb-4">
+                        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                            {t('calendar.loadingTasks')}
+                        </span>
                     </div>
                 )}
 
                 {/* Calendar view */}
-                {view === 'month' && (
-                    <CalendarMonthView
-                        currentDate={currentDate}
-                        events={events}
-                        onDateClick={handleDateClick}
-                        onEventClick={handleEventClick}
-                    />
-                )}
+                <div className="flex-1 overflow-hidden min-h-0">
+                    {view === 'month' && (
+                        <CalendarMonthView
+                            currentDate={currentDate}
+                            events={events}
+                            onDateClick={handleDateClick}
+                            onEventClick={handleEventClick}
+                            onEventDrop={handleEventDrop}
+                        />
+                    )}
 
-                {view === 'week' && (
-                    <CalendarWeekView
-                        currentDate={currentDate}
-                        events={events}
-                        onDateClick={handleDateClick}
-                        onEventClick={handleEventClick}
-                        onTimeSlotClick={handleTimeSlotClick}
-                    />
-                )}
+                    {view === 'week' && (
+                        <CalendarWeekView
+                            currentDate={currentDate}
+                            events={events}
+                            onDateClick={handleDateClick}
+                            onEventClick={handleEventClick}
+                            onTimeSlotClick={handleTimeSlotClick}
+                            onEventDrop={handleEventDrop}
+                        />
+                    )}
 
-                {view === 'day' && (
-                    <CalendarDayView
-                        currentDate={currentDate}
-                        events={events}
-                        onEventClick={handleEventClick}
-                        onTimeSlotClick={handleTimeSlotClick}
-                    />
-                )}
-
-                {/* Google Calendar Integration Panel */}
-                <div className="mt-6 bg-white dark:bg-gray-900 rounded-lg shadow p-6">
-                    <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
-                        {t('calendar.googleIntegration')}
-                    </h3>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                {isDemoMode
-                                    ? 'Demo mode: Google Calendar integration simulated for testing purposes.'
-                                    : t('calendar.googleDescription')}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-500">
-                                {t('calendar.googleStatus')}:
-                                {googleStatus.connected ? (
-                                    <span className="text-green-500 ml-1">
-                                        {t('calendar.connected')}
-                                        {googleStatus.email &&
-                                            ` (${googleStatus.email})`}
-                                    </span>
-                                ) : (
-                                    <span className="text-red-500 ml-1">
-                                        {t('calendar.notConnected')}
-                                    </span>
-                                )}
-                            </p>
-                        </div>
-                        {googleStatus.connected ? (
-                            <button
-                                onClick={disconnectGoogleCalendar}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                            >
-                                {t('calendar.disconnectGoogle')}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={connectGoogleCalendar}
-                                disabled={isConnecting}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                            >
-                                {isConnecting
-                                    ? t('calendar.connecting')
-                                    : t('calendar.connectGoogle')}
-                            </button>
-                        )}
-                    </div>
+                    {view === 'day' && (
+                        <CalendarDayView
+                            currentDate={currentDate}
+                            events={events}
+                            onEventClick={handleEventClick}
+                            onTimeSlotClick={handleTimeSlotClick}
+                            onEventDrop={handleEventDrop}
+                        />
+                    )}
                 </div>
 
                 {/* Event Details Modal */}
@@ -551,20 +488,6 @@ const Calendar: React.FC = () => {
                 )}
 
                 {/* Full Task Edit Modal */}
-                {selectedTask && (
-                    <TaskModal
-                        isOpen={isTaskModalOpen}
-                        onClose={() => {
-                            setIsTaskModalOpen(false);
-                            setSelectedTask(null);
-                        }}
-                        task={selectedTask}
-                        onSave={handleTaskSave}
-                        onDelete={handleTaskDelete}
-                        projects={projects}
-                        onCreateProject={handleCreateProject}
-                    />
-                )}
             </div>
         </div>
     );
@@ -642,9 +565,14 @@ const TaskEventModal: React.FC<TaskEventModalProps> = ({
                                 {t('calendar.dueDate')}
                             </label>
                             <p className="text-gray-900 dark:text-gray-100">
-                                {format(new Date(task.due_date), 'PPP', {
-                                    locale: locale,
-                                })}
+                                {parseDateString(task.due_date) &&
+                                    format(
+                                        parseDateString(task.due_date) as Date,
+                                        'PPP',
+                                        {
+                                            locale: locale,
+                                        }
+                                    )}
                             </p>
                         </div>
                     )}
@@ -712,13 +640,13 @@ const TaskEventModal: React.FC<TaskEventModalProps> = ({
 
                 {/* Action Buttons */}
                 <div className="mt-6 flex justify-between">
-                    <a
-                        href="/tasks"
+                    <Link
+                        to="/tasks"
                         className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                     >
                         <ArrowTopRightOnSquareIcon className="w-4 h-4 mr-1" />
                         {t('calendar.goToTasks')}
-                    </a>
+                    </Link>
 
                     <div className="flex space-x-3">
                         <button

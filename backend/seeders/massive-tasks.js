@@ -1,3 +1,5 @@
+const { faker } = require('@faker-js/faker');
+
 // Helper function to create massive task data with AI feature triggers
 function createMassiveTaskData(projects, getRandomDate, getPastDate) {
     // Helper to get random items from array
@@ -13,6 +15,26 @@ function createMassiveTaskData(projects, getRandomDate, getPastDate) {
     const getRandomStatus = () => {
         const statuses = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 4]; // More weighted towards active tasks
         return statuses[Math.floor(Math.random() * statuses.length)];
+    };
+
+    // Helper to generate task description (70% of tasks get a description)
+    const maybeDescription = () => {
+        if (Math.random() < 0.7) {
+            return faker.lorem.paragraph({ min: 1, max: 3 });
+        }
+        return null;
+    };
+
+    // Helper to generate task notes (40% of tasks get notes)
+    const maybeNote = () => {
+        if (Math.random() < 0.4) {
+            const bulletPoints = Array.from(
+                { length: faker.number.int({ min: 2, max: 5 }) },
+                () => `- ${faker.lorem.sentence()}`
+            ).join('\n');
+            return `${faker.lorem.sentence()}\n\n${bulletPoints}`;
+        }
+        return null;
     };
 
     // Productivity and work tasks
@@ -341,24 +363,34 @@ function createMassiveTaskData(projects, getRandomDate, getPastDate) {
         },
         {
             name: 'Create wireframes for homepage',
+            description:
+                'Design low-fidelity wireframes for the new homepage layout. Focus on user flow, CTA placement, and mobile-first approach.',
             project_id: projects[0].id,
             priority: 2,
             status: 1,
+            note: 'Need to review with stakeholders\n\n- Include hero section\n- Add testimonials section\n- Feature products prominently\n- Ensure accessibility standards',
         },
         {
             name: 'Design new color palette',
+            description:
+                'Research and create a modern color palette that aligns with brand identity. Should work well for both light and dark modes.',
             project_id: projects[0].id,
             priority: 1,
             status: 0,
         },
         {
             name: 'Write content for About page',
+            description:
+                'Draft engaging copy for the About page that tells our story and highlights company values.',
             project_id: projects[0].id,
             priority: 1,
             status: 0,
+            note: 'Content guidelines:\n\n- Keep it under 500 words\n- Include team photos\n- Highlight mission and values\n- Add company timeline',
         },
         {
             name: 'Set up staging environment',
+            description:
+                'Configure staging server with proper environment variables, SSL certificates, and deployment pipeline.',
             project_id: projects[0].id,
             priority: 2,
             status: 0,
@@ -520,12 +552,73 @@ function createMassiveTaskData(projects, getRandomDate, getPastDate) {
         },
 
         // Investment Portfolio - triggers financial AI features
+        // Research & Analysis Tasks
         {
             name: 'Research ESG investment options',
             project_id: projects[5].id,
             priority: 1,
+            status: 2,
+            completed_at: getPastDate(15),
+        },
+        {
+            name: 'Analyze S&P 500 index fund options',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(20),
+        },
+        {
+            name: 'Research low-cost bond index funds',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 2,
+            completed_at: getPastDate(18),
+        },
+        {
+            name: 'Compare Vanguard vs Fidelity vs Schwab platforms',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(25),
+        },
+        {
+            name: 'Research international market exposure',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 1,
+        },
+        {
+            name: 'Analyze emerging markets funds (VWO, IEMG)',
+            project_id: projects[5].id,
+            priority: 1,
             status: 0,
         },
+        {
+            name: 'Research REIT investment opportunities',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Compare target-date retirement funds',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 1,
+        },
+        {
+            name: 'Research dividend aristocrats stocks',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 0,
+        },
+        {
+            name: 'Analyze tech sector ETF options (QQQ, VGT)',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+
+        // Portfolio Management Tasks
         {
             name: 'Rebalance portfolio allocation',
             project_id: projects[5].id,
@@ -536,19 +629,350 @@ function createMassiveTaskData(projects, getRandomDate, getPastDate) {
         {
             name: 'Review quarterly performance',
             project_id: projects[5].id,
-            priority: 1,
+            priority: 2,
             status: 1,
         },
         {
-            name: 'Set up automatic dividend reinvestment',
+            name: 'Calculate portfolio risk metrics (Sharpe ratio)',
             project_id: projects[5].id,
             priority: 1,
             status: 0,
         },
         {
-            name: 'Research international market exposure',
+            name: 'Review asset allocation percentages',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+            due_date: getRandomDate(7),
+        },
+        {
+            name: 'Analyze portfolio expense ratios',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 1,
+        },
+        {
+            name: 'Review and optimize tax-loss harvesting',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+        },
+        {
+            name: 'Check portfolio diversification metrics',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Calculate year-to-date returns',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 1,
+        },
+
+        // Account Setup & Administration
+        {
+            name: 'Open Vanguard brokerage account',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(30),
+        },
+        {
+            name: 'Set up automatic dividend reinvestment',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(10),
+        },
+        {
+            name: 'Configure automatic monthly contributions',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(12),
+        },
+        {
+            name: 'Link bank account for transfers',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(28),
+        },
+        {
+            name: 'Set up 2-factor authentication',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(27),
+        },
+        {
+            name: 'Configure email alerts for large transactions',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 2,
+            completed_at: getPastDate(8),
+        },
+        {
+            name: 'Set up account beneficiaries',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+            due_date: getRandomDate(14),
+        },
+        {
+            name: 'Review account security settings',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+
+        // Purchases & Transactions
+        {
+            name: 'Purchase VTSAX (Vanguard Total Stock)',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(5),
+        },
+        {
+            name: 'Purchase VBTLX (Vanguard Total Bond)',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(5),
+        },
+        {
+            name: 'Purchase VTIAX (Vanguard International)',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(4),
+        },
+        {
+            name: 'Make $1000 monthly contribution',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+            due_date: getRandomDate(3),
+        },
+        {
+            name: 'Sell underperforming position',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Execute rebalancing trades',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+            due_date: getRandomDate(10),
+        },
+
+        // Tax Planning & Documentation
+        {
+            name: 'Download tax documents for filing',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+            due_date: getRandomDate(30),
+        },
+        {
+            name: 'Review capital gains/losses for tax year',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+        },
+        {
+            name: 'Maximize IRA contribution for year',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 1,
+        },
+        {
+            name: 'Research Roth IRA conversion strategy',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Track cost basis for all positions',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Document investment decisions for records',
             project_id: projects[5].id,
             priority: 0,
+            status: 0,
+        },
+
+        // Education & Learning
+        {
+            name: 'Read "The Simple Path to Wealth" book',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 2,
+            completed_at: getPastDate(40),
+        },
+        {
+            name: 'Read "A Random Walk Down Wall Street"',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 1,
+        },
+        {
+            name: 'Complete Bogleheads investment course',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Watch Warren Buffett shareholder letters',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 0,
+        },
+        {
+            name: 'Join r/Bogleheads community discussions',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 2,
+            completed_at: getPastDate(35),
+        },
+        {
+            name: 'Subscribe to investment newsletter',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 2,
+            completed_at: getPastDate(22),
+        },
+        {
+            name: 'Learn about modern portfolio theory',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+
+        // Monitoring & Review
+        {
+            name: 'Set up portfolio tracking spreadsheet',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 2,
+            completed_at: getPastDate(20),
+        },
+        {
+            name: 'Create monthly performance dashboard',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 1,
+        },
+        {
+            name: 'Review portfolio monthly (recurring)',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 0,
+            due_date: getRandomDate(5),
+        },
+        {
+            name: 'Track expenses and fee analysis',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Monitor market volatility and VIX',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 0,
+        },
+        {
+            name: 'Review inflation-adjusted returns',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+
+        // Strategy & Planning
+        {
+            name: 'Define investment time horizon',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(45),
+        },
+        {
+            name: 'Set retirement savings goals',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(42),
+        },
+        {
+            name: 'Create investment policy statement',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 1,
+        },
+        {
+            name: 'Plan asset allocation glide path',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Define risk tolerance level',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(38),
+        },
+        {
+            name: 'Create emergency fund strategy',
+            project_id: projects[5].id,
+            priority: 2,
+            status: 2,
+            completed_at: getPastDate(50),
+        },
+        {
+            name: 'Plan for major life events (house, kids)',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+
+        // Advanced Topics
+        {
+            name: 'Research options trading strategies',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 0,
+        },
+        {
+            name: 'Explore cryptocurrency allocation (5% max)',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 0,
+        },
+        {
+            name: 'Research factor investing (value, momentum)',
+            project_id: projects[5].id,
+            priority: 1,
+            status: 0,
+        },
+        {
+            name: 'Analyze sector rotation strategies',
+            project_id: projects[5].id,
+            priority: 0,
+            status: 0,
+        },
+        {
+            name: 'Review alternative investments (gold, commodities)',
+            project_id: projects[5].id,
+            priority: 1,
             status: 0,
         },
 
@@ -890,12 +1314,10 @@ function createMassiveTaskData(projects, getRandomDate, getPastDate) {
 
         const task = {
             name: taskName,
+            description: maybeDescription(),
             priority: getRandomPriority(),
             status: isCompleted ? 2 : getRandomStatus(),
-            note:
-                Math.random() < 0.1
-                    ? 'Added some notes during planning phase'
-                    : null,
+            note: maybeNote(),
         };
 
         if (hasProject) {

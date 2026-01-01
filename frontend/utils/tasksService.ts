@@ -5,6 +5,8 @@ import {
     getDefaultHeaders,
     getPostHeaders,
 } from './authUtils';
+import { getApiPath } from '../config/paths';
+import { isTaskDone, TASK_STATUS } from '../constants/taskStatus';
 
 export interface GroupedTasks {
     [groupName: string]: Task[];
@@ -16,32 +18,66 @@ export const fetchTasks = async (
     tasks: Task[];
     metrics: Metrics;
     groupedTasks?: GroupedTasks;
+    tasks_in_progress?: Task[];
+    tasks_today_plan?: Task[];
+    tasks_due_today?: Task[];
+    tasks_overdue?: Task[];
+    suggested_tasks?: Task[];
+    tasks_completed_today?: Task[];
+    pagination?: {
+        total: number;
+        limit: number;
+        offset: number;
+        hasMore: boolean;
+    };
 }> => {
-    const response = await fetch(`/api/tasks${query}`, {
-        credentials: 'include',
-        headers: getDefaultHeaders(),
-    });
-    await handleAuthResponse(response, 'Failed to fetch tasks.');
+    // For today view, include dashboard task lists
+    const includeLists = query.includes('type=today');
+    const tasksQuery =
+        includeLists && !query.includes('include_lists')
+            ? `${query}${query.includes('?') ? '&' : '?'}include_lists=true`
+            : query;
 
-    const result = await response.json();
+    // Fetch tasks and metrics in parallel for better performance
+    const [tasksResponse, metricsResponse] = await Promise.all([
+        fetch(getApiPath(`tasks${tasksQuery}`), {
+            credentials: 'include',
+            headers: getDefaultHeaders(),
+        }),
+        fetch(getApiPath('tasks/metrics'), {
+            credentials: 'include',
+            headers: getDefaultHeaders(),
+        }),
+    ]);
 
-    if (!Array.isArray(result.tasks)) {
+    await handleAuthResponse(tasksResponse, 'Failed to fetch tasks.');
+    await handleAuthResponse(metricsResponse, 'Failed to fetch metrics.');
+
+    const tasksResult = await tasksResponse.json();
+    const metrics = await metricsResponse.json();
+
+    if (!Array.isArray(tasksResult.tasks)) {
         throw new Error('Resulting tasks are not an array.');
     }
 
-    if (!result.metrics) {
-        throw new Error('Metrics data is not included.');
-    }
-
     return {
-        tasks: result.tasks,
-        metrics: result.metrics,
-        groupedTasks: result.groupedTasks,
+        tasks: tasksResult.tasks,
+        metrics: metrics,
+        groupedTasks: tasksResult.groupedTasks,
+        // Dashboard task lists (only present when include_lists=true)
+        tasks_in_progress: tasksResult.tasks_in_progress,
+        tasks_today_plan: tasksResult.tasks_today_plan,
+        tasks_due_today: tasksResult.tasks_due_today,
+        tasks_overdue: tasksResult.tasks_overdue,
+        suggested_tasks: tasksResult.suggested_tasks,
+        tasks_completed_today: tasksResult.tasks_completed_today,
+        // Pagination metadata
+        pagination: tasksResult.pagination,
     };
 };
 
 export const createTask = async (taskData: Task): Promise<Task> => {
-    const response = await fetch('/api/task', {
+    const response = await fetch(getApiPath('task'), {
         method: 'POST',
         credentials: 'include',
         headers: getPostHeaders(),
@@ -53,44 +89,60 @@ export const createTask = async (taskData: Task): Promise<Task> => {
 };
 
 export const updateTask = async (
-    taskId: number,
-    taskData: Task
+    taskUid: string,
+    taskData: Partial<Task>
 ): Promise<Task> => {
-    const response = await fetch(`/api/task/${taskId}`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: getPostHeaders(),
-        body: JSON.stringify(taskData),
-    });
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(taskUid)}`),
+        {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: getPostHeaders(),
+            body: JSON.stringify(taskData),
+        }
+    );
 
     await handleAuthResponse(response, 'Failed to update task.');
     return await response.json();
 };
 
-export const toggleTaskCompletion = async (taskId: number): Promise<Task> => {
-    const response = await fetch(`/api/task/${taskId}/toggle_completion`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: getPostHeaders(),
-    });
+export const toggleTaskCompletion = async (
+    taskUid: string,
+    currentTask?: Task
+): Promise<Task> => {
+    const task = currentTask ?? (await fetchTaskByUid(taskUid));
 
-    await handleAuthResponse(response, 'Failed to toggle task completion.');
-    const result = await response.json();
-    return result;
+    // Handle habits differently - log completion instead of marking as done
+    if (task.habit_mode) {
+        const { logHabitCompletion } = await import('./habitsService');
+        const result = await logHabitCompletion(taskUid);
+        return result.task;
+    }
+
+    const newStatus = isTaskDone(task.status)
+        ? task.note
+            ? TASK_STATUS.IN_PROGRESS
+            : TASK_STATUS.NOT_STARTED
+        : TASK_STATUS.DONE;
+
+    return await updateTask(taskUid, { status: newStatus });
 };
 
-export const deleteTask = async (taskId: number): Promise<void> => {
-    const response = await fetch(`/api/task/${taskId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: getDefaultHeaders(),
-    });
+export const deleteTask = async (taskUid: string): Promise<void> => {
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(taskUid)}`),
+        {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: getDefaultHeaders(),
+        }
+    );
 
     await handleAuthResponse(response, 'Failed to delete task.');
 };
 
 export const fetchTaskById = async (taskId: number): Promise<Task> => {
-    const response = await fetch(`/api/task/${taskId}`, {
+    const response = await fetch(getApiPath(`task/${taskId}`), {
         credentials: 'include',
         headers: getDefaultHeaders(),
     });
@@ -100,33 +152,25 @@ export const fetchTaskById = async (taskId: number): Promise<Task> => {
 };
 
 export const fetchTaskByUid = async (uid: string): Promise<Task> => {
-    const response = await fetch(`/api/task?uid=${encodeURIComponent(uid)}`, {
-        credentials: 'include',
-        headers: getDefaultHeaders(),
-    });
+    const response = await fetch(
+        getApiPath(`task/${encodeURIComponent(uid)}`),
+        {
+            credentials: 'include',
+            headers: getDefaultHeaders(),
+        }
+    );
 
     await handleAuthResponse(response, 'Failed to fetch task.');
     return await response.json();
 };
 
-export const fetchSubtasks = async (parentTaskId: number): Promise<Task[]> => {
-    const response = await fetch(`/api/task/${parentTaskId}/subtasks`, {
+export const fetchSubtasks = async (parentTaskUid: string): Promise<Task[]> => {
+    const response = await fetch(getApiPath(`task/${parentTaskUid}/subtasks`), {
         credentials: 'include',
         headers: getDefaultHeaders(),
     });
 
     await handleAuthResponse(response, 'Failed to fetch subtasks.');
-    return await response.json();
-};
-
-export const toggleTaskToday = async (taskId: number): Promise<Task> => {
-    const response = await fetch(`/api/task/${taskId}/toggle-today`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: getPostHeaders(),
-    });
-
-    await handleAuthResponse(response, 'Failed to toggle task today status.');
     return await response.json();
 };
 
@@ -136,12 +180,14 @@ export interface TaskIteration {
 }
 
 export const fetchTaskNextIterations = async (
-    taskId: number,
+    taskUid: string,
     startFromDate?: string
 ): Promise<TaskIteration[]> => {
     const url = startFromDate
-        ? `/api/task/${taskId}/next-iterations?startFromDate=${startFromDate}`
-        : `/api/task/${taskId}/next-iterations`;
+        ? getApiPath(
+              `task/${taskUid}/next-iterations?startFromDate=${startFromDate}`
+          )
+        : getApiPath(`task/${taskUid}/next-iterations`);
 
     const response = await fetch(url, {
         credentials: 'include',
