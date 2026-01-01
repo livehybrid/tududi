@@ -20,7 +20,16 @@ router.post('/telegram/start-polling', async (req, res) => {
     try {
         const userId = getUserIdOrUnauthorized(req, res);
         if (!userId) return;
-        const user = await User.findByPk(userId);
+        const user = await User.findByPk(userId, {
+            attributes: [
+                'id',
+                'telegram_bot_token',
+                'microsoft_todo_connected',
+                'microsoft_todo_access_token',
+                'microsoft_todo_refresh_token',
+                'microsoft_todo_expires_at'
+            ]
+        });
         if (!user || !user.telegram_bot_token) {
             return res
                 .status(400)

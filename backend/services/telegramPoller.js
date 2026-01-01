@@ -1,5 +1,6 @@
 const https = require('https');
 const { User, InboxItem } = require('../models');
+const microsoftTodoService = require('./microsoftTodoService');
 
 // Create poller state
 const createPollerState = () => ({
@@ -290,9 +291,26 @@ const handleBotCommand = async (command, user, chatId, messageId) => {
             await sendTelegramMessage(
                 botToken,
                 chatId,
-                `📋 tududi Bot Help\n\nSend me any text message and I'll add it to your tududi inbox as an inbox item.\n\nCommands:\n/start - Welcome message\n/help - Show this help message\n\nJust type your item and I'll take care of the rest!`,
+                `📋 tududi Bot Help\n\nSend me any text message and I'll add it to your tududi inbox as an inbox item.\n\nCommands:\n/start - Welcome message\n/help - Show this help message\n/mstodo import - Import tasks from Microsoft ToDo\n/mstodo export - Export tasks to Microsoft ToDo\n/mstodo sync - Two-way sync with Microsoft ToDo\n\nJust type your item and I'll take care of the rest!`,
                 messageId
             );
+            break;
+        case '/mstodo':
+            await sendTelegramMessage(
+                botToken,
+                chatId,
+                `🔄 Microsoft ToDo Commands\n\n/mstodo import - Import tasks from Microsoft ToDo\n/mstodo export - Export tasks to Microsoft ToDo\n/mstodo sync - Two-way sync with Microsoft ToDo\n\nMake sure you're connected to Microsoft ToDo in your tududi settings first!`,
+                messageId
+            );
+            break;
+        case '/mstodo import':
+            await handleMicrosoftTodoImport(user, chatId, messageId);
+            break;
+        case '/mstodo export':
+            await handleMicrosoftTodoExport(user, chatId, messageId);
+            break;
+        case '/mstodo sync':
+            await handleMicrosoftTodoSync(user, chatId, messageId);
             break;
         default:
             await sendTelegramMessage(
@@ -302,6 +320,200 @@ const handleBotCommand = async (command, user, chatId, messageId) => {
                 messageId
             );
             break;
+    }
+};
+
+// Microsoft ToDo command handlers
+const handleMicrosoftTodoImport = async (user, chatId, messageId) => {
+    try {
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `🔄 Starting Microsoft ToDo import...`,
+            messageId
+        );
+
+        // Check if user is connected to Microsoft ToDo
+        if (!user.microsoft_todo_connected || !user.microsoft_todo_access_token) {
+            await sendTelegramMessage(
+                user.telegram_bot_token,
+                chatId,
+                `❌ Not connected to Microsoft ToDo. Please connect in your tududi settings first.`,
+                messageId
+            );
+            return;
+        }
+
+        // Check if token is expired and refresh if needed
+        let accessToken = user.microsoft_todo_access_token;
+        if (user.microsoft_todo_expires_at && new Date() >= new Date(user.microsoft_todo_expires_at)) {
+            try {
+                const newTokenData = await microsoftTodoService.refreshAccessToken(user.microsoft_todo_refresh_token);
+                accessToken = newTokenData.access_token;
+                
+                // Update user with new tokens
+                await user.update({
+                    microsoft_todo_access_token: newTokenData.access_token,
+                    microsoft_todo_refresh_token: newTokenData.refresh_token,
+                    microsoft_todo_expires_at: newTokenData.expires_at
+                });
+            } catch (refreshError) {
+                await sendTelegramMessage(
+                    user.telegram_bot_token,
+                    chatId,
+                    `❌ Failed to refresh Microsoft ToDo token. Please reconnect in your tududi settings.`,
+                    messageId
+                );
+                return;
+            }
+        }
+
+        // Import tasks
+        const result = await microsoftTodoService.importTasksFromMicrosoft(user.id, accessToken);
+        
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `✅ Microsoft ToDo import completed!\n\n📊 Results:\n• ${result.imported} tasks imported\n• ${result.lists} lists processed\n\nYour tasks are now synced with tududi!`,
+            messageId
+        );
+    } catch (error) {
+        logError('Telegram Microsoft ToDo import failed', error);
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `❌ Failed to import from Microsoft ToDo: ${error.message}`,
+            messageId
+        );
+    }
+};
+
+const handleMicrosoftTodoExport = async (user, chatId, messageId) => {
+    try {
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `🔄 Starting Microsoft ToDo export...`,
+            messageId
+        );
+
+        // Check if user is connected to Microsoft ToDo
+        if (!user.microsoft_todo_connected || !user.microsoft_todo_access_token) {
+            await sendTelegramMessage(
+                user.telegram_bot_token,
+                chatId,
+                `❌ Not connected to Microsoft ToDo. Please connect in your tududi settings first.`,
+                messageId
+            );
+            return;
+        }
+
+        // Check if token is expired and refresh if needed
+        let accessToken = user.microsoft_todo_access_token;
+        if (user.microsoft_todo_expires_at && new Date() >= new Date(user.microsoft_todo_expires_at)) {
+            try {
+                const newTokenData = await microsoftTodoService.refreshAccessToken(user.microsoft_todo_refresh_token);
+                accessToken = newTokenData.access_token;
+                
+                // Update user with new tokens
+                await user.update({
+                    microsoft_todo_access_token: newTokenData.access_token,
+                    microsoft_todo_refresh_token: newTokenData.refresh_token,
+                    microsoft_todo_expires_at: newTokenData.expires_at
+                });
+            } catch (refreshError) {
+                await sendTelegramMessage(
+                    user.telegram_bot_token,
+                    chatId,
+                    `❌ Failed to refresh Microsoft ToDo token. Please reconnect in your tududi settings.`,
+                    messageId
+                );
+                return;
+            }
+        }
+
+        // Export tasks
+        const result = await microsoftTodoService.exportTasksToMicrosoft(user.id, accessToken);
+        
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `✅ Microsoft ToDo export completed!\n\n📊 Results:\n• ${result.exported} tasks exported\n\nYour tududi tasks are now synced with Microsoft ToDo!`,
+            messageId
+        );
+    } catch (error) {
+        logError('Telegram Microsoft ToDo export failed', error);
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `❌ Failed to export to Microsoft ToDo: ${error.message}`,
+            messageId
+        );
+    }
+};
+
+const handleMicrosoftTodoSync = async (user, chatId, messageId) => {
+    try {
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `🔄 Starting Microsoft ToDo two-way sync...`,
+            messageId
+        );
+
+        // Check if user is connected to Microsoft ToDo
+        if (!user.microsoft_todo_connected || !user.microsoft_todo_access_token) {
+            await sendTelegramMessage(
+                user.telegram_bot_token,
+                chatId,
+                `❌ Not connected to Microsoft ToDo. Please connect in your tududi settings first.`,
+                messageId
+            );
+            return;
+        }
+
+        // Check if token is expired and refresh if needed
+        let accessToken = user.microsoft_todo_access_token;
+        if (user.microsoft_todo_expires_at && new Date() >= new Date(user.microsoft_todo_expires_at)) {
+            try {
+                const newTokenData = await microsoftTodoService.refreshAccessToken(user.microsoft_todo_refresh_token);
+                accessToken = newTokenData.access_token;
+                
+                // Update user with new tokens
+                await user.update({
+                    microsoft_todo_access_token: newTokenData.access_token,
+                    microsoft_todo_refresh_token: newTokenData.refresh_token,
+                    microsoft_todo_expires_at: newTokenData.expires_at
+                });
+            } catch (refreshError) {
+                await sendTelegramMessage(
+                    user.telegram_bot_token,
+                    chatId,
+                    `❌ Failed to refresh Microsoft ToDo token. Please reconnect in your tududi settings.`,
+                    messageId
+                );
+                return;
+            }
+        }
+
+        // Perform two-way sync
+        const importResult = await microsoftTodoService.importTasksFromMicrosoft(user.id, accessToken);
+        const exportResult = await microsoftTodoService.exportTasksToMicrosoft(user.id, accessToken);
+        
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `✅ Microsoft ToDo sync completed!\n\n📊 Results:\n• ${importResult.imported} tasks imported\n• ${exportResult.exported} tasks exported\n• ${importResult.lists} lists processed\n\nYour tududi and Microsoft ToDo are now fully synced!`,
+            messageId
+        );
+    } catch (error) {
+        logError('Telegram Microsoft ToDo sync failed', error);
+        await sendTelegramMessage(
+            user.telegram_bot_token,
+            chatId,
+            `❌ Failed to sync with Microsoft ToDo: ${error.message}`,
+            messageId
+        );
     }
 };
 

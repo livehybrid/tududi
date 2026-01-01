@@ -8,7 +8,7 @@ let dbConfig;
 dbConfig = {
     dialect: 'sqlite',
     storage: config.dbFile,
-    logging: config.environment === 'development' ? console.log : false,
+    logging: false, // Disable SQL logging
     define: {
         timestamps: true,
         underscored: true,
