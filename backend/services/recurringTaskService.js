@@ -235,6 +235,51 @@ const calculateVirtualOccurrences = (task, count = 7, startFrom = null) => {
     return occurrences;
 };
 
+/**
+ * Generate recurring task instances for a user
+ * Note: This function is a stub - the system now uses virtual occurrences
+ * calculated on-the-fly rather than generating actual database records.
+ * This function exists for backward compatibility with existing code.
+ * 
+ * @param {number} userId - The user ID
+ * @param {number} daysAhead - Number of days ahead to generate (optional, default: 7)
+ * @returns {Promise<Array>} Empty array (no actual tasks are generated)
+ */
+const generateRecurringTasks = async (userId, daysAhead = 7) => {
+    // This is a stub function - recurring tasks are now handled as virtual occurrences
+    // in the query layer rather than generating actual database records.
+    // See expandRecurringTasks in routes/tasks/index.js for the virtual occurrence logic.
+    return [];
+};
+
+/**
+ * Process recurring tasks for all users
+ * Note: This function is a stub - the system now uses virtual occurrences
+ * calculated on-the-fly rather than generating actual database records.
+ * This function exists for backward compatibility with taskScheduler.
+ * 
+ * @returns {Promise<void>}
+ */
+const processRecurringTasks = async () => {
+    // This is a stub function - recurring tasks are now handled as virtual occurrences
+    // in the query layer rather than generating actual database records.
+    return;
+};
+
+/**
+ * Handle task completion for recurring tasks
+ * Note: This function is a stub - recurring tasks are now handled as virtual occurrences.
+ * Completion logic is handled in the task update route.
+ * 
+ * @param {Object} task - The completed task
+ * @returns {Promise<Object|null>} Returns null (no next task is generated)
+ */
+const handleTaskCompletion = async (task) => {
+    // This is a stub function - recurring task completion is handled in the task update route.
+    // Virtual occurrences are calculated on-the-fly, so no next task instance needs to be generated.
+    return null;
+};
+
 module.exports = {
     calculateNextDueDate,
     calculateDailyRecurrence,
@@ -247,6 +292,9 @@ module.exports = {
     getFirstWeekdayOfMonth,
     getLastWeekdayOfMonth,
     getNthWeekdayOfMonth,
+    generateRecurringTasks,
+    processRecurringTasks,
+    handleTaskCompletion,
     _getFirstWeekdayOfMonth: getFirstWeekdayOfMonth,
     _getLastWeekdayOfMonth: getLastWeekdayOfMonth,
     _getNthWeekdayOfMonth: getNthWeekdayOfMonth,

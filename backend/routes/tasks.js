@@ -547,7 +547,7 @@ async function filterTasksByParams(params, userId, userTimezone) {
         },
         {
             model: Project,
-            attributes: ['id', 'name', 'state', 'uid'],
+            attributes: ['id', 'name', 'status', 'uid'],
             required: false,
         },
         {
@@ -778,7 +778,7 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
             },
             {
                 model: Project,
-                attributes: ['id', 'name', 'state', 'uid'],
+                attributes: ['id', 'name', 'status', 'uid'],
                 required: false,
             },
             {
@@ -799,17 +799,22 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
     });
 
     // Get tasks in today plan
+    // Today plan tasks are determined by status (in_progress, planned, waiting)
+    // The 'today' column was removed - see migration 20251227000001-remove-today-column.js
+    const todayPlanStatuses = [
+        Task.STATUS.IN_PROGRESS,
+        Task.STATUS.WAITING,
+        Task.STATUS.PLANNED,
+        'in_progress',
+        'waiting',
+        'planned',
+    ];
+    
     const todayPlanTasks = await Task.findAll({
         where: {
             ...visibleTasksWhere,
-            today: true,
             status: {
-                [Op.notIn]: [
-                    Task.STATUS.DONE,
-                    Task.STATUS.ARCHIVED,
-                    'done',
-                    'archived',
-                ],
+                [Op.in]: todayPlanStatuses,
             },
             parent_task_id: null, // Exclude subtasks
             recurring_parent_id: null, // Exclude recurring instances
@@ -823,7 +828,7 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
             },
             {
                 model: Project,
-                attributes: ['id', 'name', 'state', 'uid'],
+                attributes: ['id', 'name', 'status', 'uid'],
                 required: false,
             },
             {
@@ -881,7 +886,7 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
             },
             {
                 model: Project,
-                attributes: ['id', 'name', 'state', 'uid'],
+                attributes: ['id', 'name', 'status', 'uid'],
                 required: false,
             },
             {
@@ -1105,7 +1110,7 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
             },
             {
                 model: Project,
-                attributes: ['id', 'name', 'state', 'uid'],
+                attributes: ['id', 'name', 'status', 'uid'],
                 required: false,
             },
             {
@@ -1591,7 +1596,7 @@ router.post('/task', async (req, res) => {
                         : status
                     : Task.STATUS.NOT_STARTED,
             note,
-            today: today !== undefined ? today : false,
+                // 'today' column removed - task visibility in today view is now determined by status
             user_id: req.currentUser.id,
             recurrence_type: recurrence_type || 'none',
             recurrence_interval: recurrence_interval || null,
@@ -1667,7 +1672,7 @@ router.post('/task', async (req, res) => {
                         user_id: req.currentUser.id,
                         priority: Task.PRIORITY.LOW,
                         status: Task.STATUS.NOT_STARTED,
-                        today: false,
+                        // 'today' column removed - task visibility in today view is now determined by status
                         recurrence_type: 'none',
                         completion_based: false,
                     })
@@ -1917,7 +1922,7 @@ router.patch(
                     due_date,
                     getSafeTimezone(req.currentUser.timezone)
                 ),
-                today: today !== undefined ? today : task.today,
+                // 'today' column removed - task visibility in today view is now determined by status
                 recurrence_type:
                     recurrence_type !== undefined
                         ? recurrence_type
@@ -1948,15 +1953,9 @@ router.patch(
                         : task.completion_based,
             };
 
-            // If task is being moved away from today and has in_progress status, change it to not_started
-            if (
-                today !== undefined &&
-                task.today === true &&
-                today === false &&
-                task.status === Task.STATUS.IN_PROGRESS
-            ) {
-                taskAttributes.status = Task.STATUS.NOT_STARTED;
-            }
+            // If task status is being changed from in_progress/planned/waiting to not_started,
+            // it will no longer appear in today view (handled by status-based filtering)
+            // Note: 'today' column was removed - see migration 20251227000001-remove-today-column.js
 
             // Set completed_at when task is marked as done
             if (status !== undefined) {
@@ -2209,7 +2208,7 @@ router.patch(
                                         ? new Date(subtask.completed_at)
                                         : new Date()
                                     : null,
-                            today: subtask.today || false,
+                            // 'today' column removed - task visibility in today view is now determined by status
                             recurrence_type: 'none',
                             completion_based: false,
                         })
@@ -2815,17 +2814,23 @@ router.patch(
 
             // access ensured by middleware
 
-            // Toggle the today flag
-            const newTodayValue = !task.today;
-            const updateData = { today: newTodayValue };
-
-            // If task is being moved away from today and has in_progress status, change it to not_started
-            if (
-                task.today === true &&
-                newTodayValue === false &&
-                task.status === Task.STATUS.IN_PROGRESS
-            ) {
+            // Toggle today view - 'today' column was removed, now using status-based logic
+            // Tasks in today view have status: IN_PROGRESS, WAITING, or PLANNED
+            const todayPlanStatuses = [
+                Task.STATUS.IN_PROGRESS,
+                Task.STATUS.WAITING,
+                Task.STATUS.PLANNED,
+            ];
+            const isInTodayView = todayPlanStatuses.includes(task.status);
+            const oldStatus = task.status;
+            
+            const updateData = {};
+            if (isInTodayView) {
+                // Remove from today view by setting to NOT_STARTED
                 updateData.status = Task.STATUS.NOT_STARTED;
+            } else {
+                // Add to today view by setting to IN_PROGRESS
+                updateData.status = Task.STATUS.IN_PROGRESS;
             }
             await task.update(updateData);
 
@@ -2834,10 +2839,10 @@ router.patch(
                 await logEvent({
                     taskId: task.id,
                     userId: req.currentUser.id,
-                    eventType: 'today_changed',
-                    fieldName: 'today',
-                    oldValue: !newTodayValue,
-                    newValue: newTodayValue,
+                    eventType: 'status_changed',
+                    fieldName: 'status',
+                    oldValue: oldStatus,
+                    newValue: updateData.status,
                     metadata: { source: 'web', action: 'toggle_today' },
                 });
             } catch (eventError) {

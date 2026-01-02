@@ -189,8 +189,7 @@ class MicrosoftTodoService {
 
         const mappedTask = {
             name: microsoftTask.title,
-            description: description,
-            note: description, // Also map to note field for Tududi compatibility
+            note: description, // Map to note field (description column was removed)
             due_date: microsoftTask.dueDateTime?.dateTime ? new Date(microsoftTask.dueDateTime.dateTime) : null,
             priority: priority,
             status: status,
@@ -201,9 +200,6 @@ class MicrosoftTodoService {
             external_last_modified: microsoftTask.lastModifiedDateTime,
             // Map completion date if completed
             completed_at: microsoftTask.completedDateTime?.dateTime ? new Date(microsoftTask.completedDateTime.dateTime) : null,
-            // Map today flag if due today
-            today: microsoftTask.dueDateTime?.dateTime ? 
-                new Date(microsoftTask.dueDateTime.dateTime).toDateString() === new Date().toDateString() : false
         };
 
         logInfo(`[DEBUG] Mapped Tududi Task:`, mappedTask);
@@ -219,13 +215,11 @@ class MicrosoftTodoService {
             id: tududiTask.id,
             uid: tududiTask.uid,
             name: tududiTask.name,
-            description: tududiTask.description,
             note: tududiTask.note,
             status: tududiTask.status,
             priority: tududiTask.priority,
             due_date: tududiTask.due_date,
             completed_at: tududiTask.completed_at,
-            today: tududiTask.today,
             project_id: tududiTask.project_id,
             external_id: tududiTask.external_id,
             external_source: tududiTask.external_source,
@@ -245,8 +239,8 @@ class MicrosoftTodoService {
         if (tududiTask.priority === 2) importance = 'high';
         else if (tududiTask.priority === 0) importance = 'low';
 
-        // Use description or note field for content
-        const content = tududiTask.description || tududiTask.note || '';
+        // Use note field for content (description column was removed)
+        const content = tududiTask.note || '';
 
         // Build Microsoft task object
         const microsoftTask = {
@@ -318,7 +312,7 @@ class MicrosoftTodoService {
                         name: list.displayName,
                         description: `Imported from Microsoft ToDo list`,
                         user_id: userId,
-                        state: 'in_progress'
+                        status: 'in_progress'
                     });
                     projectId = newProject.id;
                     projectMap.set(list.displayName.toLowerCase(), projectId);
@@ -340,7 +334,7 @@ class MicrosoftTodoService {
                             external_id: microsoftTask.id
                         },
                         attributes: [
-                            'id', 'uid', 'name', 'description', 'note', 'due_date', 'priority', 'status', 
+                            'id', 'uid', 'name', 'note', 'due_date', 'priority', 'status', 
                             'completed_at', 'external_id', 'external_source', 'external_last_modified',
                             'created_at', 'updated_at'  // Explicitly include timestamp fields
                         ]
@@ -353,7 +347,6 @@ class MicrosoftTodoService {
                         // Check if task needs updating by comparing content, not just timestamps
                         const hasContentChanges = (
                             existingTask.name !== updatedTaskData.name ||
-                            existingTask.description !== updatedTaskData.description ||
                             existingTask.note !== updatedTaskData.note ||
                             existingTask.due_date?.getTime() !== updatedTaskData.due_date?.getTime() ||
                             existingTask.priority !== updatedTaskData.priority ||
@@ -380,8 +373,6 @@ class MicrosoftTodoService {
                             timestampSource: (existingTask.updated_at && existingTask.updated_at !== 'Invalid Date') ? 'updated_at' : (existingTask.external_last_modified ? 'external_last_modified' : 'none'),
                             existingName: existingTask.name,
                             newName: updatedTaskData.name,
-                            existingDescription: existingTask.description,
-                            newDescription: updatedTaskData.description,
                             existingNote: existingTask.note,
                             newNote: updatedTaskData.note,
                             allExistingTaskFields: Object.keys(existingTask)
@@ -395,9 +386,6 @@ class MicrosoftTodoService {
                             const changes = [];
                             if (existingTask.name !== updatedTaskData.name) {
                                 changes.push({ field: 'name', old: existingTask.name, new: updatedTaskData.name });
-                            }
-                            if (existingTask.description !== updatedTaskData.description) {
-                                changes.push({ field: 'description', old: existingTask.description, new: updatedTaskData.description });
                             }
                             if (existingTask.note !== updatedTaskData.note) {
                                 changes.push({ field: 'note', old: existingTask.note, new: updatedTaskData.note });
@@ -417,13 +405,11 @@ class MicrosoftTodoService {
                             
                             await existingTask.update({
                                 name: updatedTaskData.name,
-                                description: updatedTaskData.description,
                                 note: updatedTaskData.note,
                                 due_date: updatedTaskData.due_date,
                                 priority: updatedTaskData.priority,
                                 status: updatedTaskData.status,
                                 completed_at: updatedTaskData.completed_at,
-                                today: updatedTaskData.today,
                                 external_last_modified: microsoftTask.lastModifiedDateTime
                             });
                             
@@ -478,7 +464,7 @@ class MicrosoftTodoService {
                             userId,
                             {
                                 name: taskData.name,
-                                description: taskData.description,
+                                note: taskData.note,
                                 due_date: taskData.due_date,
                                 priority: taskData.priority,
                                 status: taskData.status,

@@ -105,7 +105,7 @@ module.exports = (sequelize) => {
                             'name',
                             'description',
                             'note',
-                            'today',
+                            // 'today' field removed - see migration 20251227000001-remove-today-column.js
                             'tags',
                             'recurrence_type',
                             'recurrence_interval',
