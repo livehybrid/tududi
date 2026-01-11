@@ -5,7 +5,9 @@
  * Adds any missing columns that the model expects but the database doesn't have
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+require('dotenv').config({
+    path: require('path').join(__dirname, '..', '..', '.env'),
+});
 const { sequelize, User } = require('../models');
 const { safeAddColumns } = require('../utils/migration-utils');
 
@@ -13,7 +15,7 @@ async function syncUsersSchema() {
     try {
         const dialect = sequelize.getDialect();
         const queryInterface = sequelize.getQueryInterface();
-        
+
         console.log(`Syncing users table schema (${dialect})...`);
 
         // Get current table structure
@@ -28,12 +30,12 @@ async function syncUsersSchema() {
         const missingColumns = [];
         for (const columnName of modelColumns) {
             const attr = modelAttributes[columnName];
-            
+
             // Skip virtual fields and fields that map to different column names
             if (attr.type && attr.type.toString().includes('VIRTUAL')) {
                 continue;
             }
-            
+
             // Check if column exists (handle field mapping)
             const dbColumnName = attr.field || columnName;
             if (!existingColumns.includes(dbColumnName)) {
@@ -55,7 +57,7 @@ async function syncUsersSchema() {
         }
 
         console.log(`Found ${missingColumns.length} missing columns:`);
-        missingColumns.forEach(col => console.log(`  - ${col.name}`));
+        missingColumns.forEach((col) => console.log(`  - ${col.name}`));
 
         // Add missing columns
         await safeAddColumns(queryInterface, 'users', missingColumns);

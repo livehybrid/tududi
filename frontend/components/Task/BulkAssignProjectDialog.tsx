@@ -1,9 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Task } from '../../entities/Task';
 import { Project } from '../../entities/Project';
 import { Area } from '../../entities/Area';
+import ProjectDropdown from '../Shared/ProjectDropdown';
+import { createProject } from '../../utils/projectsService';
+import { useToast } from '../Shared/ToastContext';
 
 interface BulkAssignProjectDialogProps {
     selectedTasks: Task[];
@@ -21,23 +24,100 @@ const BulkAssignProjectDialog: React.FC<BulkAssignProjectDialogProps> = ({
     onCancel,
 }) => {
     const { t } = useTranslation();
-    const [selectedProjectId, setSelectedProjectId] = useState<number | null | 'none'>('none');
+    const { showSuccessToast, showErrorToast } = useToast();
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
     const [selectedAreaId, setSelectedAreaId] = useState<number | null | 'all'>('all');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+    const [projectName, setProjectName] = useState('');
+    const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+    const [isCreatingProject, setIsCreatingProject] = useState(false);
+    const projectDropdownRef = useRef<HTMLDivElement>(null);
 
     // Filter projects by selected area
-    const filteredProjects = useMemo(() => {
+    const memoizedFilteredProjects = useMemo(() => {
         if (selectedAreaId === 'all' || selectedAreaId === null) {
             return projects;
         }
         return projects.filter((p) => p.area_id === selectedAreaId);
     }, [projects, selectedAreaId]);
 
+    useEffect(() => {
+        setFilteredProjects(memoizedFilteredProjects);
+    }, [memoizedFilteredProjects]);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                projectDropdownOpen &&
+                projectDropdownRef.current &&
+                !projectDropdownRef.current.contains(e.target as Node)
+            ) {
+                setProjectDropdownOpen(false);
+                setProjectName('');
+            }
+        };
+
+        if (projectDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [projectDropdownOpen]);
+
+    const handleProjectSearch = (query: string) => {
+        setProjectName(query);
+        const filtered = memoizedFilteredProjects.filter((p) =>
+            p.name.toLowerCase().includes(query.toLowerCase())
+        );
+        setFilteredProjects(filtered);
+    };
+
+    const handleProjectSelection = (project: Project) => {
+        setSelectedProject(project);
+        setProjectDropdownOpen(false);
+        setProjectName('');
+    };
+
+    const handleCreateProject = async (name: string) => {
+        if (name.trim() !== '') {
+            setIsCreatingProject(true);
+            try {
+                const areaId = selectedAreaId !== 'all' && selectedAreaId !== null ? selectedAreaId : undefined;
+                const newProject = await createProject({ 
+                    name: name.trim(),
+                    area_id: areaId,
+                    status: 'planned'
+                });
+                setSelectedProject(newProject);
+                setFilteredProjects([...filteredProjects, newProject]);
+                setProjectDropdownOpen(false);
+                setProjectName('');
+                showSuccessToast(t('success.projectCreated', 'Project created successfully'));
+            } catch (error) {
+                showErrorToast(t('errors.projectCreationFailed', 'Failed to create project'));
+                console.error('Error creating project:', error);
+            } finally {
+                setIsCreatingProject(false);
+            }
+        }
+    };
+
+    const handleShowAllProjects = () => {
+        setProjectName('');
+        setFilteredProjects(memoizedFilteredProjects);
+        setProjectDropdownOpen(!projectDropdownOpen);
+    };
+
+    const handleClearProject = () => {
+        setSelectedProject(null);
+        setProjectName('');
+    };
+
     const handleAssign = async () => {
         setIsProcessing(true);
         try {
-            const projectId = selectedProjectId === 'none' ? null : selectedProjectId;
-            await onAssign(projectId as number | null);
+            const projectId = selectedProject ? selectedProject.id : null;
+            await onAssign(projectId);
         } catch (error) {
             console.error('Error assigning project:', error);
         } finally {
@@ -96,33 +176,27 @@ const BulkAssignProjectDialog: React.FC<BulkAssignProjectDialogProps> = ({
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('tasks.selectProject', 'Select Project')}
                         </label>
-                        <select
-                            value={selectedProjectId === null ? 'none' : selectedProjectId}
-                            onChange={(e) =>
-                                setSelectedProjectId(
-                                    e.target.value === 'none'
-                                        ? 'none'
-                                        : Number(e.target.value)
-                                )
-                            }
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="none">
-                                {t('tasks.noProject', 'No Project')}
-                            </option>
-                            {filteredProjects.map((project) => (
-                                <option key={project.id} value={project.id}>
-                                    {project.name}
-                                    {project.area && ` (${project.area.name})`}
-                                </option>
-                            ))}
-                        </select>
-                        {filteredProjects.length === 0 && selectedAreaId !== 'all' && (
-                            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                {t(
-                                    'tasks.noProjectsInArea',
-                                    'No projects found in this area'
-                                )}
+                        <div ref={projectDropdownRef} className="relative">
+                            <ProjectDropdown
+                                projectName={projectName}
+                                onProjectSearch={handleProjectSearch}
+                                dropdownOpen={projectDropdownOpen}
+                                filteredProjects={filteredProjects}
+                                onProjectSelection={handleProjectSelection}
+                                onCreateProject={handleCreateProject}
+                                isCreatingProject={isCreatingProject}
+                                onShowAllProjects={handleShowAllProjects}
+                                allProjects={memoizedFilteredProjects}
+                                selectedProject={selectedProject}
+                                onClearProject={handleClearProject}
+                                placeholder={t('tasks.searchOrCreateProject', 'Search or create project...')}
+                            />
+                        </div>
+                        {selectedProject && (
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                {t('tasks.selectedProject', 'Selected: {{name}}', {
+                                    name: selectedProject.name,
+                                })}
                             </p>
                         )}
                     </div>
@@ -137,7 +211,7 @@ const BulkAssignProjectDialog: React.FC<BulkAssignProjectDialogProps> = ({
                     </button>
                     <button
                         onClick={handleAssign}
-                        disabled={isProcessing}
+                        disabled={isProcessing || isCreatingProject}
                         className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                     >
                         {isProcessing

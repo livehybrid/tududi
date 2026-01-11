@@ -8,7 +8,7 @@ module.exports = {
     async up(queryInterface, Sequelize) {
         // Check if uid column already exists
         const tableInfo = await queryInterface.describeTable('users');
-        
+
         if (!tableInfo.uid) {
             // Add uid column
             await safeAddColumns(queryInterface, 'users', [

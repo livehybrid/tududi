@@ -5,7 +5,9 @@
  * This fixes the issue where the migration was a no-op but the column is needed
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '..', '..', '.env') });
+require('dotenv').config({
+    path: require('path').join(__dirname, '..', '..', '.env'),
+});
 const { sequelize } = require('../models');
 const { uid } = require('../utils/uid');
 
@@ -20,7 +22,7 @@ async function addUidToUsers() {
                 ? "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'uid'"
                 : dialect === 'postgres'
                   ? "SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'uid'"
-                  : "PRAGMA table_info(users)"
+                  : 'PRAGMA table_info(users)'
         );
 
         let uidExists = false;

@@ -1203,6 +1203,24 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
     };
 }
 
+// GET /api/tasks/metrics
+router.get('/tasks/metrics', async (req, res) => {
+    try {
+        const {
+            getTaskMetrics,
+        } = require('./tasks/queries/metrics-computation');
+        const response = await getTaskMetrics(
+            req.currentUser.id,
+            req.currentUser.timezone,
+            req.query.type
+        );
+        res.json(response);
+    } catch (error) {
+        logError('Error fetching task metrics:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // GET /api/tasks
 router.get('/tasks', async (req, res) => {
     try {
@@ -1375,7 +1393,77 @@ router.get('/tasks', async (req, res) => {
     }
 });
 
-// GET /api/task?uid=...
+// GET /api/task/:uid - Handle UID lookups (must come before /task/:id)
+router.get('/task/:uid', async (req, res) => {
+    try {
+        const { uid } = req.params;
+
+        if (_.isEmpty(uid)) {
+            return res.status(400).json({ error: 'uid parameter is required' });
+        }
+
+        // Check if it's actually a numeric ID (fallback to ID lookup)
+        const isNumeric = /^\d+$/.test(uid);
+        const whereClause = isNumeric
+            ? { id: parseInt(uid, 10) }
+            : { uid: uid };
+
+        const task = await Task.findOne({
+            where: whereClause,
+            include: [
+                {
+                    model: Tag,
+                    attributes: ['id', 'name', 'uid'],
+                    through: { attributes: [] },
+                },
+                {
+                    model: Project,
+                    attributes: ['id', 'name', 'uid'],
+                    required: false,
+                },
+                {
+                    model: Task,
+                    as: 'Subtasks',
+                    required: false,
+                    include: [
+                        {
+                            model: Tag,
+                            attributes: ['id', 'name', 'uid'],
+                            through: { attributes: [] },
+                        },
+                    ],
+                },
+            ],
+        });
+
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found.' });
+        }
+
+        // Ensure read access to the task
+        const access = await permissionsService.getAccess(
+            req.currentUser.id,
+            'task',
+            task.uid
+        );
+        if (access === 'none') {
+            return res.status(403).json({ error: 'Forbidden' });
+        }
+
+        const serializedTask = await serializeTask(
+            task,
+            req.currentUser.timezone,
+            { skipDisplayNameTransform: true }
+        );
+
+        res.json(serializedTask);
+    } catch (error) {
+        logError('Error fetching task by UID:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /api/task?uid=... (query parameter version for backwards compatibility)
 router.get('/task', async (req, res) => {
     try {
         const { uid } = req.query;
@@ -1443,7 +1531,7 @@ router.get('/task', async (req, res) => {
     }
 });
 
-// GET /api/task/:id
+// GET /api/task/:id (numeric ID only - must come after /task/:uid)
 router.get(
     '/task/:id',
     hasAccess(

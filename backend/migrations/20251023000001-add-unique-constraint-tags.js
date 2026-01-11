@@ -102,7 +102,7 @@ module.exports = {
                 'DROP TABLE IF EXISTS tags_new;',
                 { transaction }
             );
-            
+
             await queryInterface.sequelize.query(
                 `
                 CREATE TABLE tags_new (

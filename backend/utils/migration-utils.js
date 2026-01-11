@@ -47,20 +47,26 @@ async function safeCreateTable(queryInterface, tableName, tableDefinition) {
 
         if (!tableExists) {
             const dialect = queryInterface.sequelize.getDialect();
-            
+
             // For MySQL/PostgreSQL, check if referenced tables exist
             // If they don't exist, create table without foreign keys first
             if (dialect === 'mysql' || dialect === 'postgres') {
                 // Extract foreign key references from table definition
-                const tableDefCopy = JSON.parse(JSON.stringify(tableDefinition));
+                const tableDefCopy = JSON.parse(
+                    JSON.stringify(tableDefinition)
+                );
                 const missingRefs = [];
-                
+
                 // Check if referenced tables exist
-                for (const [columnName, columnDef] of Object.entries(tableDefCopy)) {
+                for (const [columnName, columnDef] of Object.entries(
+                    tableDefCopy
+                )) {
                     if (columnDef.references) {
-                        const refTable = columnDef.references.model || columnDef.references.table;
+                        const refTable =
+                            columnDef.references.model ||
+                            columnDef.references.table;
                         const refTables = await queryInterface.showAllTables();
-                        
+
                         if (!refTables.includes(refTable)) {
                             // Referenced table doesn't exist
                             missingRefs.push(refTable);
@@ -71,10 +77,10 @@ async function safeCreateTable(queryInterface, tableName, tableDefinition) {
                         }
                     }
                 }
-                
+
                 // Create table (with or without foreign keys)
                 await queryInterface.createTable(tableName, tableDefCopy);
-                
+
                 if (missingRefs.length > 0) {
                     console.log(
                         `⚠️  Created ${tableName} without foreign keys - referenced tables (${missingRefs.join(', ')}) don't exist yet. Sequelize sync will add them.`

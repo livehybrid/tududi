@@ -33,7 +33,7 @@ module.exports = {
 
         // Populate order field for existing subtasks based on created_at
         const dialect = queryInterface.sequelize.getDialect();
-        
+
         if (dialect === 'mysql') {
             // MySQL syntax - use JOIN instead of FROM
             await queryInterface.sequelize.query(`
