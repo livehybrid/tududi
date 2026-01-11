@@ -59,6 +59,9 @@ export interface Profile {
     productivity_assistant_enabled: boolean;
     next_task_suggestion_enabled: boolean;
     pomodoro_enabled: boolean;
+    background_agent_enabled: boolean;
+    openrouter_api_key?: string | null;
+    include_user_context: boolean;
     notification_preferences?: NotificationPreferences | null;
     keyboard_shortcuts?: KeyboardShortcutsConfig | null;
 }

@@ -10,8 +10,11 @@ const {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        // Temporarily disable foreign key constraints for SQLite
-        await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF');
+        // Temporarily disable foreign key constraints for SQLite only
+        const dialect = queryInterface.sequelize.getDialect();
+        if (dialect === 'sqlite') {
+            await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF');
+        }
 
         try {
             // Add uid columns to all tables
@@ -70,8 +73,12 @@ module.exports = {
                 });
             }
         } finally {
-            // Re-enable foreign key constraints
-            await queryInterface.sequelize.query('PRAGMA foreign_keys = ON');
+            // Re-enable foreign key constraints for SQLite only
+            if (dialect === 'sqlite') {
+                await queryInterface.sequelize.query(
+                    'PRAGMA foreign_keys = ON'
+                );
+            }
         }
     },
 

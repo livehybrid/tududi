@@ -1,10 +1,15 @@
 'use strict';
 
+const { safeAddIndex } = require('../utils/migration-utils');
+
 module.exports = {
     up: async (queryInterface, Sequelize) => {
-        // CRITICAL: Disable foreign keys BEFORE starting transaction
+        // CRITICAL: Disable foreign keys BEFORE starting transaction (SQLite only)
         // (SQLite requires this to be set outside of a transaction)
-        await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF;');
+        const dialect = queryInterface.sequelize.getDialect();
+        if (dialect === 'sqlite') {
+            await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF;');
+        }
 
         const transaction = await queryInterface.sequelize.transaction();
 
@@ -17,32 +22,72 @@ module.exports = {
             console.log(`📊 Original tags count: ${originalCount.count}`);
 
             // Step 1: Remove duplicate tags per user (keep oldest)
-            const [duplicatesResult] = await queryInterface.sequelize.query(
-                `
-                SELECT COUNT(*) as count FROM tags
-                WHERE id NOT IN (
-                    SELECT MIN(id)
-                    FROM tags
-                    GROUP BY user_id, name
+            const dialect = queryInterface.sequelize.getDialect();
+
+            let duplicatesResult;
+            if (dialect === 'mysql') {
+                // MySQL requires wrapping the subquery in another SELECT
+                [duplicatesResult] = await queryInterface.sequelize.query(
+                    `
+                    SELECT COUNT(*) as count FROM tags
+                    WHERE id NOT IN (
+                        SELECT id FROM (
+                            SELECT MIN(id) as id
+                            FROM tags
+                            GROUP BY user_id, name
+                        ) AS temp
+                    );
+                `,
+                    { transaction, type: Sequelize.QueryTypes.SELECT }
                 );
-            `,
-                { transaction, type: Sequelize.QueryTypes.SELECT }
-            );
+            } else {
+                // SQLite and PostgreSQL can use the simpler query
+                [duplicatesResult] = await queryInterface.sequelize.query(
+                    `
+                    SELECT COUNT(*) as count FROM tags
+                    WHERE id NOT IN (
+                        SELECT MIN(id)
+                        FROM tags
+                        GROUP BY user_id, name
+                    );
+                `,
+                    { transaction, type: Sequelize.QueryTypes.SELECT }
+                );
+            }
             console.log(
                 `🔍 Found ${duplicatesResult.count} duplicate tags to remove`
             );
 
-            await queryInterface.sequelize.query(
-                `
-                DELETE FROM tags
-                WHERE id NOT IN (
-                    SELECT MIN(id)
-                    FROM tags
-                    GROUP BY user_id, name
-                )
-            `,
-                { transaction }
-            );
+            // Delete duplicates using dialect-appropriate query
+            if (dialect === 'mysql') {
+                // MySQL requires wrapping the subquery in another SELECT
+                await queryInterface.sequelize.query(
+                    `
+                    DELETE FROM tags
+                    WHERE id NOT IN (
+                        SELECT id FROM (
+                            SELECT MIN(id) as id
+                            FROM tags
+                            GROUP BY user_id, name
+                        ) AS temp
+                    )
+                `,
+                    { transaction }
+                );
+            } else {
+                // SQLite and PostgreSQL can use the simpler query
+                await queryInterface.sequelize.query(
+                    `
+                    DELETE FROM tags
+                    WHERE id NOT IN (
+                        SELECT MIN(id)
+                        FROM tags
+                        GROUP BY user_id, name
+                    )
+                `,
+                    { transaction }
+                );
+            }
 
             // Step 1.5: Verify count after deduplication
             const [afterDedup] = await queryInterface.sequelize.query(
@@ -52,6 +97,12 @@ module.exports = {
             console.log(`📊 After deduplication: ${afterDedup.count} tags`);
 
             // Step 2: Create new tags table with correct schema
+            // Drop tags_new if it exists from a previous failed migration
+            await queryInterface.sequelize.query(
+                'DROP TABLE IF EXISTS tags_new;',
+                { transaction }
+            );
+
             await queryInterface.sequelize.query(
                 `
                 CREATE TABLE tags_new (
@@ -140,31 +191,138 @@ module.exports = {
                 `📦 Backed up junction tables: ${projectsTagsBackupCount.count} project tags, ${tasksTagsBackupCount.count} task tags`
             );
 
-            // Step 4: Drop old table
+            // Step 4: Drop foreign key constraints for MySQL before dropping tags table
+            if (dialect === 'mysql') {
+                // Get foreign key constraint names
+                const fkConstraints = await queryInterface.sequelize.query(
+                    `
+                    SELECT CONSTRAINT_NAME, TABLE_NAME
+                    FROM information_schema.KEY_COLUMN_USAGE
+                    WHERE REFERENCED_TABLE_NAME = 'tags'
+                    AND TABLE_SCHEMA = DATABASE()
+                    `,
+                    { transaction, type: Sequelize.QueryTypes.SELECT }
+                );
+
+                // Drop foreign key constraints from junction tables
+                for (const fk of fkConstraints) {
+                    try {
+                        await queryInterface.sequelize.query(
+                            `ALTER TABLE ${fk.TABLE_NAME} DROP FOREIGN KEY ${fk.CONSTRAINT_NAME}`,
+                            { transaction }
+                        );
+                        console.log(
+                            `Dropped foreign key ${fk.CONSTRAINT_NAME} from ${fk.TABLE_NAME}`
+                        );
+                    } catch (error) {
+                        console.log(
+                            `Could not drop foreign key ${fk.CONSTRAINT_NAME}: ${error.message}`
+                        );
+                    }
+                }
+            }
+
+            // Step 5: Drop old table
             await queryInterface.sequelize.query('DROP TABLE tags;', {
                 transaction,
             });
 
-            // Step 5: Rename new table
+            // Step 6: Rename new table
             await queryInterface.sequelize.query(
                 'ALTER TABLE tags_new RENAME TO tags;',
                 { transaction }
             );
 
-            // Step 6: Create composite unique index
-            await queryInterface.addIndex('tags', ['user_id', 'name'], {
-                unique: true,
-                name: 'tags_user_id_name_unique',
-                transaction,
-            });
+            // Step 7: Recreate foreign key constraints for MySQL
+            if (dialect === 'mysql') {
+                // Recreate foreign keys for tasks_tags
+                try {
+                    await queryInterface.sequelize.query(
+                        `
+                        ALTER TABLE tasks_tags
+                        ADD CONSTRAINT tasks_tags_ibfk_2
+                        FOREIGN KEY (tag_id) REFERENCES tags(id)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                    `,
+                        { transaction }
+                    );
+                } catch (error) {
+                    console.log(
+                        `Could not recreate tasks_tags foreign key: ${error.message}`
+                    );
+                }
 
-            // Step 7: Create index on user_id for performance
-            await queryInterface.addIndex('tags', ['user_id'], {
-                name: 'tags_user_id',
-                transaction,
-            });
+                // Recreate foreign keys for projects_tags
+                try {
+                    await queryInterface.sequelize.query(
+                        `
+                        ALTER TABLE projects_tags
+                        ADD CONSTRAINT projects_tags_ibfk_2
+                        FOREIGN KEY (tag_id) REFERENCES tags(id)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+                    `,
+                        { transaction }
+                    );
+                } catch (error) {
+                    console.log(
+                        `Could not recreate projects_tags foreign key: ${error.message}`
+                    );
+                }
 
-            // Step 7.5: Restore junction table data
+                // Recreate foreign keys for notes_tags if it exists
+                try {
+                    const tables = await queryInterface.showAllTables();
+                    if (tables.includes('notes_tags')) {
+                        await queryInterface.sequelize.query(
+                            `
+                            ALTER TABLE notes_tags
+                            ADD CONSTRAINT notes_tags_ibfk_2
+                            FOREIGN KEY (tag_id) REFERENCES tags(id)
+                            ON DELETE CASCADE ON UPDATE CASCADE
+                        `,
+                            { transaction }
+                        );
+                    }
+                } catch (error) {
+                    console.log(
+                        `Could not recreate notes_tags foreign key: ${error.message}`
+                    );
+                }
+            }
+
+            // Step 8: Create composite unique index
+            // Note: safeAddIndex doesn't support transactions, so we'll use try/catch
+            try {
+                await queryInterface.addIndex('tags', ['user_id', 'name'], {
+                    unique: true,
+                    name: 'tags_user_id_name_unique',
+                    transaction,
+                });
+            } catch (error) {
+                if (
+                    !error.message.includes('Duplicate') &&
+                    !error.message.includes('already exists')
+                ) {
+                    throw error;
+                }
+            }
+
+            // Step 9: Create index on user_id for performance
+            try {
+                await queryInterface.addIndex('tags', ['user_id'], {
+                    name: 'tags_user_id',
+                    transaction,
+                });
+            } catch (error) {
+                if (
+                    !error.message.includes('Duplicate') &&
+                    !error.message.includes('already exists')
+                ) {
+                    throw error;
+                }
+            }
+
+            // Step 10: Restore junction table data
             await queryInterface.sequelize.query(
                 `
                 DELETE FROM projects_tags;
@@ -238,8 +396,12 @@ module.exports = {
 
             await transaction.commit();
 
-            // Re-enable foreign keys AFTER committing transaction
-            await queryInterface.sequelize.query('PRAGMA foreign_keys = ON;');
+            // Re-enable foreign keys AFTER committing transaction (SQLite only)
+            if (dialect === 'sqlite') {
+                await queryInterface.sequelize.query(
+                    'PRAGMA foreign_keys = ON;'
+                );
+            }
 
             console.log('✅ Successfully fixed tags table unique constraints');
             console.log(
@@ -248,13 +410,18 @@ module.exports = {
         } catch (error) {
             await transaction.rollback();
 
-            // Re-enable foreign keys even on error (must be done after rollback)
-            try {
-                await queryInterface.sequelize.query(
-                    'PRAGMA foreign_keys = ON;'
-                );
-            } catch (pragmaError) {
-                console.error('Failed to re-enable foreign keys:', pragmaError);
+            // Re-enable foreign keys even on error (must be done after rollback, SQLite only)
+            if (dialect === 'sqlite') {
+                try {
+                    await queryInterface.sequelize.query(
+                        'PRAGMA foreign_keys = ON;'
+                    );
+                } catch (pragmaError) {
+                    console.error(
+                        'Failed to re-enable foreign keys:',
+                        pragmaError
+                    );
+                }
             }
 
             console.error('❌ Error fixing tags table:', error);

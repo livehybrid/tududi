@@ -17,7 +17,7 @@ router.post('/background-agent-jobs', async (req, res) => {
             if (!task) {
                 return res.status(404).json({ error: 'Task not found' });
             }
-            
+
             const access = await permissionsService.getAccess(
                 req.currentUser.id,
                 'task',
@@ -50,7 +50,7 @@ router.get('/background-agent-jobs', async (req, res) => {
             if (!task) {
                 return res.status(404).json({ error: 'Task not found' });
             }
-            
+
             const access = await permissionsService.getAccess(
                 req.currentUser.id,
                 'task',
@@ -60,10 +60,15 @@ router.get('/background-agent-jobs', async (req, res) => {
                 return res.status(403).json({ error: 'Forbidden' });
             }
 
-            const jobs = await BackgroundAgentService.getJobsByUserAndTask(req.currentUser.id, taskId);
+            const jobs = await BackgroundAgentService.getJobsByUserAndTask(
+                req.currentUser.id,
+                taskId
+            );
             res.json({ jobs });
         } else {
-            const jobs = await BackgroundAgentService.getJobsByUser(req.currentUser.id);
+            const jobs = await BackgroundAgentService.getJobsByUser(
+                req.currentUser.id
+            );
             res.json({ jobs });
         }
     } catch (error) {
@@ -86,7 +91,9 @@ router.get('/background-agent-jobs/:id', async (req, res) => {
 
         // If job is associated with a task, verify user has access to that task
         if (job.task_id) {
-            const task = await Task.findByPk(job.task_id, { attributes: ['uid'] });
+            const task = await Task.findByPk(job.task_id, {
+                attributes: ['uid'],
+            });
             if (task) {
                 const access = await permissionsService.getAccess(
                     req.currentUser.id,
@@ -106,4 +113,4 @@ router.get('/background-agent-jobs/:id', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;

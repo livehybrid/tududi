@@ -26,7 +26,13 @@ RUN npm install --no-audit --no-fund
 COPY . ./
 
 # Build frontend
-RUN NODE_ENV=production npm run frontend:build
+RUN echo "=== Starting frontend build ===" && \
+    NODE_ENV=production npm run clean && \
+    echo "=== Running TypeScript check ===" && \
+    NODE_ENV=production npx tsc --noEmit && \
+    echo "=== Running webpack build ===" && \
+    NODE_ENV=production npx webpack --config webpack.config.js && \
+    echo "=== Frontend build completed successfully ==="
 
 # Run backend tests
 # RUN npm run backend:test

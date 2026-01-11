@@ -23,24 +23,36 @@ async function checkDatabaseStatus() {
     try {
         console.log('🔍 Checking database status...\n');
 
-        // Check database file
+        // Check database configuration
         const dbConfig = sequelize.config || sequelize.options;
+        const dialect =
+            dbConfig.dialect || sequelize.options.dialect || 'sqlite';
         const dbPath = dbConfig.storage || sequelize.options.storage;
 
         console.log('📂 Database Configuration:');
-        console.log(`   Storage: ${dbPath}`);
-        console.log(
-            `   Dialect: ${dbConfig.dialect || sequelize.options.dialect || 'sqlite'}`
-        );
+        console.log(`   Dialect: ${dialect}`);
         console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
 
-        // Check if database file exists
-        if (fs.existsSync(dbPath)) {
-            const stats = fs.statSync(dbPath);
-            console.log(`   File size: ${(stats.size / 1024).toFixed(2)} KB`);
-            console.log(`   Last modified: ${stats.mtime.toISOString()}`);
+        if (dialect === 'sqlite') {
+            console.log(`   Storage: ${dbPath}`);
+            // Check if database file exists (SQLite only)
+            if (fs.existsSync(dbPath)) {
+                const stats = fs.statSync(dbPath);
+                console.log(
+                    `   File size: ${(stats.size / 1024).toFixed(2)} KB`
+                );
+                console.log(`   Last modified: ${stats.mtime.toISOString()}`);
+            } else {
+                console.log('   ⚠️  Database file does not exist');
+            }
         } else {
-            console.log('   ⚠️  Database file does not exist');
+            // For MySQL/PostgreSQL, show connection info
+            const host = dbConfig.host || 'localhost';
+            const port = dbConfig.port || (dialect === 'mysql' ? 3306 : 5432);
+            const database = dbConfig.database || dbConfig.database || 'tududi';
+            console.log(`   Host: ${host}`);
+            console.log(`   Port: ${port}`);
+            console.log(`   Database: ${database}`);
         }
 
         console.log('\n🔌 Testing database connection...');

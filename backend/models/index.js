@@ -1,21 +1,75 @@
-const { Sequelize } = require('sequelize');
+// Load environment variables FIRST before any other requires
+// Use explicit path to ensure .env is loaded from project root
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
+const { Sequelize } = require('sequelize');
 const { getConfig } = require('../config/config');
 const config = getConfig();
 
 let dbConfig;
 
-dbConfig = {
-    dialect: 'sqlite',
-    storage: config.dbFile,
-    logging: config.environment === 'development' ? console.log : false,
-    define: {
-        timestamps: true,
-        underscored: true,
-        createdAt: 'created_at',
-        updatedAt: 'updated_at',
-    },
-};
+// Determine database dialect from environment variable, default to SQLite
+const dbDialect = process.env.DB_DIALECT || 'sqlite';
+
+if (dbDialect === 'mysql') {
+    dbConfig = {
+        dialect: 'mysql',
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '3306', 10),
+        database: process.env.DB_NAME || 'tududi',
+        username: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        logging: false,
+        define: {
+            timestamps: true,
+            underscored: true,
+            createdAt: 'created_at',
+            updatedAt: 'updated_at',
+        },
+        pool: {
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
+        },
+    };
+} else if (dbDialect === 'postgres' || dbDialect === 'postgresql') {
+    dbConfig = {
+        dialect: 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432', 10),
+        database: process.env.DB_NAME || 'tududi',
+        username: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || '',
+        logging: false,
+        define: {
+            timestamps: true,
+            underscored: true,
+            createdAt: 'created_at',
+            updatedAt: 'updated_at',
+        },
+        pool: {
+            max: 5,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
+        },
+    };
+} else {
+    // Default to SQLite
+    dbConfig = {
+        dialect: 'sqlite',
+        storage: config.dbFile,
+        logging: false, // Disable SQL logging
+        define: {
+            timestamps: true,
+            underscored: true,
+            createdAt: 'created_at',
+            updatedAt: 'updated_at',
+        },
+    };
+}
 
 const sequelize = new Sequelize(dbConfig);
 
@@ -67,7 +121,10 @@ InboxItem.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(BackgroundAgentJob, { foreignKey: 'user_id' });
 BackgroundAgentJob.belongsTo(User, { foreignKey: 'user_id' });
 
-Task.hasMany(BackgroundAgentJob, { foreignKey: 'task_id', as: 'BackgroundAgentJobs' });
+Task.hasMany(BackgroundAgentJob, {
+    foreignKey: 'task_id',
+    as: 'BackgroundAgentJobs',
+});
 BackgroundAgentJob.belongsTo(Task, { foreignKey: 'task_id', as: 'Task' });
 
 // TaskEvent associations

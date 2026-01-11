@@ -60,12 +60,14 @@ describe('Tasks Permissions', () => {
         const otherTask = await Task.create({
             name: 'Other Task',
             user_id: otherUser.id,
-            today: false,
+            // 'today' column removed - use status instead
+            status: Task.STATUS.NOT_STARTED,
         });
 
+        // 'today' column removed - use status instead
         const res = await agent
             .patch(`/api/task/${otherTask.uid}`)
-            .send({ today: true });
+            .send({ status: Task.STATUS.IN_PROGRESS });
         expect(res.status).toBe(403);
         expect(res.body.error).toBe('Forbidden');
     });
