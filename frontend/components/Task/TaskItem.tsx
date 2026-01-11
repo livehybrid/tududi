@@ -156,6 +156,9 @@ interface TaskItemProps {
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     isUpcomingView?: boolean;
     showCompletedTasks?: boolean;
+    isSelected?: boolean;
+    onSelect?: (selected: boolean) => void;
+    showCheckbox?: boolean;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
@@ -168,6 +171,9 @@ const TaskItem: React.FC<TaskItemProps> = ({
     onToggleToday,
     isUpcomingView = false,
     showCompletedTasks = false,
+    isSelected = false,
+    onSelect,
+    showCheckbox = false,
 }) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -372,6 +378,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
         ? 'border-l-4 border-l-green-500'
         : getPriorityBorderClassName(task.priority);
 
+    const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        e.stopPropagation();
+        if (onSelect) {
+            onSelect(e.target.checked);
+        }
+    };
+
     return (
         <>
             <div
@@ -379,9 +392,25 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     isInProgress
                         ? 'ring-1 ring-blue-500/60 dark:ring-blue-600/60'
                         : ''
-                } ${isAnimatingOut ? 'opacity-0' : 'opacity-100'}`}
+                } ${isAnimatingOut ? 'opacity-0' : 'opacity-100'} ${
+                    isSelected && showCheckbox
+                        ? 'ring-2 ring-blue-500 dark:ring-blue-400'
+                        : ''
+                }`}
             >
-                <TaskHeader
+                {showCheckbox && (
+                    <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10">
+                        <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={handleCheckboxChange}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                    </div>
+                )}
+                <div className={showCheckbox ? 'pl-8' : ''}>
+                    <TaskHeader
                     task={task}
                     project={project}
                     onTaskClick={handleTaskClick}
@@ -400,7 +429,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
                     isUpcomingView={isUpcomingView}
-                />
+                    />
+                </div>
 
                 {/* Progress bar at bottom of parent task */}
                 {subtasks.length > 0 && (

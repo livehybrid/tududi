@@ -784,7 +784,11 @@ router.delete('/task/:uid', requireTaskWriteAccess, async (req, res) => {
             }
         }
 
-        await sequelize.query('PRAGMA foreign_keys = OFF');
+        // Temporarily disable foreign key constraints (SQLite only)
+        const dialect = sequelize.getDialect();
+        if (dialect === 'sqlite') {
+            await sequelize.query('PRAGMA foreign_keys = OFF');
+        }
 
         try {
             await TaskEvent.destroy({
@@ -800,7 +804,10 @@ router.delete('/task/:uid', requireTaskWriteAccess, async (req, res) => {
 
             await task.destroy({ force: true });
         } finally {
-            await sequelize.query('PRAGMA foreign_keys = ON');
+            // Re-enable foreign key constraints (SQLite only)
+            if (dialect === 'sqlite') {
+                await sequelize.query('PRAGMA foreign_keys = ON');
+            }
         }
 
         res.json({ message: 'Task successfully deleted' });

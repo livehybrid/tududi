@@ -41,4 +41,4 @@ class BackgroundJobProcessor {
     }
 }
 
-module.exports = new BackgroundJobProcessor(); 
+module.exports = new BackgroundJobProcessor();

@@ -3,7 +3,12 @@ const openRouter = require('./openRouter');
 const emailService = require('./emailService');
 
 class BackgroundAgentService {
-    static async createJob({ userId, taskId = null, query, sendEmail = false }) {
+    static async createJob({
+        userId,
+        taskId = null,
+        query,
+        sendEmail = false,
+    }) {
         return await BackgroundAgentJob.create({
             user_id: userId,
             task_id: taskId,
@@ -27,9 +32,9 @@ class BackgroundAgentService {
 
     static async getJobsByUserAndTask(userId, taskId) {
         return await BackgroundAgentJob.findAll({
-            where: { 
+            where: {
                 user_id: userId,
-                task_id: taskId 
+                task_id: taskId,
             },
             order: [['created_at', 'DESC']],
         });
@@ -46,9 +51,14 @@ class BackgroundAgentService {
             try {
                 // Get user's OpenRouter API key
                 const user = await User.findByPk(job.user_id);
-                if (!user || !user.background_agent_enabled || !user.openrouter_api_key) {
+                if (
+                    !user ||
+                    !user.background_agent_enabled ||
+                    !user.openrouter_api_key
+                ) {
                     job.status = 'error';
-                    job.error = 'Background agent not enabled or no API key configured';
+                    job.error =
+                        'Background agent not enabled or no API key configured';
                     await job.save();
                     continue;
                 }
@@ -66,11 +76,15 @@ class BackgroundAgentService {
                         `Pomodoro enabled: ${user.pomodoro_enabled}`,
                         `Language: ${user.language || 'en'}`,
                         `Timezone: ${user.timezone || 'UTC'}`,
-                        `Appearance: ${user.appearance || 'system'}`
+                        `Appearance: ${user.appearance || 'system'}`,
                     ].join(', ');
                 }
 
-                const result = await openRouter.chatCompletion(job.query, user.openrouter_api_key, userContext);
+                const result = await openRouter.chatCompletion(
+                    job.query,
+                    user.openrouter_api_key,
+                    userContext
+                );
                 job.result = result;
                 job.status = 'completed';
 
@@ -95,4 +109,4 @@ class BackgroundAgentService {
     }
 }
 
-module.exports = BackgroundAgentService; 
+module.exports = BackgroundAgentService;

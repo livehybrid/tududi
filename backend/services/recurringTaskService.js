@@ -240,7 +240,7 @@ const calculateVirtualOccurrences = (task, count = 7, startFrom = null) => {
  * Note: This function is a stub - the system now uses virtual occurrences
  * calculated on-the-fly rather than generating actual database records.
  * This function exists for backward compatibility with existing code.
- * 
+ *
  * @param {number} userId - The user ID
  * @param {number} daysAhead - Number of days ahead to generate (optional, default: 7)
  * @returns {Promise<Array>} Empty array (no actual tasks are generated)
@@ -257,7 +257,7 @@ const generateRecurringTasks = async (userId, daysAhead = 7) => {
  * Note: This function is a stub - the system now uses virtual occurrences
  * calculated on-the-fly rather than generating actual database records.
  * This function exists for backward compatibility with taskScheduler.
- * 
+ *
  * @returns {Promise<void>}
  */
 const processRecurringTasks = async () => {
@@ -270,7 +270,7 @@ const processRecurringTasks = async () => {
  * Handle task completion for recurring tasks
  * Note: This function is a stub - recurring tasks are now handled as virtual occurrences.
  * Completion logic is handled in the task update route.
- * 
+ *
  * @param {Object} task - The completed task
  * @returns {Promise<Object|null>} Returns null (no next task is generated)
  */

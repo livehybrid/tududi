@@ -56,8 +56,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration
-console.log(`[DEBUG] Session secret configured: ${config.secret ? 'YES' : 'NO'}`);
-console.log(`[DEBUG] Session secret length: ${config.secret ? config.secret.length : 0}`);
+console.log(
+    `[DEBUG] Session secret configured: ${config.secret ? 'YES' : 'NO'}`
+);
+console.log(
+    `[DEBUG] Session secret length: ${config.secret ? config.secret.length : 0}`
+);
 
 app.use(
     session({

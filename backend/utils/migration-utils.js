@@ -16,15 +16,21 @@ async function safeAddColumns(queryInterface, tableName, columns) {
 
         for (const column of columns) {
             if (!(column.name in tableInfo)) {
-                console.log(`Adding column ${column.name} to table ${tableName}`);
+                console.log(
+                    `Adding column ${column.name} to table ${tableName}`
+                );
                 await queryInterface.addColumn(
                     tableName,
                     column.name,
                     column.definition
                 );
-                console.log(`Successfully added column ${column.name} to table ${tableName}`);
+                console.log(
+                    `Successfully added column ${column.name} to table ${tableName}`
+                );
             } else {
-                console.log(`Column ${column.name} already exists in table ${tableName}, skipping`);
+                console.log(
+                    `Column ${column.name} already exists in table ${tableName}, skipping`
+                );
             }
         }
     } catch (error) {
@@ -40,9 +46,59 @@ async function safeCreateTable(queryInterface, tableName, tableDefinition) {
         const tableExists = tables.includes(tableName);
 
         if (!tableExists) {
-            await queryInterface.createTable(tableName, tableDefinition);
+            const dialect = queryInterface.sequelize.getDialect();
+            
+            // For MySQL/PostgreSQL, check if referenced tables exist
+            // If they don't exist, create table without foreign keys first
+            if (dialect === 'mysql' || dialect === 'postgres') {
+                // Extract foreign key references from table definition
+                const tableDefCopy = JSON.parse(JSON.stringify(tableDefinition));
+                const missingRefs = [];
+                
+                // Check if referenced tables exist
+                for (const [columnName, columnDef] of Object.entries(tableDefCopy)) {
+                    if (columnDef.references) {
+                        const refTable = columnDef.references.model || columnDef.references.table;
+                        const refTables = await queryInterface.showAllTables();
+                        
+                        if (!refTables.includes(refTable)) {
+                            // Referenced table doesn't exist
+                            missingRefs.push(refTable);
+                            // Keep column but remove foreign key constraints
+                            delete columnDef.references;
+                            delete columnDef.onUpdate;
+                            delete columnDef.onDelete;
+                        }
+                    }
+                }
+                
+                // Create table (with or without foreign keys)
+                await queryInterface.createTable(tableName, tableDefCopy);
+                
+                if (missingRefs.length > 0) {
+                    console.log(
+                        `⚠️  Created ${tableName} without foreign keys - referenced tables (${missingRefs.join(', ')}) don't exist yet. Sequelize sync will add them.`
+                    );
+                }
+            } else {
+                // SQLite - create table normally
+                await queryInterface.createTable(tableName, tableDefinition);
+            }
         }
     } catch (error) {
+        // If error is about missing referenced table, log and continue
+        // Sequelize sync will create the table with proper foreign keys later
+        if (
+            error.message.includes('Failed to open the referenced table') ||
+            error.message.includes('referenced table') ||
+            error.message.includes('does not exist') ||
+            error.message.includes('ER_NO_SUCH_TABLE')
+        ) {
+            console.log(
+                `⚠️  Could not create ${tableName} with foreign keys - referenced tables don't exist yet. Sequelize sync will handle this.`
+            );
+            return; // Don't throw - let Sequelize sync handle it
+        }
         console.log(
             `Migration error creating table ${tableName}:`,
             error.message
@@ -64,18 +120,49 @@ async function safeAddIndex(queryInterface, tableName, fields, options = {}) {
         }
 
         const indexes = await queryInterface.showIndex(tableName);
-        const indexExists = indexes.some((index) =>
-            index.fields.some((field) => fields.includes(field.attribute))
-        );
+
+        // Check if index already exists by name (if provided) or by fields
+        let indexExists = false;
+        if (options.name) {
+            indexExists = indexes.some((index) => index.name === options.name);
+        } else {
+            // Check by field match
+            indexExists = indexes.some((index) => {
+                const indexFields = index.fields.map((f) => f.attribute || f);
+                return (
+                    indexFields.length === fields.length &&
+                    fields.every((field) => indexFields.includes(field))
+                );
+            });
+        }
 
         if (!indexExists) {
             await queryInterface.addIndex(tableName, fields, options);
+            console.log(
+                `Successfully added index ${options.name || fields.join('_')} to ${tableName}`
+            );
+        } else {
+            console.log(
+                `Index ${options.name || fields.join('_')} already exists on ${tableName}, skipping`
+            );
         }
     } catch (error) {
+        // If it's a duplicate index error, just log and continue
+        if (
+            error.message.includes('Duplicate') ||
+            error.message.includes('already exists') ||
+            error.message.includes('duplicate key')
+        ) {
+            console.log(
+                `Index ${options.name || fields.join('_')} already exists on ${tableName}, skipping`
+            );
+            return;
+        }
         console.log(
             `Migration error adding index to ${tableName}:`,
             error.message
         );
+        throw error;
     }
 }
 
@@ -134,9 +221,12 @@ async function safeRemoveColumn(queryInterface, tableName, columnName) {
                     .map((col) => `\`${col}\``)
                     .join(', ');
 
-                await queryInterface.sequelize.query(
-                    'PRAGMA foreign_keys = OFF;'
-                );
+                // SQLite-specific: disable foreign keys for table recreation
+                if (dialect === 'sqlite') {
+                    await queryInterface.sequelize.query(
+                        'PRAGMA foreign_keys = OFF;'
+                    );
+                }
 
                 // Drop the _new table if it exists from a previous failed migration
                 await queryInterface.sequelize.query(
@@ -159,19 +249,25 @@ async function safeRemoveColumn(queryInterface, tableName, columnName) {
                     `ALTER TABLE ${tableName}_new RENAME TO ${tableName};`
                 );
 
-                await queryInterface.sequelize.query(
-                    'PRAGMA foreign_keys = ON;'
-                );
+                // SQLite-specific: re-enable foreign keys
+                if (dialect === 'sqlite') {
+                    await queryInterface.sequelize.query(
+                        'PRAGMA foreign_keys = ON;'
+                    );
+                }
 
                 console.log(
                     `Successfully removed column ${columnName} from ${tableName}`
                 );
             } catch (error) {
-                try {
-                    await queryInterface.sequelize.query(
-                        'PRAGMA foreign_keys = ON;'
-                    );
-                } catch (pragmaError) {}
+                // SQLite-specific: re-enable foreign keys on error
+                if (dialect === 'sqlite') {
+                    try {
+                        await queryInterface.sequelize.query(
+                            'PRAGMA foreign_keys = ON;'
+                        );
+                    } catch (pragmaError) {}
+                }
                 console.log(
                     `Migration error removing column ${columnName} from ${tableName}:`,
                     error.message
@@ -322,7 +418,12 @@ async function safeChangeColumn(
 
             const columnList = columns.map((col) => `\`${col}\``).join(', ');
 
-            await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF;');
+            // SQLite-specific: disable foreign keys for table recreation
+            if (dialect === 'sqlite') {
+                await queryInterface.sequelize.query(
+                    'PRAGMA foreign_keys = OFF;'
+                );
+            }
 
             // Drop the _new table if it exists from a previous failed migration
             await queryInterface.sequelize.query(
@@ -343,7 +444,12 @@ async function safeChangeColumn(
                 `ALTER TABLE ${tableName}_new RENAME TO ${tableName};`
             );
 
-            await queryInterface.sequelize.query('PRAGMA foreign_keys = ON;');
+            // SQLite-specific: re-enable foreign keys
+            if (dialect === 'sqlite') {
+                await queryInterface.sequelize.query(
+                    'PRAGMA foreign_keys = ON;'
+                );
+            }
 
             console.log(
                 `Successfully changed column ${columnName} on ${tableName}`

@@ -25,13 +25,19 @@ module.exports = {
             // SQLite doesn't support ENUM, it's stored as TEXT
             // Check if column is 'state' or 'status' (may have been renamed already)
             const tableInfo = await queryInterface.describeTable('projects');
-            const columnName = tableInfo.status ? 'status' : (tableInfo.state ? 'state' : null);
-            
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
             if (!columnName) {
-                console.log('⚠️  Neither state nor status column found in projects table, skipping migration');
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping migration'
+                );
                 return;
             }
-            
+
             // Just update the data values
             await queryInterface.sequelize.query(
                 `UPDATE projects SET ${columnName} = 'not_started' WHERE ${columnName} = 'idea'`
@@ -45,13 +51,19 @@ module.exports = {
         } else if (dialect === 'postgres') {
             // PostgreSQL: Create new enum type, migrate data, swap types
             const tableInfo = await queryInterface.describeTable('projects');
-            const columnName = tableInfo.status ? 'status' : (tableInfo.state ? 'state' : null);
-            
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
             if (!columnName) {
-                console.log('⚠️  Neither state nor status column found in projects table, skipping migration');
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping migration'
+                );
                 return;
             }
-            
+
             await queryInterface.sequelize.query(`
                 CREATE TYPE "enum_projects_${columnName}_new" AS ENUM(
                     'not_started', 'in_progress', 'done', 'waiting', 'cancelled', 'planned'
@@ -91,13 +103,19 @@ module.exports = {
         } else if (dialect === 'mysql' || dialect === 'mariadb') {
             // MySQL: Alter column directly
             const tableInfo = await queryInterface.describeTable('projects');
-            const columnName = tableInfo.status ? 'status' : (tableInfo.state ? 'state' : null);
-            
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
             if (!columnName) {
-                console.log('⚠️  Neither state nor status column found in projects table, skipping migration');
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping migration'
+                );
                 return;
             }
-            
+
             await queryInterface.sequelize.query(
                 `UPDATE projects SET ${columnName} = 'not_started' WHERE ${columnName} = 'idea'`
             );
@@ -129,13 +147,19 @@ module.exports = {
         if (dialect === 'sqlite') {
             // Reverse the data mapping
             const tableInfo = await queryInterface.describeTable('projects');
-            const columnName = tableInfo.status ? 'status' : (tableInfo.state ? 'state' : null);
-            
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
             if (!columnName) {
-                console.log('⚠️  Neither state nor status column found in projects table, skipping rollback');
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping rollback'
+                );
                 return;
             }
-            
+
             await queryInterface.sequelize.query(
                 `UPDATE projects SET ${columnName} = 'idea' WHERE ${columnName} = 'not_started'`
             );

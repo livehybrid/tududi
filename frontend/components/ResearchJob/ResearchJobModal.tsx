@@ -14,8 +14,6 @@ const ResearchJobModal: React.FC<ResearchJobModalProps> = ({ jobId, onClose }) =
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-
         const loadJob = async () => {
             try {
                 const data = await fetchResearchJob(jobId);
@@ -30,7 +28,7 @@ const ResearchJobModal: React.FC<ResearchJobModalProps> = ({ jobId, onClose }) =
         };
 
         loadJob();
-        interval = setInterval(loadJob, 2000);
+        const interval = setInterval(loadJob, 2000);
         return () => clearInterval(interval);
     }, [jobId]);
 

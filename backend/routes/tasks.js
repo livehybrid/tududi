@@ -244,31 +244,35 @@ async function serializeTask(task, userTimezone = 'UTC', options = {}) {
                       subtask.due_date,
                       safeTimezone
                   ),
-                      completed_at: subtask.completed_at
-                          ? (() => {
-                              try {
-                                  const date = subtask.completed_at instanceof Date 
-                                      ? subtask.completed_at 
-                                      : new Date(subtask.completed_at);
-                                  return isNaN(date.getTime()) ? null : date.toISOString();
-                              } catch (error) {
-                                  return null;
-                              }
-                          })()
-                          : null,
+                  completed_at: subtask.completed_at
+                      ? (() => {
+                            try {
+                                const date =
+                                    subtask.completed_at instanceof Date
+                                        ? subtask.completed_at
+                                        : new Date(subtask.completed_at);
+                                return isNaN(date.getTime())
+                                    ? null
+                                    : date.toISOString();
+                            } catch (error) {
+                                return null;
+                            }
+                        })()
+                      : null,
               }))
             : [],
         completed_at: task.completed_at
             ? (() => {
-                try {
-                    const date = task.completed_at instanceof Date 
-                        ? task.completed_at 
-                        : new Date(task.completed_at);
-                    return isNaN(date.getTime()) ? null : date.toISOString();
-                } catch (error) {
-                    return null;
-                }
-            })()
+                  try {
+                      const date =
+                          task.completed_at instanceof Date
+                              ? task.completed_at
+                              : new Date(task.completed_at);
+                      return isNaN(date.getTime()) ? null : date.toISOString();
+                  } catch (error) {
+                      return null;
+                  }
+              })()
             : null,
         today_move_count: todayMoveCount,
     };
@@ -323,6 +327,8 @@ async function updateTaskTags(task, tagsData, userId) {
 
     // Set all tags to task
     const allTags = [...existingTags, ...createdTags];
+    // Reload task to ensure we have fresh associations before setting tags
+    await task.reload();
     await task.setTags(allTags);
 }
 
@@ -809,7 +815,7 @@ async function computeTaskMetrics(userId, userTimezone = 'UTC') {
         'waiting',
         'planned',
     ];
-    
+
     const todayPlanTasks = await Task.findAll({
         where: {
             ...visibleTasksWhere,
@@ -1325,15 +1331,18 @@ router.get('/tasks', async (req, res) => {
                             ...serialized,
                             completed_at: task.completed_at
                                 ? (() => {
-                                    try {
-                                        const date = task.completed_at instanceof Date 
-                                            ? task.completed_at 
-                                            : new Date(task.completed_at);
-                                        return isNaN(date.getTime()) ? null : date.toISOString();
-                                    } catch (error) {
-                                        return null;
-                                    }
-                                })()
+                                      try {
+                                          const date =
+                                              task.completed_at instanceof Date
+                                                  ? task.completed_at
+                                                  : new Date(task.completed_at);
+                                          return isNaN(date.getTime())
+                                              ? null
+                                              : date.toISOString();
+                                      } catch (error) {
+                                          return null;
+                                      }
+                                  })()
                                 : null,
                         };
                     })
@@ -1596,7 +1605,7 @@ router.post('/task', async (req, res) => {
                         : status
                     : Task.STATUS.NOT_STARTED,
             note,
-                // 'today' column removed - task visibility in today view is now determined by status
+            // 'today' column removed - task visibility in today view is now determined by status
             user_id: req.currentUser.id,
             recurrence_type: recurrence_type || 'none',
             recurrence_interval: recurrence_interval || null,
@@ -1729,27 +1738,33 @@ router.post('/task', async (req, res) => {
                 today_move_count: 0,
                 due_date: task.due_date
                     ? (() => {
-                        try {
-                            const date = task.due_date instanceof Date 
-                                ? task.due_date 
-                                : new Date(task.due_date);
-                            return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
-                        } catch (error) {
-                            return null;
-                        }
-                    })()
+                          try {
+                              const date =
+                                  task.due_date instanceof Date
+                                      ? task.due_date
+                                      : new Date(task.due_date);
+                              return isNaN(date.getTime())
+                                  ? null
+                                  : date.toISOString().split('T')[0];
+                          } catch (error) {
+                              return null;
+                          }
+                      })()
                     : null,
                 completed_at: task.completed_at
                     ? (() => {
-                        try {
-                            const date = task.completed_at instanceof Date 
-                                ? task.completed_at 
-                                : new Date(task.completed_at);
-                            return isNaN(date.getTime()) ? null : date.toISOString();
-                        } catch (error) {
-                            return null;
-                        }
-                    })()
+                          try {
+                              const date =
+                                  task.completed_at instanceof Date
+                                      ? task.completed_at
+                                      : new Date(task.completed_at);
+                              return isNaN(date.getTime())
+                                  ? null
+                                  : date.toISOString();
+                          } catch (error) {
+                              return null;
+                          }
+                      })()
                     : null,
             };
             return res.status(201).json(fallbackTask);
@@ -1782,18 +1797,26 @@ router.post('/task', async (req, res) => {
     }
 });
 
-// PATCH /api/task/:id
+// Helper function to find task by ID or UID
+async function findTaskByIdentifier(identifier) {
+    // Check if identifier is numeric (ID) or string (UID)
+    const isNumeric = /^\d+$/.test(identifier);
+    const whereClause = isNumeric
+        ? { id: parseInt(identifier, 10) }
+        : { uid: identifier };
+
+    return await Task.findOne({ where: whereClause });
+}
+
+// PATCH /api/task/:id or /api/task/:uid
 router.patch(
     '/task/:id',
     hasAccess(
         'rw',
         'task',
         async (req) => {
-            const t = await Task.findOne({
-                where: { id: req.params.id },
-                attributes: ['uid'],
-            });
-            return t?.uid;
+            const task = await findTaskByIdentifier(req.params.id);
+            return task?.uid;
         },
         { notFoundMessage: 'Task not found.' }
     ),
@@ -1824,8 +1847,13 @@ router.patch(
             // Handle both tags and Tags (Sequelize association format)
             const tagsData = tags || Tags;
 
-            const task = await Task.findOne({
-                where: { id: req.params.id },
+            const task = await findTaskByIdentifier(req.params.id);
+            if (!task) {
+                return res.status(404).json({ error: 'Task not found.' });
+            }
+
+            const taskWithTags = await Task.findOne({
+                where: { id: task.id },
                 include: [
                     {
                         model: Tag,
@@ -1835,36 +1863,39 @@ router.patch(
                 ],
             });
 
-            if (!task) {
+            if (!taskWithTags) {
                 return res.status(404).json({ error: 'Task not found.' });
             }
             // access ensured by middleware
 
             // Capture old values for event logging
             const oldValues = {
-                name: task.name,
-                status: task.status,
-                priority: task.priority,
-                due_date: task.due_date,
-                project_id: task.project_id,
-                note: task.note,
-                recurrence_type: task.recurrence_type,
-                recurrence_interval: task.recurrence_interval,
-                recurrence_end_date: task.recurrence_end_date,
-                recurrence_weekday: task.recurrence_weekday,
-                recurrence_month_day: task.recurrence_month_day,
-                recurrence_week_of_month: task.recurrence_week_of_month,
-                completion_based: task.completion_based,
-                tags: task.Tags
-                    ? task.Tags.map((tag) => ({ id: tag.id, name: tag.name }))
+                name: taskWithTags.name,
+                status: taskWithTags.status,
+                priority: taskWithTags.priority,
+                due_date: taskWithTags.due_date,
+                project_id: taskWithTags.project_id,
+                note: taskWithTags.note,
+                recurrence_type: taskWithTags.recurrence_type,
+                recurrence_interval: taskWithTags.recurrence_interval,
+                recurrence_end_date: taskWithTags.recurrence_end_date,
+                recurrence_weekday: taskWithTags.recurrence_weekday,
+                recurrence_month_day: taskWithTags.recurrence_month_day,
+                recurrence_week_of_month: taskWithTags.recurrence_week_of_month,
+                completion_based: taskWithTags.completion_based,
+                tags: taskWithTags.Tags
+                    ? taskWithTags.Tags.map((tag) => ({
+                          id: tag.id,
+                          name: tag.name,
+                      }))
                     : [],
             };
 
             // Handle updating parent recurrence settings if this is a child task
-            if (update_parent_recurrence && task.recurring_parent_id) {
+            if (update_parent_recurrence && taskWithTags.recurring_parent_id) {
                 const parentTask = await Task.findOne({
                     where: {
-                        id: task.recurring_parent_id,
+                        id: taskWithTags.recurring_parent_id,
                         user_id: req.currentUser.id,
                     },
                 });
@@ -1926,31 +1957,31 @@ router.patch(
                 recurrence_type:
                     recurrence_type !== undefined
                         ? recurrence_type
-                        : task.recurrence_type,
+                        : taskWithTags.recurrence_type,
                 recurrence_interval:
                     recurrence_interval !== undefined
                         ? recurrence_interval
-                        : task.recurrence_interval,
+                        : taskWithTags.recurrence_interval,
                 recurrence_end_date:
                     recurrence_end_date !== undefined
                         ? recurrence_end_date
-                        : task.recurrence_end_date,
+                        : taskWithTags.recurrence_end_date,
                 recurrence_weekday:
                     recurrence_weekday !== undefined
                         ? recurrence_weekday
-                        : task.recurrence_weekday,
+                        : taskWithTags.recurrence_weekday,
                 recurrence_month_day:
                     recurrence_month_day !== undefined
                         ? recurrence_month_day
-                        : task.recurrence_month_day,
+                        : taskWithTags.recurrence_month_day,
                 recurrence_week_of_month:
                     recurrence_week_of_month !== undefined
                         ? recurrence_week_of_month
-                        : task.recurrence_week_of_month,
+                        : taskWithTags.recurrence_week_of_month,
                 completion_based:
                     completion_based !== undefined
                         ? completion_based
-                        : task.completion_based,
+                        : taskWithTags.completion_based,
             };
 
             // If task status is being changed from in_progress/planned/waiting to not_started,
@@ -1964,9 +1995,9 @@ router.patch(
                         ? Task.getStatusValue(status)
                         : status;
                 const oldStatus =
-                    typeof task.status === 'string'
-                        ? Task.getStatusValue(task.status)
-                        : task.status;
+                    typeof taskWithTags.status === 'string'
+                        ? Task.getStatusValue(taskWithTags.status)
+                        : taskWithTags.status;
 
                 if (
                     newStatus === Task.STATUS.DONE &&
@@ -2074,7 +2105,7 @@ router.patch(
                 }
             }
 
-            await task.update(taskAttributes);
+            await taskWithTags.update(taskAttributes);
 
             // Generate new recurring tasks after updating recurrence settings (if still recurring)
             if (recurrenceChanged && task.recurrence_type !== 'none') {
@@ -2095,14 +2126,14 @@ router.patch(
                     }
                 }
             }
-            await updateTaskTags(task, tagsData, req.currentUser.id);
+            await updateTaskTags(taskWithTags, tagsData, req.currentUser.id);
 
             // Handle subtasks updates
             if (subtasks && Array.isArray(subtasks)) {
                 // Delete existing subtasks that are not in the new list
                 const existingSubtasks = await Task.findAll({
                     where: {
-                        parent_task_id: task.id,
+                        parent_task_id: taskWithTags.id,
                         user_id: req.currentUser.id,
                     },
                 });
@@ -2189,7 +2220,7 @@ router.patch(
                     const subtaskPromises = newSubtasks.map((subtask) =>
                         Task.create({
                             name: subtask.name.trim(),
-                            parent_task_id: task.id,
+                            parent_task_id: taskWithTags.id,
                             user_id: req.currentUser.id,
                             priority: subtask.priority
                                 ? typeof subtask.priority === 'string'
@@ -2333,9 +2364,14 @@ router.patch(
 
                 // Log all changes
                 if (Object.keys(changes).length > 0) {
-                    await logTaskUpdate(task.id, req.currentUser.id, changes, {
-                        source: 'web',
-                    });
+                    await logTaskUpdate(
+                        taskWithTags.id,
+                        req.currentUser.id,
+                        changes,
+                        {
+                            source: 'web',
+                        }
+                    );
                 }
 
                 // Check for tag changes (this is more complex due to the array comparison)
@@ -2354,7 +2390,7 @@ router.patch(
                         JSON.stringify(newTagNames)
                     ) {
                         await logEvent({
-                            taskId: task.id,
+                            taskId: taskWithTags.id,
                             userId: req.currentUser.id,
                             eventType: 'tags_changed',
                             fieldName: 'tags',
@@ -2370,7 +2406,7 @@ router.patch(
             }
 
             // Reload task with associations
-            const taskWithAssociations = await Task.findByPk(task.id, {
+            const taskWithAssociations = await Task.findByPk(taskWithTags.id, {
                 include: [
                     {
                         model: Tag,
@@ -2656,69 +2692,73 @@ router.delete(
                 }
             );
 
-            // Check SQLite foreign key list for tasks table
-            const foreignKeys = await sequelize.query(
-                'PRAGMA foreign_key_list(tasks)',
-                { type: sequelize.QueryTypes.SELECT }
-            );
+            // Check foreign key references (SQLite-specific)
+            const dialect = sequelize.getDialect();
+            if (dialect === 'sqlite') {
+                // Check SQLite foreign key list for tasks table
+                const foreignKeys = await sequelize.query(
+                    'PRAGMA foreign_key_list(tasks)',
+                    { type: sequelize.QueryTypes.SELECT }
+                );
 
-            // Find all tables that reference tasks
-            const allTables = await sequelize.query(
-                "SELECT name FROM sqlite_master WHERE type='table'",
-                { type: sequelize.QueryTypes.SELECT }
-            );
+                // Find all tables that reference tasks
+                const allTables = await sequelize.query(
+                    "SELECT name FROM sqlite_master WHERE type='table'",
+                    { type: sequelize.QueryTypes.SELECT }
+                );
 
-            // Whitelist of known valid table names to prevent SQL injection
-            const validTableNames = [
-                'tasks',
-                'projects',
-                'notes',
-                'users',
-                'tags',
-                'areas',
-                'permissions',
-                'actions',
-                'task_events',
-                'inbox_items',
-                'tasks_tags',
-                'notes_tags',
-                'projects_tags',
-                'Sessions',
-            ];
+                // Whitelist of known valid table names to prevent SQL injection
+                const validTableNames = [
+                    'tasks',
+                    'projects',
+                    'notes',
+                    'users',
+                    'tags',
+                    'areas',
+                    'permissions',
+                    'actions',
+                    'task_events',
+                    'inbox_items',
+                    'tasks_tags',
+                    'notes_tags',
+                    'projects_tags',
+                    'Sessions',
+                ];
 
-            for (const table of allTables) {
-                if (
-                    table.name !== 'tasks' &&
-                    validTableNames.includes(table.name)
-                ) {
-                    try {
-                        const fks = await sequelize.query(
-                            `PRAGMA foreign_key_list(${table.name})`,
-                            { type: sequelize.QueryTypes.SELECT }
-                        );
-                        const taskRefs = fks.filter(
-                            (fk) => fk.table === 'tasks'
-                        );
-                        if (taskRefs.length > 0) {
-                            // Check if this table has any records referencing our task
-                            for (const fk of taskRefs) {
-                                const count = await sequelize.query(
-                                    `SELECT COUNT(*) as count FROM ${table.name} WHERE ${fk.from} = ?`,
-                                    {
-                                        replacements: [req.params.id],
-                                        type: sequelize.QueryTypes.SELECT,
-                                    }
-                                );
+                for (const table of allTables) {
+                    if (
+                        table.name !== 'tasks' &&
+                        validTableNames.includes(table.name)
+                    ) {
+                        try {
+                            const fks = await sequelize.query(
+                                `PRAGMA foreign_key_list(${table.name})`,
+                                { type: sequelize.QueryTypes.SELECT }
+                            );
+                            const taskRefs = fks.filter(
+                                (fk) => fk.table === 'tasks'
+                            );
+                            if (taskRefs.length > 0) {
+                                // Check if this table has any records referencing our task
+                                for (const fk of taskRefs) {
+                                    const count = await sequelize.query(
+                                        `SELECT COUNT(*) as count FROM ${table.name} WHERE ${fk.from} = ?`,
+                                        {
+                                            replacements: [req.params.id],
+                                            type: sequelize.QueryTypes.SELECT,
+                                        }
+                                    );
+                                }
                             }
+                        } catch (error) {
+                            // Skip tables that might not exist or have issues
                         }
-                    } catch (error) {
-                        // Skip tables that might not exist or have issues
                     }
                 }
-            }
 
-            // Temporarily disable foreign key constraints for this operation
-            await sequelize.query('PRAGMA foreign_keys = OFF');
+                // Temporarily disable foreign key constraints for this operation (SQLite only)
+                await sequelize.query('PRAGMA foreign_keys = OFF');
+            }
 
             try {
                 // Use force delete to bypass foreign key constraints
@@ -2742,8 +2782,10 @@ router.delete(
                 // Delete the task itself
                 await task.destroy({ force: true });
             } finally {
-                // Re-enable foreign key constraints
-                await sequelize.query('PRAGMA foreign_keys = ON');
+                // Re-enable foreign key constraints (SQLite only)
+                if (dialect === 'sqlite') {
+                    await sequelize.query('PRAGMA foreign_keys = ON');
+                }
             }
 
             res.json({ message: 'Task successfully deleted' });
@@ -2823,7 +2865,7 @@ router.patch(
             ];
             const isInTodayView = todayPlanStatuses.includes(task.status);
             const oldStatus = task.status;
-            
+
             const updateData = {};
             if (isInTodayView) {
                 // Remove from today view by setting to NOT_STARTED

@@ -10,11 +10,11 @@ const { sequelize } = require('../models');
 async function setupDatabase() {
     try {
         console.log('Setting up database...');
-        
+
         // First, sync the database to create all tables
         await sequelize.sync({ force: false });
         console.log('✅ Database tables created/updated');
-        
+
         // Now add the Microsoft Todo columns if they don't exist
         try {
             await sequelize.query(`
@@ -23,12 +23,14 @@ async function setupDatabase() {
             console.log('✅ Added microsoft_todo_access_token column');
         } catch (error) {
             if (error.message.includes('duplicate column name')) {
-                console.log('⚠️  microsoft_todo_access_token column already exists');
+                console.log(
+                    '⚠️  microsoft_todo_access_token column already exists'
+                );
             } else {
                 throw error;
             }
         }
-        
+
         try {
             await sequelize.query(`
                 ALTER TABLE users ADD COLUMN microsoft_todo_refresh_token TEXT;
@@ -36,12 +38,14 @@ async function setupDatabase() {
             console.log('✅ Added microsoft_todo_refresh_token column');
         } catch (error) {
             if (error.message.includes('duplicate column name')) {
-                console.log('⚠️  microsoft_todo_refresh_token column already exists');
+                console.log(
+                    '⚠️  microsoft_todo_refresh_token column already exists'
+                );
             } else {
                 throw error;
             }
         }
-        
+
         try {
             await sequelize.query(`
                 ALTER TABLE users ADD COLUMN microsoft_todo_expires_at DATETIME;
@@ -49,12 +53,14 @@ async function setupDatabase() {
             console.log('✅ Added microsoft_todo_expires_at column');
         } catch (error) {
             if (error.message.includes('duplicate column name')) {
-                console.log('⚠️  microsoft_todo_expires_at column already exists');
+                console.log(
+                    '⚠️  microsoft_todo_expires_at column already exists'
+                );
             } else {
                 throw error;
             }
         }
-        
+
         try {
             await sequelize.query(`
                 ALTER TABLE users ADD COLUMN microsoft_todo_connected BOOLEAN DEFAULT 0;
@@ -62,12 +68,14 @@ async function setupDatabase() {
             console.log('✅ Added microsoft_todo_connected column');
         } catch (error) {
             if (error.message.includes('duplicate column name')) {
-                console.log('⚠️  microsoft_todo_connected column already exists');
+                console.log(
+                    '⚠️  microsoft_todo_connected column already exists'
+                );
             } else {
                 throw error;
             }
         }
-        
+
         console.log('✅ Database setup completed successfully');
         process.exit(0);
     } catch (error) {

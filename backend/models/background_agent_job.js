@@ -80,4 +80,4 @@ module.exports = (sequelize) => {
     );
 
     return BackgroundAgentJob;
-}; 
+};

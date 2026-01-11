@@ -6,8 +6,11 @@ const { safeAddColumns, safeAddIndex } = require('../utils/migration-utils');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        // Temporarily disable foreign key constraints for SQLite
-        await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF');
+        // Temporarily disable foreign key constraints for SQLite only
+        const dialect = queryInterface.sequelize.getDialect();
+        if (dialect === 'sqlite') {
+            await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF');
+        }
 
         try {
             // 1. Add uid column to inbox_items table
@@ -52,8 +55,12 @@ module.exports = {
                 name: 'inbox_items_uid_unique_index',
             });
         } finally {
-            // Re-enable foreign key constraints
-            await queryInterface.sequelize.query('PRAGMA foreign_keys = ON');
+            // Re-enable foreign key constraints for SQLite only
+            if (dialect === 'sqlite') {
+                await queryInterface.sequelize.query(
+                    'PRAGMA foreign_keys = ON'
+                );
+            }
         }
     },
 

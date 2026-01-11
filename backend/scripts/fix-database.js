@@ -11,10 +11,10 @@ const path = require('path');
 async function fixDatabase() {
     try {
         console.log('Fixing database...');
-        
+
         const dbPath = path.join(__dirname, '..', 'db', 'development.sqlite3');
         console.log('Database path:', dbPath);
-        
+
         // Check if database exists
         const fs = require('fs');
         if (!fs.existsSync(dbPath)) {
@@ -27,54 +27,72 @@ async function fixDatabase() {
             // Create empty database file
             fs.writeFileSync(dbPath, '');
         }
-        
+
         const db = new sqlite3.Database(dbPath);
-        
+
         // Add columns one by one
         await new Promise((resolve, reject) => {
-            db.run(`ALTER TABLE users ADD COLUMN microsoft_todo_access_token TEXT;`, (err) => {
-                if (err && !err.message.includes('duplicate column name')) {
-                    reject(err);
-                } else {
-                    console.log('✅ Added microsoft_todo_access_token column');
-                    resolve();
+            db.run(
+                `ALTER TABLE users ADD COLUMN microsoft_todo_access_token TEXT;`,
+                (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        reject(err);
+                    } else {
+                        console.log(
+                            '✅ Added microsoft_todo_access_token column'
+                        );
+                        resolve();
+                    }
                 }
-            });
+            );
         });
-        
+
         await new Promise((resolve, reject) => {
-            db.run(`ALTER TABLE users ADD COLUMN microsoft_todo_refresh_token TEXT;`, (err) => {
-                if (err && !err.message.includes('duplicate column name')) {
-                    reject(err);
-                } else {
-                    console.log('✅ Added microsoft_todo_refresh_token column');
-                    resolve();
+            db.run(
+                `ALTER TABLE users ADD COLUMN microsoft_todo_refresh_token TEXT;`,
+                (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        reject(err);
+                    } else {
+                        console.log(
+                            '✅ Added microsoft_todo_refresh_token column'
+                        );
+                        resolve();
+                    }
                 }
-            });
+            );
         });
-        
+
         await new Promise((resolve, reject) => {
-            db.run(`ALTER TABLE users ADD COLUMN microsoft_todo_expires_at DATETIME;`, (err) => {
-                if (err && !err.message.includes('duplicate column name')) {
-                    reject(err);
-                } else {
-                    console.log('✅ Added microsoft_todo_expires_at column');
-                    resolve();
+            db.run(
+                `ALTER TABLE users ADD COLUMN microsoft_todo_expires_at DATETIME;`,
+                (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        reject(err);
+                    } else {
+                        console.log(
+                            '✅ Added microsoft_todo_expires_at column'
+                        );
+                        resolve();
+                    }
                 }
-            });
+            );
         });
-        
+
         await new Promise((resolve, reject) => {
-            db.run(`ALTER TABLE users ADD COLUMN microsoft_todo_connected BOOLEAN DEFAULT 0;`, (err) => {
-                if (err && !err.message.includes('duplicate column name')) {
-                    reject(err);
-                } else {
-                    console.log('✅ Added microsoft_todo_connected column');
-                    resolve();
+            db.run(
+                `ALTER TABLE users ADD COLUMN microsoft_todo_connected BOOLEAN DEFAULT 0;`,
+                (err) => {
+                    if (err && !err.message.includes('duplicate column name')) {
+                        reject(err);
+                    } else {
+                        console.log('✅ Added microsoft_todo_connected column');
+                        resolve();
+                    }
                 }
-            });
+            );
         });
-        
+
         db.close();
         console.log('✅ Database fixed successfully');
         process.exit(0);

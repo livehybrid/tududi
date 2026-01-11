@@ -23,6 +23,9 @@ interface GroupedTaskListProps {
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     showCompletedTasks?: boolean;
     searchQuery?: string;
+    selectedTaskIds?: Set<number>;
+    onTaskSelect?: (taskId: number, selected: boolean) => void;
+    showCheckboxes?: boolean;
 }
 
 interface TaskGroup {
@@ -50,6 +53,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
     onToggleToday,
     showCompletedTasks = false,
     searchQuery = '',
+    selectedTaskIds,
+    onTaskSelect,
+    showCheckboxes = false,
 }) => {
     const { t } = useTranslation();
 
@@ -365,6 +371,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                             showCompletedTasks={
                                                                 showCompletedTasks
                                                             }
+                                                            isSelected={task.id ? selectedTaskIds?.has(task.id) : false}
+                                                            onSelect={onTaskSelect && task.id ? (selected) => onTaskSelect(task.id, selected) : undefined}
+                                                            showCheckbox={showCheckboxes}
                                                         />
                                                     </div>
                                                 ))}
@@ -451,6 +460,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                               projects={projects}
                                               hideProjectName={hideProjectName}
                                               onToggleToday={onToggleToday}
+                                              isSelected={task.id ? selectedTaskIds?.has(task.id) : false}
+                                              onSelect={onTaskSelect && task.id ? (selected) => onTaskSelect(task.id, selected) : undefined}
+                                              showCheckbox={showCheckboxes}
                                           />
                                       </div>
                                   ))}
@@ -471,6 +483,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                               projects={projects}
                               hideProjectName={hideProjectName}
                               onToggleToday={onToggleToday}
+                              isSelected={task.id ? selectedTaskIds?.has(task.id) : false}
+                              onSelect={onTaskSelect && task.id ? (selected) => onTaskSelect(task.id, selected) : undefined}
+                              showCheckbox={showCheckboxes}
                           />
                       </div>
                   ))}
@@ -503,6 +518,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                             projects={projects}
                                             hideProjectName={hideProjectName}
                                             onToggleToday={onToggleToday}
+                                            isSelected={group.template.id ? selectedTaskIds?.has(group.template.id) : false}
+                                            onSelect={onTaskSelect && group.template.id ? (selected) => onTaskSelect(group.template.id, selected) : undefined}
+                                            showCheckbox={showCheckboxes}
                                         />
                                     </div>
                                 </div>
@@ -585,6 +603,9 @@ const GroupedTaskList: React.FC<GroupedTaskListProps> = ({
                                                     hideProjectName
                                                 }
                                                 onToggleToday={onToggleToday}
+                                                isSelected={instance.id ? selectedTaskIds?.has(instance.id) : false}
+                                                onSelect={onTaskSelect && instance.id ? (selected) => onTaskSelect(instance.id, selected) : undefined}
+                                                showCheckbox={showCheckboxes}
                                             />
                                         </div>
                                     ))}

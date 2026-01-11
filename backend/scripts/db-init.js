@@ -5,12 +5,15 @@
  * Initializes the database by creating all tables and dropping existing data
  */
 
-require('dotenv').config();
+// Load environment variables with explicit path
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const { sequelize } = require('../models');
 
 async function initDatabase() {
     try {
-        console.log('Initializing database...');
+        const dialect = sequelize.getDialect();
+        console.log(`Initializing ${dialect} database...`);
         console.log('WARNING: This will drop all existing data!');
 
         await sequelize.sync({ force: true });

@@ -16,74 +16,101 @@ async function fixTimestamps() {
         });
 
         // Check if columns exist
-        db.all("PRAGMA table_info(tasks);", (err, rows) => {
+        db.all('PRAGMA table_info(tasks);', (err, rows) => {
             if (err) {
                 console.error('Error checking table info:', err.message);
                 reject(err);
                 return;
             }
 
-            const hasCreatedAt = rows.some(row => row.name === 'createdAt');
-            const hasUpdatedAt = rows.some(row => row.name === 'updatedAt');
+            const hasCreatedAt = rows.some((row) => row.name === 'createdAt');
+            const hasUpdatedAt = rows.some((row) => row.name === 'updatedAt');
 
-            console.log('Current columns:', rows.map(r => r.name).join(', '));
+            console.log('Current columns:', rows.map((r) => r.name).join(', '));
             console.log('Has createdAt:', hasCreatedAt);
             console.log('Has updatedAt:', hasUpdatedAt);
 
             if (!hasCreatedAt) {
-                db.run("ALTER TABLE tasks ADD COLUMN createdAt DATETIME DEFAULT CURRENT_TIMESTAMP;", (err) => {
-                    if (err) {
-                        console.error('Error adding createdAt:', err.message);
-                    } else {
-                        console.log('✅ Added createdAt column');
+                db.run(
+                    'ALTER TABLE tasks ADD COLUMN createdAt DATETIME DEFAULT CURRENT_TIMESTAMP;',
+                    (err) => {
+                        if (err) {
+                            console.error(
+                                'Error adding createdAt:',
+                                err.message
+                            );
+                        } else {
+                            console.log('✅ Added createdAt column');
+                        }
                     }
-                });
+                );
             }
 
             if (!hasUpdatedAt) {
-                db.run("ALTER TABLE tasks ADD COLUMN updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP;", (err) => {
-                    if (err) {
-                        console.error('Error adding updatedAt:', err.message);
-                    } else {
-                        console.log('✅ Added updatedAt column');
+                db.run(
+                    'ALTER TABLE tasks ADD COLUMN updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP;',
+                    (err) => {
+                        if (err) {
+                            console.error(
+                                'Error adding updatedAt:',
+                                err.message
+                            );
+                        } else {
+                            console.log('✅ Added updatedAt column');
+                        }
                     }
-                });
+                );
             }
 
             // Update existing records
-            db.run("UPDATE tasks SET createdAt = COALESCE(createdAt, CURRENT_TIMESTAMP) WHERE createdAt IS NULL;", (err) => {
-                if (err) {
-                    console.error('Error updating createdAt:', err.message);
-                } else {
-                    console.log('✅ Updated existing createdAt values');
+            db.run(
+                'UPDATE tasks SET createdAt = COALESCE(createdAt, CURRENT_TIMESTAMP) WHERE createdAt IS NULL;',
+                (err) => {
+                    if (err) {
+                        console.error('Error updating createdAt:', err.message);
+                    } else {
+                        console.log('✅ Updated existing createdAt values');
+                    }
                 }
-            });
+            );
 
-            db.run("UPDATE tasks SET updatedAt = COALESCE(updatedAt, CURRENT_TIMESTAMP) WHERE updatedAt IS NULL;", (err) => {
-                if (err) {
-                    console.error('Error updating updatedAt:', err.message);
-                } else {
-                    console.log('✅ Updated existing updatedAt values');
+            db.run(
+                'UPDATE tasks SET updatedAt = COALESCE(updatedAt, CURRENT_TIMESTAMP) WHERE updatedAt IS NULL;',
+                (err) => {
+                    if (err) {
+                        console.error('Error updating updatedAt:', err.message);
+                    } else {
+                        console.log('✅ Updated existing updatedAt values');
+                    }
                 }
-            });
+            );
 
             // Verify columns
-            db.all("SELECT id, name, createdAt, updatedAt FROM tasks LIMIT 1;", (err, rows) => {
-                if (err) {
-                    console.error('Error verifying columns:', err.message);
-                } else {
-                    console.log('✅ Verification successful. Sample row:', rows[0]);
-                }
-                
-                db.close((err) => {
+            db.all(
+                'SELECT id, name, createdAt, updatedAt FROM tasks LIMIT 1;',
+                (err, rows) => {
                     if (err) {
-                        console.error('Error closing database:', err.message);
+                        console.error('Error verifying columns:', err.message);
                     } else {
-                        console.log('Database connection closed');
+                        console.log(
+                            '✅ Verification successful. Sample row:',
+                            rows[0]
+                        );
                     }
-                    resolve();
-                });
-            });
+
+                    db.close((err) => {
+                        if (err) {
+                            console.error(
+                                'Error closing database:',
+                                err.message
+                            );
+                        } else {
+                            console.log('Database connection closed');
+                        }
+                        resolve();
+                    });
+                }
+            );
         });
     });
 }

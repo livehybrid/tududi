@@ -1337,7 +1337,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                             
                                             {/* Microsoft ToDo Integration */}
                                             <MicrosoftTodoImport 
-                                                onImportComplete={(importedCount) => {
+                                                onImportComplete={() => {
                                                     // Toast is already shown by MicrosoftTodoImport component
                                                     // No need to show duplicate toast here
                                                 }}

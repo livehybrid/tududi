@@ -334,7 +334,10 @@ const handleMicrosoftTodoImport = async (user, chatId, messageId) => {
         );
 
         // Check if user is connected to Microsoft ToDo
-        if (!user.microsoft_todo_connected || !user.microsoft_todo_access_token) {
+        if (
+            !user.microsoft_todo_connected ||
+            !user.microsoft_todo_access_token
+        ) {
             await sendTelegramMessage(
                 user.telegram_bot_token,
                 chatId,
@@ -346,16 +349,22 @@ const handleMicrosoftTodoImport = async (user, chatId, messageId) => {
 
         // Check if token is expired and refresh if needed
         let accessToken = user.microsoft_todo_access_token;
-        if (user.microsoft_todo_expires_at && new Date() >= new Date(user.microsoft_todo_expires_at)) {
+        if (
+            user.microsoft_todo_expires_at &&
+            new Date() >= new Date(user.microsoft_todo_expires_at)
+        ) {
             try {
-                const newTokenData = await microsoftTodoService.refreshAccessToken(user.microsoft_todo_refresh_token);
+                const newTokenData =
+                    await microsoftTodoService.refreshAccessToken(
+                        user.microsoft_todo_refresh_token
+                    );
                 accessToken = newTokenData.access_token;
-                
+
                 // Update user with new tokens
                 await user.update({
                     microsoft_todo_access_token: newTokenData.access_token,
                     microsoft_todo_refresh_token: newTokenData.refresh_token,
-                    microsoft_todo_expires_at: newTokenData.expires_at
+                    microsoft_todo_expires_at: newTokenData.expires_at,
                 });
             } catch (refreshError) {
                 await sendTelegramMessage(
@@ -369,8 +378,11 @@ const handleMicrosoftTodoImport = async (user, chatId, messageId) => {
         }
 
         // Import tasks
-        const result = await microsoftTodoService.importTasksFromMicrosoft(user.id, accessToken);
-        
+        const result = await microsoftTodoService.importTasksFromMicrosoft(
+            user.id,
+            accessToken
+        );
+
         await sendTelegramMessage(
             user.telegram_bot_token,
             chatId,
@@ -398,7 +410,10 @@ const handleMicrosoftTodoExport = async (user, chatId, messageId) => {
         );
 
         // Check if user is connected to Microsoft ToDo
-        if (!user.microsoft_todo_connected || !user.microsoft_todo_access_token) {
+        if (
+            !user.microsoft_todo_connected ||
+            !user.microsoft_todo_access_token
+        ) {
             await sendTelegramMessage(
                 user.telegram_bot_token,
                 chatId,
@@ -410,16 +425,22 @@ const handleMicrosoftTodoExport = async (user, chatId, messageId) => {
 
         // Check if token is expired and refresh if needed
         let accessToken = user.microsoft_todo_access_token;
-        if (user.microsoft_todo_expires_at && new Date() >= new Date(user.microsoft_todo_expires_at)) {
+        if (
+            user.microsoft_todo_expires_at &&
+            new Date() >= new Date(user.microsoft_todo_expires_at)
+        ) {
             try {
-                const newTokenData = await microsoftTodoService.refreshAccessToken(user.microsoft_todo_refresh_token);
+                const newTokenData =
+                    await microsoftTodoService.refreshAccessToken(
+                        user.microsoft_todo_refresh_token
+                    );
                 accessToken = newTokenData.access_token;
-                
+
                 // Update user with new tokens
                 await user.update({
                     microsoft_todo_access_token: newTokenData.access_token,
                     microsoft_todo_refresh_token: newTokenData.refresh_token,
-                    microsoft_todo_expires_at: newTokenData.expires_at
+                    microsoft_todo_expires_at: newTokenData.expires_at,
                 });
             } catch (refreshError) {
                 await sendTelegramMessage(
@@ -433,8 +454,11 @@ const handleMicrosoftTodoExport = async (user, chatId, messageId) => {
         }
 
         // Export tasks
-        const result = await microsoftTodoService.exportTasksToMicrosoft(user.id, accessToken);
-        
+        const result = await microsoftTodoService.exportTasksToMicrosoft(
+            user.id,
+            accessToken
+        );
+
         await sendTelegramMessage(
             user.telegram_bot_token,
             chatId,
@@ -462,7 +486,10 @@ const handleMicrosoftTodoSync = async (user, chatId, messageId) => {
         );
 
         // Check if user is connected to Microsoft ToDo
-        if (!user.microsoft_todo_connected || !user.microsoft_todo_access_token) {
+        if (
+            !user.microsoft_todo_connected ||
+            !user.microsoft_todo_access_token
+        ) {
             await sendTelegramMessage(
                 user.telegram_bot_token,
                 chatId,
@@ -474,16 +501,22 @@ const handleMicrosoftTodoSync = async (user, chatId, messageId) => {
 
         // Check if token is expired and refresh if needed
         let accessToken = user.microsoft_todo_access_token;
-        if (user.microsoft_todo_expires_at && new Date() >= new Date(user.microsoft_todo_expires_at)) {
+        if (
+            user.microsoft_todo_expires_at &&
+            new Date() >= new Date(user.microsoft_todo_expires_at)
+        ) {
             try {
-                const newTokenData = await microsoftTodoService.refreshAccessToken(user.microsoft_todo_refresh_token);
+                const newTokenData =
+                    await microsoftTodoService.refreshAccessToken(
+                        user.microsoft_todo_refresh_token
+                    );
                 accessToken = newTokenData.access_token;
-                
+
                 // Update user with new tokens
                 await user.update({
                     microsoft_todo_access_token: newTokenData.access_token,
                     microsoft_todo_refresh_token: newTokenData.refresh_token,
-                    microsoft_todo_expires_at: newTokenData.expires_at
+                    microsoft_todo_expires_at: newTokenData.expires_at,
                 });
             } catch (refreshError) {
                 await sendTelegramMessage(
@@ -497,9 +530,16 @@ const handleMicrosoftTodoSync = async (user, chatId, messageId) => {
         }
 
         // Perform two-way sync
-        const importResult = await microsoftTodoService.importTasksFromMicrosoft(user.id, accessToken);
-        const exportResult = await microsoftTodoService.exportTasksToMicrosoft(user.id, accessToken);
-        
+        const importResult =
+            await microsoftTodoService.importTasksFromMicrosoft(
+                user.id,
+                accessToken
+            );
+        const exportResult = await microsoftTodoService.exportTasksToMicrosoft(
+            user.id,
+            accessToken
+        );
+
         await sendTelegramMessage(
             user.telegram_bot_token,
             chatId,

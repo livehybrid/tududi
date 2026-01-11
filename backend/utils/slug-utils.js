@@ -70,7 +70,10 @@ function extractUidFromSlug(uidSlug) {
  */
 function isValidUid(str) {
     // Accept both 15-character nanoid format and 21-character generateId format
-    return /^[0-9abcdefghijkmnpqrstuvwxyz]{15}$/.test(str) || /^[A-Za-z0-9]{21}$/.test(str);
+    return (
+        /^[0-9abcdefghijkmnpqrstuvwxyz]{15}$/.test(str) ||
+        /^[A-Za-z0-9]{21}$/.test(str)
+    );
 }
 
 module.exports = {

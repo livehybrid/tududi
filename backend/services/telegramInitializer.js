@@ -22,8 +22,8 @@ async function initializeTelegramPolling() {
                 'microsoft_todo_connected',
                 'microsoft_todo_access_token',
                 'microsoft_todo_refresh_token',
-                'microsoft_todo_expires_at'
-            ]
+                'microsoft_todo_expires_at',
+            ],
         });
 
         if (usersWithTelegram.length > 0) {

@@ -3,13 +3,17 @@
 module.exports = {
     up: async (queryInterface, Sequelize) => {
         const tableInfo = await queryInterface.describeTable('users');
-        
+
         if (!('background_agent_enabled' in tableInfo)) {
-            await queryInterface.addColumn('users', 'background_agent_enabled', {
-                type: Sequelize.BOOLEAN,
-                allowNull: false,
-                defaultValue: false,
-            });
+            await queryInterface.addColumn(
+                'users',
+                'background_agent_enabled',
+                {
+                    type: Sequelize.BOOLEAN,
+                    allowNull: false,
+                    defaultValue: false,
+                }
+            );
         }
 
         if (!('openrouter_api_key' in tableInfo)) {
@@ -24,4 +28,4 @@ module.exports = {
         await queryInterface.removeColumn('users', 'background_agent_enabled');
         await queryInterface.removeColumn('users', 'openrouter_api_key');
     },
-}; 
+};

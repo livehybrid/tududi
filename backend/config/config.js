@@ -1,5 +1,11 @@
 const path = require('path');
 
+// Load environment variables if not already loaded
+// This ensures env vars are available even if models/index.js hasn't loaded them yet
+if (!process.env.DB_DIALECT) {
+    require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+}
+
 if (
     process.env.NODE_ENV !== 'production' &&
     process.env.NODE_ENV !== 'development' &&
@@ -107,8 +113,7 @@ const config = {
 
     openRouter: {
         endpoint:
-            process.env.OPENROUTER_ENDPOINT ||
-            'https://openrouter.ai/api/v1',
+            process.env.OPENROUTER_ENDPOINT || 'https://openrouter.ai/api/v1',
         apiKey: process.env.OPENROUTER_API_KEY,
         model: process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo',
         temperature: parseFloat(process.env.OPENROUTER_TEMPERATURE) || 0.7,
@@ -175,7 +180,19 @@ const config = {
     },
 };
 
-console.log(`Using database file '${config.dbFile}'`);
+// Only log database file if using SQLite
+const dbDialect = process.env.DB_DIALECT || 'sqlite';
+if (dbDialect === 'sqlite') {
+    console.log(`Using database file '${config.dbFile}'`);
+} else {
+    const dbName = process.env.DB_NAME || 'tududi';
+    const dbHost = process.env.DB_HOST || 'localhost';
+    const dbPort =
+        process.env.DB_PORT || (dbDialect === 'mysql' ? '3306' : '5432');
+    console.log(
+        `Using ${dbDialect} database '${dbName}' at ${dbHost}:${dbPort}`
+    );
+}
 
 function setConfig({ dbFile } = {}) {
     if (dbFile != null) {

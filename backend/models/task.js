@@ -207,7 +207,7 @@ module.exports = (sequelize) => {
         },
         {
             tableName: 'tasks',
-            timestamps: true,  // Enable createdAt and updatedAt fields
+            timestamps: true, // Enable createdAt and updatedAt fields
             indexes: [
                 {
                     fields: ['user_id'],

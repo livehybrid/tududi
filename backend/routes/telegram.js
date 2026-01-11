@@ -27,8 +27,8 @@ router.post('/telegram/start-polling', async (req, res) => {
                 'microsoft_todo_connected',
                 'microsoft_todo_access_token',
                 'microsoft_todo_refresh_token',
-                'microsoft_todo_expires_at'
-            ]
+                'microsoft_todo_expires_at',
+            ],
         });
         if (!user || !user.telegram_bot_token) {
             return res
