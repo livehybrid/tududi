@@ -5,6 +5,9 @@ export interface BackgroundAgentJob {
     status: string;
     result?: string;
     error?: string;
+    query: string;
+    created_at: string;
+    updated_at: string;
 }
 
 export const createBackgroundAgentJob = async ({
