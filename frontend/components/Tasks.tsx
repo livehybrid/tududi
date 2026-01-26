@@ -112,6 +112,7 @@ const Tasks: React.FC = () => {
                     task.status === 3;
                 return !isCompleted;
             });
+            console.log('filteredTasks', filteredTasks);
         }
 
         if (taskSearchQuery.trim() && !isUpcomingView) {

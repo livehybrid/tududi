@@ -7,6 +7,9 @@ const {
     getTodayBoundsInUTC,
 } = require('../../../utils/timezone-utils');
 
+const COMPLETED_STATUSES = [Task.STATUS.DONE, Task.STATUS.ARCHIVED];
+const DONE_STATUSES = [Task.STATUS.DONE];
+
 async function filterTasksByParams(
     params,
     userId,
@@ -222,40 +225,30 @@ async function filterTasksByParams(
 
             if (params.status === 'done' || params.status === 'completed') {
                 whereClause.status = {
-                    [Op.in]: [
-                        Task.STATUS.DONE,
-                        Task.STATUS.ARCHIVED,
-                        'done',
-                        'archived',
-                    ],
+                    [Op.in]: COMPLETED_STATUSES,
                 };
             } else if (params.status === 'active') {
                 whereClause.status = {
-                    [Op.notIn]: [
-                        Task.STATUS.DONE,
-                        Task.STATUS.ARCHIVED,
-                        'done',
-                        'archived',
-                    ],
+                    [Op.notIn]: COMPLETED_STATUSES,
                 };
             } else if (!params.client_side_filtering) {
-                whereClause.status = { [Op.notIn]: [Task.STATUS.DONE, 'done'] };
+                whereClause.status = { [Op.notIn]: DONE_STATUSES };
             }
             break;
         }
         case 'next':
             whereClause.due_date = null;
             whereClause.project_id = null;
-            whereClause.status = { [Op.notIn]: [Task.STATUS.DONE, 'done'] };
+            whereClause.status = { [Op.notIn]: DONE_STATUSES };
             break;
         case 'inbox':
             whereClause[Op.or] = [{ due_date: null }, { project_id: null }];
-            whereClause.status = { [Op.notIn]: [Task.STATUS.DONE, 'done'] };
+            whereClause.status = { [Op.notIn]: DONE_STATUSES };
             break;
         case 'someday':
             whereClause.recurring_parent_id = null;
             whereClause.due_date = null;
-            whereClause.status = { [Op.notIn]: [Task.STATUS.DONE, 'done'] };
+            whereClause.status = { [Op.notIn]: DONE_STATUSES };
             break;
         case 'waiting':
             whereClause.status = Task.STATUS.WAITING;
@@ -263,24 +256,14 @@ async function filterTasksByParams(
         case 'all':
             if (params.status === 'done' || params.status === 'completed') {
                 whereClause.status = {
-                    [Op.in]: [
-                        Task.STATUS.DONE,
-                        Task.STATUS.ARCHIVED,
-                        'done',
-                        'archived',
-                    ],
+                    [Op.in]: COMPLETED_STATUSES,
                 };
             } else if (params.status === 'active') {
                 whereClause.status = {
-                    [Op.notIn]: [
-                        Task.STATUS.DONE,
-                        Task.STATUS.ARCHIVED,
-                        'done',
-                        'archived',
-                    ],
+                    [Op.notIn]: COMPLETED_STATUSES,
                 };
             } else if (!params.client_side_filtering) {
-                whereClause.status = { [Op.notIn]: [Task.STATUS.DONE, 'done'] };
+                whereClause.status = { [Op.notIn]: DONE_STATUSES };
             }
             break;
         default:
@@ -289,24 +272,14 @@ async function filterTasksByParams(
             }
             if (params.status === 'done' || params.status === 'completed') {
                 whereClause.status = {
-                    [Op.in]: [
-                        Task.STATUS.DONE,
-                        Task.STATUS.ARCHIVED,
-                        'done',
-                        'archived',
-                    ],
+                    [Op.in]: COMPLETED_STATUSES,
                 };
             } else if (params.status === 'active') {
                 whereClause.status = {
-                    [Op.notIn]: [
-                        Task.STATUS.DONE,
-                        Task.STATUS.ARCHIVED,
-                        'done',
-                        'archived',
-                    ],
+                    [Op.notIn]: COMPLETED_STATUSES,
                 };
             } else if (!params.client_side_filtering) {
-                whereClause.status = { [Op.notIn]: [Task.STATUS.DONE, 'done'] };
+                whereClause.status = { [Op.notIn]: DONE_STATUSES };
             }
     }
 
