@@ -13,6 +13,12 @@ async function filterTasksByParams(
     userTimezone,
     permissionCache = null
 ) {
+    const isTruthyParam = (value) =>
+        value === true ||
+        value === 'true' ||
+        value === '1' ||
+        value === 1 ||
+        value === 'yes';
     const ownedOrShared = await permissionsService.ownershipOrPermissionWhere(
         'task',
         userId,
@@ -372,6 +378,21 @@ async function filterTasksByParams(
             ...(whereClause.id || {}),
             [Op.in]: tagFilteredTaskIds,
         };
+    }
+
+    if (isTruthyParam(params.missing_project)) {
+        whereClause.project_id = null;
+    } else if (isTruthyParam(params.missing_area)) {
+        const projectInclude = includeClause.find(
+            (item) => item.model === Project
+        );
+        if (projectInclude) {
+            projectInclude.required = false;
+            projectInclude.where = { area_id: null };
+            projectInclude.attributes = Array.from(
+                new Set([...(projectInclude.attributes || []), 'area_id'])
+            );
+        }
     }
 
     const finalWhereClause = {

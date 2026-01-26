@@ -182,7 +182,7 @@ const registerApiRoutes = (basePath) => {
     app.use(basePath, require('./routes/feature-flags'));
 
     app.use(basePath, requireAuth);
-    app.use(basePath, require('./routes/tasks'));
+    app.use(basePath, require('./routes/tasks/index'));
     app.use(`${basePath}/habits`, require('./routes/habits'));
     app.use(basePath, require('./routes/projects'));
     app.use(basePath, require('./routes/admin'));
@@ -199,7 +199,6 @@ const registerApiRoutes = (basePath) => {
     app.use(`${basePath}/search`, require('./routes/search'));
     app.use(`${basePath}/views`, require('./routes/views'));
     app.use(`${basePath}/notifications`, require('./routes/notifications'));
-    app.use(basePath, require('./routes/tasks/events'));
     app.use(basePath, require('./routes/background-agent-jobs'));
     app.use(`${basePath}/microsoft-todo`, require('./routes/microsoft-todo'));
 };

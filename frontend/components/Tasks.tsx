@@ -864,6 +864,20 @@ const Tasks: React.FC = () => {
                                                         'Completed'
                                                     ),
                                                 },
+                                                {
+                                                    key: 'missing_project',
+                                                    label: t(
+                                                        'tasks.missingProject',
+                                                        'Missing Project'
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'missing_area',
+                                                    label: t(
+                                                        'tasks.missingArea',
+                                                        'Missing Area'
+                                                    ),
+                                                },
                                             ].map((opt) => {
                                                 const isActive =
                                                     (opt.key === 'all' &&
@@ -872,7 +886,17 @@ const Tasks: React.FC = () => {
                                                         status ===
                                                             'completed') ||
                                                     (opt.key === 'active' &&
-                                                        status === 'active');
+                                                        status === 'active') ||
+                                                    (opt.key ===
+                                                        'missing_project' &&
+                                                        query.get(
+                                                            'missing_project'
+                                                        ) === '1') ||
+                                                    (opt.key ===
+                                                        'missing_area' &&
+                                                        query.get(
+                                                            'missing_area'
+                                                        ) === '1');
                                                 return (
                                                     <button
                                                         key={opt.key}
@@ -886,6 +910,12 @@ const Tasks: React.FC = () => {
                                                                     new URLSearchParams(
                                                                         location.search
                                                                     );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
+                                                                );
                                                                 params.set(
                                                                     'status',
                                                                     'completed'
@@ -911,6 +941,68 @@ const Tasks: React.FC = () => {
                                                                 params.delete(
                                                                     'status'
                                                                 );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            } else if (
+                                                                opt.key ===
+                                                                'missing_project'
+                                                            ) {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.delete(
+                                                                    'status'
+                                                                );
+                                                                params.set(
+                                                                    'missing_project',
+                                                                    '1'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            } else if (
+                                                                opt.key ===
+                                                                'missing_area'
+                                                            ) {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.delete(
+                                                                    'status'
+                                                                );
+                                                                params.set(
+                                                                    'missing_area',
+                                                                    '1'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
                                                                 navigate(
                                                                     {
                                                                         pathname:
@@ -929,6 +1021,12 @@ const Tasks: React.FC = () => {
                                                                 params.set(
                                                                     'status',
                                                                     'active'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
                                                                 );
                                                                 navigate(
                                                                     {
