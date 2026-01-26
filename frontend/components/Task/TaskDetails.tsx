@@ -37,7 +37,8 @@ import {
 import { isTaskOverdueInTodayPlan, isTaskPastDue } from '../../utils/dateUtils';
 
 const TaskDetails: React.FC = () => {
-    const { uid } = useParams<{ uid: string }>();
+    const { uid: uidParam } = useParams<{ uid: string }>();
+    const uid = uidParam?.split('-')[0];
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { showSuccessToast, showErrorToast } = useToast();
