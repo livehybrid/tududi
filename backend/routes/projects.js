@@ -698,10 +698,31 @@ router.delete(
 
             // Use a transaction to ensure atomicity
             await sequelize.transaction(async (transaction) => {
-                // Disable foreign key constraints for this operation
-                await sequelize.query('PRAGMA foreign_keys = OFF', {
-                    transaction,
-                });
+                const dialect = sequelize.getDialect();
+                const disableForeignKeys = async () => {
+                    if (dialect === 'sqlite') {
+                        await sequelize.query('PRAGMA foreign_keys = OFF', {
+                            transaction,
+                        });
+                    } else if (dialect === 'mysql' || dialect === 'mariadb') {
+                        await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', {
+                            transaction,
+                        });
+                    }
+                };
+                const enableForeignKeys = async () => {
+                    if (dialect === 'sqlite') {
+                        await sequelize.query('PRAGMA foreign_keys = ON', {
+                            transaction,
+                        });
+                    } else if (dialect === 'mysql' || dialect === 'mariadb') {
+                        await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', {
+                            transaction,
+                        });
+                    }
+                };
+
+                await disableForeignKeys();
 
                 try {
                     // First, orphan all tasks associated with this project by setting project_id to NULL
@@ -731,10 +752,7 @@ router.delete(
                     // Then delete the project
                     await project.destroy({ transaction });
                 } finally {
-                    // Re-enable foreign key constraints
-                    await sequelize.query('PRAGMA foreign_keys = ON', {
-                        transaction,
-                    });
+                    await enableForeignKeys();
                 }
             });
 
