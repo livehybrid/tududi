@@ -32,20 +32,53 @@ module.exports = {
         );
 
         // Populate order field for existing subtasks based on created_at
-        await queryInterface.sequelize.query(`
-            UPDATE tasks
-            SET "order" = subquery.row_num
-            FROM (
-                SELECT id,
-                       ROW_NUMBER() OVER (
-                         PARTITION BY parent_task_id
-                         ORDER BY created_at ASC
-                       ) as row_num
-                FROM tasks
+        const dialect = queryInterface.sequelize.getDialect();
+
+        if (dialect === 'mysql') {
+            // MySQL syntax - use JOIN instead of FROM
+            await queryInterface.sequelize.query(`
+                UPDATE tasks t
+                INNER JOIN (
+                    SELECT id,
+                           ROW_NUMBER() OVER (
+                             PARTITION BY parent_task_id
+                             ORDER BY created_at ASC
+                           ) as row_num
+                    FROM tasks
+                    WHERE parent_task_id IS NOT NULL
+                ) AS subquery ON t.id = subquery.id
+                SET t.\`order\` = subquery.row_num
+            `);
+        } else if (dialect === 'postgres') {
+            // PostgreSQL syntax
+            await queryInterface.sequelize.query(`
+                UPDATE tasks
+                SET "order" = subquery.row_num
+                FROM (
+                    SELECT id,
+                           ROW_NUMBER() OVER (
+                             PARTITION BY parent_task_id
+                             ORDER BY created_at ASC
+                           ) as row_num
+                    FROM tasks
+                    WHERE parent_task_id IS NOT NULL
+                ) AS subquery
+                WHERE tasks.id = subquery.id
+            `);
+        } else {
+            // SQLite - use correlated subquery
+            await queryInterface.sequelize.query(`
+                UPDATE tasks
+                SET "order" = (
+                    SELECT COUNT(*) + 1
+                    FROM tasks t2
+                    WHERE t2.parent_task_id = tasks.parent_task_id
+                    AND t2.created_at < tasks.created_at
+                    AND t2.parent_task_id IS NOT NULL
+                )
                 WHERE parent_task_id IS NOT NULL
-            ) AS subquery
-            WHERE tasks.id = subquery.id
-        `);
+            `);
+        }
     },
 
     async down(queryInterface) {

@@ -1,6 +1,6 @@
-require('dotenv').config();
-const express = require('express');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -56,6 +56,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration
+console.log(
+    `[DEBUG] Session secret configured: ${config.secret ? 'YES' : 'NO'}`
+);
+console.log(
+    `[DEBUG] Session secret length: ${config.secret ? config.secret.length : 0}`
+);
+
 app.use(
     session({
         secret: config.secret,
@@ -166,12 +173,16 @@ if (API_VERSION && API_BASE_PATH !== '/api') {
 healthPaths.forEach(registerHealthCheck);
 
 // Routes
+// Microsoft ToDo auth routes (public, no auth required)
+app.use('/auth', require('./routes/microsoft-auth'));
+app.use('/api/microsoft-todo', require('./routes/microsoft-todo-public'));
+
 const registerApiRoutes = (basePath) => {
     app.use(basePath, require('./routes/auth'));
     app.use(basePath, require('./routes/feature-flags'));
 
     app.use(basePath, requireAuth);
-    app.use(basePath, require('./routes/tasks'));
+    app.use(basePath, require('./routes/tasks/index'));
     app.use(`${basePath}/habits`, require('./routes/habits'));
     app.use(basePath, require('./routes/projects'));
     app.use(basePath, require('./routes/admin'));
@@ -188,8 +199,8 @@ const registerApiRoutes = (basePath) => {
     app.use(`${basePath}/search`, require('./routes/search'));
     app.use(`${basePath}/views`, require('./routes/views'));
     app.use(`${basePath}/notifications`, require('./routes/notifications'));
-    app.use(basePath, require('./routes/tasks/events'));
     app.use(basePath, require('./routes/background-agent-jobs'));
+    app.use(`${basePath}/microsoft-todo`, require('./routes/microsoft-todo'));
 };
 
 // Register routes at both /api and /api/v1 (if versioned) to maintain backwards compatibility

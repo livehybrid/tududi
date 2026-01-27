@@ -3,7 +3,12 @@ const openRouter = require('./openRouter');
 const emailService = require('./emailService');
 
 class ResearchJobService {
-    static async createJob({ userId, taskId = null, query, sendEmail = false }) {
+    static async createJob({
+        userId,
+        taskId = null,
+        query,
+        sendEmail = false,
+    }) {
         return await ResearchJob.create({
             user_id: userId,
             task_id: taskId,
@@ -26,9 +31,9 @@ class ResearchJobService {
 
     static async getJobsByUserAndTask(userId, taskId) {
         return await ResearchJob.findAll({
-            where: { 
+            where: {
                 user_id: userId,
-                task_id: taskId 
+                task_id: taskId,
             },
             order: [['created_at', 'DESC']],
         });

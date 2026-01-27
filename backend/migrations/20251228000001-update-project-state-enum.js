@@ -23,67 +23,110 @@ module.exports = {
 
         if (dialect === 'sqlite') {
             // SQLite doesn't support ENUM, it's stored as TEXT
+            // Check if column is 'state' or 'status' (may have been renamed already)
+            const tableInfo = await queryInterface.describeTable('projects');
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
+            if (!columnName) {
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping migration'
+                );
+                return;
+            }
+
             // Just update the data values
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'not_started' WHERE state = 'idea'`
+                `UPDATE projects SET ${columnName} = 'not_started' WHERE ${columnName} = 'idea'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'waiting' WHERE state = 'blocked'`
+                `UPDATE projects SET ${columnName} = 'waiting' WHERE ${columnName} = 'blocked'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'done' WHERE state = 'completed'`
+                `UPDATE projects SET ${columnName} = 'done' WHERE ${columnName} = 'completed'`
             );
         } else if (dialect === 'postgres') {
             // PostgreSQL: Create new enum type, migrate data, swap types
+            const tableInfo = await queryInterface.describeTable('projects');
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
+            if (!columnName) {
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping migration'
+                );
+                return;
+            }
+
             await queryInterface.sequelize.query(`
-                CREATE TYPE "enum_projects_state_new" AS ENUM(
+                CREATE TYPE "enum_projects_${columnName}_new" AS ENUM(
                     'not_started', 'in_progress', 'done', 'waiting', 'cancelled', 'planned'
                 );
             `);
 
             // Update values before changing type
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'not_started' WHERE state = 'idea'`
+                `UPDATE projects SET ${columnName} = 'not_started' WHERE ${columnName} = 'idea'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'waiting' WHERE state = 'blocked'`
+                `UPDATE projects SET ${columnName} = 'waiting' WHERE ${columnName} = 'blocked'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'done' WHERE state = 'completed'`
+                `UPDATE projects SET ${columnName} = 'done' WHERE ${columnName} = 'completed'`
             );
 
             // Change column type
             await queryInterface.sequelize.query(`
                 ALTER TABLE projects
-                ALTER COLUMN state TYPE "enum_projects_state_new"
-                USING state::text::"enum_projects_state_new";
+                ALTER COLUMN ${columnName} TYPE "enum_projects_${columnName}_new"
+                USING ${columnName}::text::"enum_projects_${columnName}_new";
             `);
 
             // Drop old enum and rename new one
             await queryInterface.sequelize.query(
-                `DROP TYPE IF EXISTS "enum_projects_state";`
+                `DROP TYPE IF EXISTS "enum_projects_${columnName}";`
             );
             await queryInterface.sequelize.query(
-                `ALTER TYPE "enum_projects_state_new" RENAME TO "enum_projects_state";`
+                `ALTER TYPE "enum_projects_${columnName}_new" RENAME TO "enum_projects_${columnName}";`
             );
 
             // Update default value
             await queryInterface.sequelize.query(`
-                ALTER TABLE projects ALTER COLUMN state SET DEFAULT 'not_started';
+                ALTER TABLE projects ALTER COLUMN ${columnName} SET DEFAULT 'not_started';
             `);
         } else if (dialect === 'mysql' || dialect === 'mariadb') {
             // MySQL: Alter column directly
+            const tableInfo = await queryInterface.describeTable('projects');
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
+            if (!columnName) {
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping migration'
+                );
+                return;
+            }
+
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'not_started' WHERE state = 'idea'`
+                `UPDATE projects SET ${columnName} = 'not_started' WHERE ${columnName} = 'idea'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'waiting' WHERE state = 'blocked'`
+                `UPDATE projects SET ${columnName} = 'waiting' WHERE ${columnName} = 'blocked'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'done' WHERE state = 'completed'`
+                `UPDATE projects SET ${columnName} = 'done' WHERE ${columnName} = 'completed'`
             );
 
-            await queryInterface.changeColumn('projects', 'state', {
+            await queryInterface.changeColumn('projects', columnName, {
                 type: Sequelize.ENUM(
                     'not_started',
                     'in_progress',
@@ -103,17 +146,31 @@ module.exports = {
 
         if (dialect === 'sqlite') {
             // Reverse the data mapping
+            const tableInfo = await queryInterface.describeTable('projects');
+            const columnName = tableInfo.status
+                ? 'status'
+                : tableInfo.state
+                  ? 'state'
+                  : null;
+
+            if (!columnName) {
+                console.log(
+                    '⚠️  Neither state nor status column found in projects table, skipping rollback'
+                );
+                return;
+            }
+
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'idea' WHERE state = 'not_started'`
+                `UPDATE projects SET ${columnName} = 'idea' WHERE ${columnName} = 'not_started'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'blocked' WHERE state = 'waiting'`
+                `UPDATE projects SET ${columnName} = 'blocked' WHERE ${columnName} = 'waiting'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'completed' WHERE state = 'done'`
+                `UPDATE projects SET ${columnName} = 'completed' WHERE ${columnName} = 'done'`
             );
             await queryInterface.sequelize.query(
-                `UPDATE projects SET state = 'idea' WHERE state = 'cancelled'`
+                `UPDATE projects SET ${columnName} = 'idea' WHERE ${columnName} = 'cancelled'`
             );
         } else if (dialect === 'postgres') {
             await queryInterface.sequelize.query(`

@@ -1,21 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XMarkIcon, MagnifyingGlassIcon, CheckCircleIcon, ExclamationTriangleIcon, ClockIcon } from '@heroicons/react/24/outline';
-import { fetchBackgroundAgentJob } from '../../utils/backgroundAgentService';
+import { fetchBackgroundAgentJob, type BackgroundAgentJob } from '../../utils/backgroundAgentService';
 
 interface BackgroundAgentModalProps {
     jobId: number;
     onClose: () => void;
-}
-
-interface BackgroundAgentJob {
-    id: number;
-    status: string;
-    result?: string;
-    error?: string;
-    query: string;
-    created_at: string;
-    updated_at: string;
 }
 
 const BackgroundAgentModal: React.FC<BackgroundAgentModalProps> = ({ jobId, onClose }) => {

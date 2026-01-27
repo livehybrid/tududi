@@ -8,6 +8,9 @@ services:
       - TUDUDI_SESSION_SECRET=changeme-please-use-openssl
       - TUDUDI_ALLOWED_ORIGINS=http://localhost:3002
       - TUDUDI_UPLOAD_PATH=/app/backend/uploads
+      - MICROSOFT_CLIENT_ID=d70f7fb0-49b2-4191-9e3c-491de0290845
+      - MICROSOFT_CLIENT_SECRET=mysecret
+      - MICROSOFT_REDIRECT_URI=http://localhost:3002/auth/microsoft/callback
       # Runtime UID/GID configuration - set these to match your host user/group
       - PUID=1001
       - PGID=1001

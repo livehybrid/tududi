@@ -1,5 +1,11 @@
 const path = require('path');
 
+// Load environment variables if not already loaded
+// This ensures env vars are available even if models/index.js hasn't loaded them yet
+if (!process.env.DB_DIALECT) {
+    require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+}
+
 if (
     process.env.NODE_ENV !== 'production' &&
     process.env.NODE_ENV !== 'development' &&
@@ -22,6 +28,13 @@ const credentials = {
         redirectUri:
             process.env.GOOGLE_REDIRECT_URI ||
             'http://localhost:3002/api/calendar/oauth/callback',
+    },
+    microsoft: {
+        clientId: process.env.MICROSOFT_CLIENT_ID,
+        clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+        redirectUri:
+            process.env.MICROSOFT_REDIRECT_URI ||
+            'http://localhost:3002/auth/microsoft/callback',
     },
 };
 
@@ -59,8 +72,10 @@ const config = {
           )
         : [
               'http://localhost:8080',
+              'http://localhost:8090',
               'http://localhost:9292',
               'http://127.0.0.1:8080',
+              'http://127.0.0.1:8090',
               'http://127.0.0.1:9292',
           ],
 
@@ -76,7 +91,7 @@ const config = {
 
     environment,
 
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8080',
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8090',
 
     backendUrl: process.env.BACKEND_URL || 'http://localhost:3002',
 
@@ -98,8 +113,7 @@ const config = {
 
     openRouter: {
         endpoint:
-            process.env.OPENROUTER_ENDPOINT ||
-            'https://openrouter.ai/api/v1',
+            process.env.OPENROUTER_ENDPOINT || 'https://openrouter.ai/api/v1',
         apiKey: process.env.OPENROUTER_API_KEY,
         model: process.env.OPENROUTER_MODEL || 'openai/gpt-3.5-turbo',
         temperature: parseFloat(process.env.OPENROUTER_TEMPERATURE) || 0.7,
@@ -166,7 +180,19 @@ const config = {
     },
 };
 
-console.log(`Using database file '${config.dbFile}'`);
+// Only log database file if using SQLite
+const dbDialect = process.env.DB_DIALECT || 'sqlite';
+if (dbDialect === 'sqlite') {
+    console.log(`Using database file '${config.dbFile}'`);
+} else {
+    const dbName = process.env.DB_NAME || 'tududi';
+    const dbHost = process.env.DB_HOST || 'localhost';
+    const dbPort =
+        process.env.DB_PORT || (dbDialect === 'mysql' ? '3306' : '5432');
+    console.log(
+        `Using ${dbDialect} database '${dbName}' at ${dbHost}:${dbPort}`
+    );
+}
 
 function setConfig({ dbFile } = {}) {
     if (dbFile != null) {

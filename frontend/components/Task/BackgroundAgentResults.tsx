@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MagnifyingGlassIcon, CheckCircleIcon, ExclamationTriangleIcon, ClockIcon } from '@heroicons/react/24/outline';
-import { fetchBackgroundAgentJobsByTask } from '../../utils/backgroundAgentService';
+import { fetchBackgroundAgentJobsByTask, type BackgroundAgentJob } from '../../utils/backgroundAgentService';
 import BackgroundAgentModal from '../BackgroundAgent/BackgroundAgentModal';
-
-interface BackgroundAgentJob {
-    id: number;
-    status: string;
-    result?: string;
-    error?: string;
-    query: string;
-    created_at: string;
-    updated_at: string;
-}
 
 interface BackgroundAgentResultsProps {
     taskId: number;

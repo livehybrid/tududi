@@ -1,31 +1,35 @@
 'use strict';
 
-const { generateId } = require('../utils/id-generator');
 const { safeAddColumns, safeAddIndex } = require('../utils/migration-utils');
+const { uid } = require('../utils/uid');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.sequelize.query('PRAGMA foreign_keys = OFF');
+        // Check if uid column already exists
+        const tableInfo = await queryInterface.describeTable('users');
 
-        try {
+        if (!tableInfo.uid) {
+            // Add uid column
             await safeAddColumns(queryInterface, 'users', [
                 {
                     name: 'uid',
                     definition: {
                         type: Sequelize.STRING,
-                        allowNull: true,
+                        allowNull: true, // Initially allow null during population
                     },
                 },
             ]);
 
+            // Populate uid values for existing users
             const users = await queryInterface.sequelize.query(
                 'SELECT id FROM users WHERE uid IS NULL',
                 { type: Sequelize.QueryTypes.SELECT }
             );
 
+            // Generate uid for each user
             for (const user of users) {
-                const uniqueId = generateId();
+                const uniqueId = uid();
                 await queryInterface.sequelize.query(
                     'UPDATE users SET uid = ? WHERE id = ?',
                     {
@@ -35,18 +39,18 @@ module.exports = {
                 );
             }
 
+            // Make uid column not null and unique
             await queryInterface.changeColumn('users', 'uid', {
                 type: Sequelize.STRING,
                 allowNull: false,
                 unique: true,
             });
 
+            // Add unique index for performance
             await safeAddIndex(queryInterface, 'users', ['uid'], {
                 unique: true,
                 name: 'users_uid_unique_index',
             });
-        } finally {
-            await queryInterface.sequelize.query('PRAGMA foreign_keys = ON');
         }
     },
 
@@ -54,13 +58,12 @@ module.exports = {
         try {
             await queryInterface.removeIndex('users', 'users_uid_unique_index');
         } catch (error) {
-            console.log('users_uid_unique_index not found, skipping removal');
+            // Index might not exist
         }
-
         try {
             await queryInterface.removeColumn('users', 'uid');
         } catch (error) {
-            console.log('Error removing uid column from users:', error.message);
+            // Column might not exist
         }
     },
 };
