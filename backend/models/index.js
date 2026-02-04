@@ -1,7 +1,10 @@
 // Load environment variables FIRST before any other requires
-// Use explicit path to ensure .env is loaded from project root
+// Load backend .env then project root .env so root wins (e.g. DB_DIALECT=postgres when using Postgres)
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const backendEnv = path.join(__dirname, '..', '.env');
+const rootEnv = path.join(__dirname, '..', '..', '.env');
+require('dotenv').config({ path: backendEnv });
+require('dotenv').config({ path: rootEnv });
 
 const { Sequelize } = require('sequelize');
 const { getConfig } = require('../config/config');

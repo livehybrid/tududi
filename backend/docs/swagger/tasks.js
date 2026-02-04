@@ -25,7 +25,7 @@
  *         name: status
  *         schema:
  *           type: string
- *           enum: [pending, completed, archived]
+ *           enum: [not_started, in_progress, done, archived, waiting, cancelled, planned]
  *         description: Filter by task status
  *       - in: query
  *         name: project_id
@@ -150,18 +150,25 @@
  *                 description: Task priority
  *               status:
  *                 type: string
- *                 enum: [pending, completed, archived]
- *                 description: Task status
+ *                 enum: [not_started, in_progress, done, archived, waiting, cancelled, planned]
+ *                 description: Task status (use these exact values; "pending" and "completed" are not valid)
  *               due_date:
  *                 type: string
- *                 format: date-time
- *                 description: Task due date
+ *                 format: date
+ *                 description: Task due date (YYYY-MM-DD or ISO date-time)
+ *               defer_until:
+ *                 type: string
+ *                 format: date
+ *                 description: Hide task until this date (YYYY-MM-DD)
  *               project_id:
  *                 type: integer
- *                 description: Associated project ID
+ *                 description: Associated project ID (user must have write access)
+ *               parent_task_id:
+ *                 type: integer
+ *                 description: Parent task ID when creating a subtask
  *               note:
  *                 type: string
- *                 description: Task description (Markdown supported)
+ *                 description: Task description/notes (Markdown supported)
  *               tags:
  *                 type: array
  *                 items:
@@ -169,21 +176,51 @@
  *                   properties:
  *                     name:
  *                       type: string
- *                 description: Array of tag objects
+ *                 description: Array of tag objects with name (or array of strings)
+ *               Tags:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                 description: Alternative to tags (same meaning)
+ *               subtasks:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                 description: Optional subtask names to create with the task
  *               recurrence_type:
  *                 type: string
- *                 enum: [none, daily, weekly, monthly, yearly]
+ *                 enum: [none, daily, weekly, monthly, monthly_weekday, monthly_last_day, yearly]
  *                 description: Recurring pattern
  *               recurrence_interval:
  *                 type: integer
  *                 description: Interval for recurrence (e.g., every 2 days)
  *               recurrence_end_date:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *                 description: When to stop creating recurring instances
- *               today:
+ *               recurrence_weekday:
+ *                 type: integer
+ *                 description: Weekday for weekly/monthly (0-6, Sunday=0)
+ *               recurrence_weekdays:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 description: Weekdays for weekly recurrence
+ *               recurrence_month_day:
+ *                 type: integer
+ *                 description: Day of month for monthly (1-31 or -1 for last day)
+ *               recurrence_week_of_month:
+ *                 type: integer
+ *                 description: Week of month for monthly_weekday (1-5)
+ *               completion_based:
  *                 type: boolean
- *                 description: Add task to today's plan
+ *                 description: If true, next occurrence is generated on completion
  *     responses:
  *       201:
  *         description: Task created successfully
@@ -192,9 +229,11 @@
  *             schema:
  *               $ref: '#/components/schemas/Task'
  *       400:
- *         description: Invalid request
+ *         description: Invalid request (e.g. missing name, invalid dates)
  *       401:
  *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (e.g. project not writable by user)
  */
 
 /**
@@ -259,7 +298,7 @@
  *                 description: Task priority
  *               status:
  *                 type: string
- *                 enum: [pending, completed, archived]
+ *                 enum: [not_started, in_progress, done, archived, waiting, cancelled, planned]
  *                 description: Task status
  *               due_date:
  *                 type: string
@@ -281,7 +320,7 @@
  *                 description: Add/remove task from today's plan
  *               recurrence_type:
  *                 type: string
- *                 enum: [none, daily, weekly, monthly, yearly]
+ *                 enum: [none, daily, weekly, monthly, monthly_weekday, monthly_last_day, yearly]
  *                 description: Recurring pattern
  *     responses:
  *       200:

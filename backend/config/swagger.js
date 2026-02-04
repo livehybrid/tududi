@@ -75,20 +75,30 @@ const options = {
                             type: 'string',
                             description: 'Task name',
                         },
-                        description: {
+                        note: {
                             type: 'string',
                             description:
-                                'Task description (Markdown supported)',
+                                'Task description/notes (Markdown supported)',
                         },
                         status: {
                             type: 'string',
-                            enum: ['pending', 'completed', 'archived'],
-                            description: 'Task status',
+                            enum: [
+                                'not_started',
+                                'in_progress',
+                                'done',
+                                'archived',
+                                'waiting',
+                                'cancelled',
+                                'planned',
+                            ],
+                            description:
+                                'Task status. Use these values when creating/updating tasks.',
                         },
                         priority: {
                             type: 'string',
                             enum: ['low', 'medium', 'high'],
-                            description: 'Task priority',
+                            description:
+                                'Task priority (API accepts string or integer 0-2)',
                         },
                         due_date: {
                             type: 'string',
@@ -99,9 +109,17 @@ const options = {
                             type: 'integer',
                             description: 'Associated project ID',
                         },
-                        recurring_pattern: {
+                        recurrence_type: {
                             type: 'string',
-                            enum: ['daily', 'weekly', 'monthly', 'yearly'],
+                            enum: [
+                                'none',
+                                'daily',
+                                'weekly',
+                                'monthly',
+                                'monthly_weekday',
+                                'monthly_last_day',
+                                'yearly',
+                            ],
                             description: 'Recurring pattern',
                         },
                         created_at: {
