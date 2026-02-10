@@ -69,10 +69,11 @@ describe('Task Attachments Routes', () => {
     describe('POST /api/upload/task-attachment', () => {
         describe('Authentication', () => {
             it('should require authentication', async () => {
+                // Use an allowed file type so multer does not reject before auth is checked
                 const response = await request(app)
                     .post('/api/upload/task-attachment')
                     .field('taskUid', task.uid)
-                    .attach('file', path.join(testFilesDir, 'test.pdf'));
+                    .attach('file', path.join(testFilesDir, 'test.txt'));
 
                 expect(response.status).toBe(401);
                 expect(response.body.error).toBe('Authentication required');

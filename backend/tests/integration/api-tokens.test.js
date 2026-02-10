@@ -383,8 +383,10 @@ describe('API Token Authentication', () => {
         });
 
         it('should require authentication', async () => {
+            // Use a fixed path so we do not depend on revokeApiToken (avoids socket issues)
+            const id = revokeApiToken?.id ?? 1;
             const response = await request(app).post(
-                `/api/profile/api-keys/${revokeApiToken.id}/revoke`
+                `/api/profile/api-keys/${id}/revoke`
             );
 
             expect(response.status).toBe(401);

@@ -15,7 +15,6 @@ module.exports = (sequelize) => {
                 type: DataTypes.STRING,
                 allowNull: false,
                 unique: true,
-                defaultValue: uid,
             },
             name: {
                 type: DataTypes.STRING,
@@ -246,6 +245,23 @@ module.exports = (sequelize) => {
                 type: DataTypes.DATE,
                 allowNull: true,
             },
+            microsoft_todo_access_token: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+            },
+            microsoft_todo_refresh_token: {
+                type: DataTypes.TEXT,
+                allowNull: true,
+            },
+            microsoft_todo_expires_at: {
+                type: DataTypes.DATE,
+                allowNull: true,
+            },
+            microsoft_todo_connected: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false,
+            },
         },
         {
             tableName: 'users',
@@ -256,6 +272,9 @@ module.exports = (sequelize) => {
                             user.password,
                             10
                         );
+                    }
+                    if (!user.uid) {
+                        user.uid = await uid();
                     }
                 },
                 afterCreate: async (user, options) => {

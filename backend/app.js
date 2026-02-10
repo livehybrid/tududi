@@ -1,6 +1,6 @@
-require('dotenv').config();
-const express = require('express');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -56,6 +56,13 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Session configuration
+console.log(
+    `[DEBUG] Session secret configured: ${config.secret ? 'YES' : 'NO'}`
+);
+console.log(
+    `[DEBUG] Session secret length: ${config.secret ? config.secret.length : 0}`
+);
+
 app.use(
     session({
         secret: config.secret,
@@ -109,30 +116,34 @@ const {
 } = require('./middleware/rateLimiter');
 
 // Swagger documentation - enabled by default, protected by authentication
-// Mounted on /api-docs to avoid conflicts with API routes
+// Mounted at /api-docs and (when versioned) at /api/v1/api-docs for consistency
 if (config.swagger.enabled) {
     const swaggerUi = require('swagger-ui-express');
     const swaggerSpec = require('./config/swagger');
 
-    const swaggerUiOptions = {
-        customSiteTitle: 'Tududi API Documentation',
-        customfavIcon: '/favicon.ico',
-        customCss: '.swagger-ui .topbar { display: none }',
-        swaggerOptions: {
-            url: '/api-docs/swagger.json',
-        },
+    const mountSwaggerAt = (base) => {
+        const options = {
+            customSiteTitle: 'Tududi API Documentation',
+            customfavIcon: '/favicon.ico',
+            customCss: '.swagger-ui .topbar { display: none }',
+            swaggerOptions: { url: `${base}/swagger.json` },
+        };
+        app.use(base, requireAuth, swaggerUi.serve);
+        app.get(`${base}/swagger.json`, requireAuth, (req, res) =>
+            res.json(swaggerSpec)
+        );
+        app.get(
+            base,
+            requireAuth,
+            swaggerUi.serveFiles(swaggerSpec, options),
+            swaggerUi.setup(swaggerSpec, options)
+        );
     };
-    // Expose on /api-docs, protected by authentication
-    app.use('/api-docs', requireAuth, swaggerUi.serve);
-    app.get('/api-docs/swagger.json', requireAuth, (req, res) =>
-        res.json(swaggerSpec)
-    );
-    app.get(
-        '/api-docs',
-        requireAuth,
-        swaggerUi.serveFiles(swaggerSpec, swaggerUiOptions),
-        swaggerUi.setup(swaggerSpec, swaggerUiOptions)
-    );
+
+    mountSwaggerAt('/api-docs');
+    if (API_VERSION && API_BASE_PATH !== '/api') {
+        mountSwaggerAt(`${API_BASE_PATH}/api-docs`);
+    }
 }
 
 // Apply rate limiting to API routes
@@ -166,12 +177,16 @@ if (API_VERSION && API_BASE_PATH !== '/api') {
 healthPaths.forEach(registerHealthCheck);
 
 // Routes
+// Microsoft ToDo auth routes (public, no auth required)
+app.use('/auth', require('./routes/microsoft-auth'));
+app.use('/api/microsoft-todo', require('./routes/microsoft-todo-public'));
+
 const registerApiRoutes = (basePath) => {
     app.use(basePath, require('./routes/auth'));
     app.use(basePath, require('./routes/feature-flags'));
 
     app.use(basePath, requireAuth);
-    app.use(basePath, require('./routes/tasks'));
+    app.use(basePath, require('./routes/tasks/index'));
     app.use(`${basePath}/habits`, require('./routes/habits'));
     app.use(basePath, require('./routes/projects'));
     app.use(basePath, require('./routes/admin'));
@@ -188,8 +203,8 @@ const registerApiRoutes = (basePath) => {
     app.use(`${basePath}/search`, require('./routes/search'));
     app.use(`${basePath}/views`, require('./routes/views'));
     app.use(`${basePath}/notifications`, require('./routes/notifications'));
-    app.use(basePath, require('./routes/tasks/events'));
     app.use(basePath, require('./routes/background-agent-jobs'));
+    app.use(`${basePath}/microsoft-todo`, require('./routes/microsoft-todo'));
 };
 
 // Register routes at both /api and /api/v1 (if versioned) to maintain backwards compatibility

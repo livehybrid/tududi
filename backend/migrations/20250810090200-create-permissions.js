@@ -1,5 +1,7 @@
 'use strict';
 
+const { safeAddIndex } = require('../utils/migration-utils');
+
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.createTable('permissions', {
@@ -49,17 +51,38 @@ module.exports = {
             },
         });
 
-        await queryInterface.addConstraint('permissions', {
-            fields: ['user_id', 'resource_type', 'resource_uid'],
-            type: 'unique',
-            name: 'uniq_permissions_user_resource',
+        // Add unique constraint (check if it exists first)
+        try {
+            await queryInterface.addConstraint('permissions', {
+                fields: ['user_id', 'resource_type', 'resource_uid'],
+                type: 'unique',
+                name: 'uniq_permissions_user_resource',
+            });
+        } catch (error) {
+            // Constraint might already exist, continue
+            if (
+                !error.message.includes('Duplicate') &&
+                !error.message.includes('already exists')
+            ) {
+                throw error;
+            }
+        }
+
+        // Use safeAddIndex to avoid duplicate index errors
+        await safeAddIndex(
+            queryInterface,
+            'permissions',
+            ['resource_type', 'resource_uid'],
+            {
+                name: 'permissions_resource_type_resource_uid',
+            }
+        );
+        await safeAddIndex(queryInterface, 'permissions', ['user_id'], {
+            name: 'permissions_user_id',
         });
-        await queryInterface.addIndex('permissions', [
-            'resource_type',
-            'resource_uid',
-        ]);
-        await queryInterface.addIndex('permissions', ['user_id']);
-        await queryInterface.addIndex('permissions', ['access_level']);
+        await safeAddIndex(queryInterface, 'permissions', ['access_level'], {
+            name: 'permissions_access_level',
+        });
     },
 
     async down(queryInterface, Sequelize) {

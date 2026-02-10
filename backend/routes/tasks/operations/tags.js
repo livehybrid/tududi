@@ -43,6 +43,8 @@ async function updateTaskTags(task, tagsData, userId) {
     );
 
     const allTags = [...existingTags, ...createdTags];
+    // Reload task to ensure we have fresh associations before setting tags
+    await task.reload();
     await task.setTags(allTags);
 }
 

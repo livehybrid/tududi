@@ -13,6 +13,9 @@ interface TaskListProps {
     hideProjectName?: boolean;
     onToggleToday?: (taskId: number, task?: Task) => Promise<void>;
     showCompletedTasks?: boolean; // New prop
+    selectedTaskIds?: Set<number>;
+    onTaskSelect?: (taskId: number, selected: boolean) => void;
+    showCheckboxes?: boolean;
 }
 
 const TaskList: React.FC<TaskListProps> = ({
@@ -24,6 +27,9 @@ const TaskList: React.FC<TaskListProps> = ({
     hideProjectName = false,
     onToggleToday,
     showCompletedTasks = false, // Default to false
+    selectedTaskIds,
+    onTaskSelect,
+    showCheckboxes = false,
 }) => {
     // Conditionally filter tasks based on showCompletedTasks prop
     const filteredTasks = showCompletedTasks
@@ -54,6 +60,9 @@ const TaskList: React.FC<TaskListProps> = ({
                             projects={projects}
                             hideProjectName={hideProjectName}
                             onToggleToday={onToggleToday}
+                            isSelected={task.id ? selectedTaskIds?.has(task.id) : false}
+                            onSelect={onTaskSelect && task.id ? (selected) => onTaskSelect(task.id, selected) : undefined}
+                            showCheckbox={showCheckboxes}
                         />
                     </div>
                 ))

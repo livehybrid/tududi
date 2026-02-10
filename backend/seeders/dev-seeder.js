@@ -325,7 +325,8 @@ async function seedDatabase() {
             priority: Math.floor(Math.random() * 3),
             status: Math.floor(Math.random() * 3), // 0, 1, or 2
             user_id: testUser.id,
-            today: true, // Mark for today
+            // 'today' column removed - use status instead (IN_PROGRESS, WAITING, or PLANNED for today view)
+            status: Task.STATUS.IN_PROGRESS,
             project_id:
                 Math.random() < 0.3
                     ? projects[Math.floor(Math.random() * projects.length)].id

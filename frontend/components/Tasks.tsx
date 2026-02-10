@@ -5,10 +5,11 @@ import { useSidebar } from '../contexts/SidebarContext';
 import TaskList from './Task/TaskList';
 import GroupedTaskList from './Task/GroupedTaskList';
 import NewTask from './Task/NewTask';
+import BulkActionsToolbar from './Task/BulkActionsToolbar';
 import { Task } from '../entities/Task';
 import { getTitleAndIcon } from './Task/getTitleAndIcon';
 import { getDescription } from './Task/getDescription';
-import { createTask, GroupedTasks } from '../utils/tasksService';
+import { createTask, GroupedTasks, updateTask, deleteTask } from '../utils/tasksService';
 import { useStore } from '../store/useStore';
 import { useToast } from './Shared/ToastContext';
 import { SortOption } from './Shared/SortFilterButton';
@@ -19,8 +20,10 @@ import {
     InformationCircleIcon,
     MagnifyingGlassIcon,
     CheckIcon,
+    Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { getApiPath } from '../config/paths';
+import { Tag } from '../entities/Tag';
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -61,6 +64,12 @@ const Tasks: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
     const DEFAULT_LIMIT = 20;
     const [limit, setLimit] = useState(DEFAULT_LIMIT);
+
+    // Bulk selection state
+    const [selectedTaskIds, setSelectedTaskIds] = useState<Set<number>>(new Set());
+    const [bulkSelectionMode, setBulkSelectionMode] = useState(false);
+    const areas = useStore((state: any) => state.areasStore.areas);
+    const tags = useStore((state: any) => state.tagsStore.tags);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
@@ -103,6 +112,7 @@ const Tasks: React.FC = () => {
                     task.status === 3;
                 return !isCompleted;
             });
+            console.log('filteredTasks', filteredTasks);
         }
 
         if (taskSearchQuery.trim() && !isUpcomingView) {
@@ -461,6 +471,147 @@ const Tasks: React.FC = () => {
         }
     };
 
+    // Load areas and tags on mount
+    useEffect(() => {
+        const areasStore = useStore.getState().areasStore;
+        if (!areasStore.hasLoaded && !areasStore.isLoading) {
+            areasStore.loadAreas();
+        }
+        const tagsStore = useStore.getState().tagsStore;
+        if (!tagsStore.hasLoaded && !tagsStore.isLoading) {
+            tagsStore.loadTags();
+        }
+    }, []);
+
+    // Bulk selection handlers
+    const handleTaskSelect = (taskId: number, selected: boolean) => {
+        setSelectedTaskIds((prev) => {
+            const newSet = new Set(prev);
+            if (selected) {
+                newSet.add(taskId);
+            } else {
+                newSet.delete(taskId);
+            }
+            return newSet;
+        });
+    };
+
+    const handleSelectAll = () => {
+        const allTaskIds = new Set(displayTasks.map((t) => t.id).filter(Boolean) as number[]);
+        setSelectedTaskIds(allTaskIds);
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedTaskIds(new Set());
+    };
+
+    const toggleBulkSelectionMode = () => {
+        setBulkSelectionMode((prev) => !prev);
+        if (bulkSelectionMode) {
+            setSelectedTaskIds(new Set());
+        }
+    };
+
+    const selectedTasks = displayTasks.filter((t) => t.id && selectedTaskIds.has(t.id));
+
+    // Bulk action handlers
+    const handleBulkClose = async (taskUids: string[]) => {
+        try {
+            const promises = taskUids.map((uid) =>
+                updateTask(uid, {
+                    status: 'done',
+                } as Task)
+            );
+            await Promise.all(promises);
+            // Refresh tasks
+            await fetchData(true);
+            showSuccessToast(
+                t('tasks.bulkCloseSuccess', '{{count}} task(s) closed', {
+                    count: taskUids.length,
+                })
+            );
+        } catch (error) {
+            console.error('Error closing tasks:', error);
+            setError('Failed to close tasks.');
+            throw error;
+        }
+    };
+
+    const handleBulkDelete = async (taskUids: string[]) => {
+        try {
+            const promises = taskUids.map((uid) => deleteTask(uid));
+            await Promise.all(promises);
+            // Refresh tasks
+            await fetchData(true);
+            showSuccessToast(
+                t('tasks.bulkDeleteSuccess', '{{count}} task(s) deleted', {
+                    count: taskUids.length,
+                })
+            );
+        } catch (error) {
+            console.error('Error deleting tasks:', error);
+            setError('Failed to delete tasks.');
+            throw error;
+        }
+    };
+
+    const handleBulkAssignProject = async (taskUids: string[], projectId: number | null) => {
+        try {
+            const promises = taskUids.map((uid) => {
+                const task = tasks.find((t) => t.uid === uid);
+                if (!task) return Promise.resolve();
+                return updateTask(uid, {
+                    ...task,
+                    project_id: projectId,
+                } as Task);
+            });
+            await Promise.all(promises);
+            // Refresh tasks
+            await fetchData(true);
+            showSuccessToast(
+                t('tasks.bulkAssignProjectSuccess', 'Project assigned to {{count}} task(s)', {
+                    count: taskUids.length,
+                })
+            );
+        } catch (error) {
+            console.error('Error assigning project:', error);
+            setError('Failed to assign project.');
+            throw error;
+        }
+    };
+
+    const handleBulkAssignTags = async (taskUids: string[], tagsToAssign: Tag[]) => {
+        try {
+            const promises = taskUids.map(async (uid) => {
+                const task = tasks.find((t) => t.uid === uid);
+                if (!task) return Promise.resolve();
+                // Merge existing tags with new tags by name only
+                const existingTags = task.tags || [];
+                const existingTagNames = existingTags.map((t) => t.name);
+                const newTagNames = tagsToAssign.map((t) => t.name);
+                const allTagNames = Array.from(new Set([...existingTagNames, ...newTagNames]));
+                // Send only tag names (objects with name property) - let backend handle tag lookup/creation
+                const allTags = allTagNames.map((name) => ({ name }));
+                return updateTask(uid, {
+                    ...task,
+                    tags: allTags,
+                } as Task);
+            });
+            await Promise.all(promises);
+            // Refresh tasks
+            await fetchData(true);
+            showSuccessToast(
+                t('tasks.bulkAssignTagsSuccess', 'Tags assigned to {{count}} task(s)', {
+                    count: taskUids.length,
+                })
+            );
+        } catch (error) {
+            console.error('Error assigning tags:', error);
+            setError('Failed to assign tags.');
+            throw error;
+        }
+    };
+
     const handleSortChange = (order: string) => {
         setOrderBy(order);
         localStorage.setItem('order_by', order);
@@ -533,7 +684,7 @@ const Tasks: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    {/* Info expand/collapse button, search button, show completed toggle, and sort dropdown */}
+                    {/* Info expand/collapse button, search button, show completed toggle, bulk selection toggle, and sort dropdown */}
                     <div
                         className={`flex items-center gap-2 flex-shrink-0 ${
                             isUpcomingView
@@ -541,6 +692,49 @@ const Tasks: React.FC = () => {
                                 : ''
                         }`}
                     >
+                        {!isUpcomingView && (
+                            <button
+                                onClick={toggleBulkSelectionMode}
+                                className={`flex items-center transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg p-2 ${
+                                    bulkSelectionMode
+                                        ? 'bg-blue-50/70 dark:bg-blue-900/20'
+                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                                aria-label={
+                                    bulkSelectionMode
+                                        ? t('tasks.disableBulkSelection', 'Disable bulk selection')
+                                        : t('tasks.enableBulkSelection', 'Enable bulk selection')
+                                }
+                                title={
+                                    bulkSelectionMode
+                                        ? t('tasks.disableBulkSelection', 'Disable bulk selection')
+                                        : t('tasks.enableBulkSelection', 'Enable bulk selection')
+                                }
+                            >
+                                <Squares2X2Icon className="h-5 w-5 text-gray-600 dark:text-gray-200" />
+                                <span className="sr-only">
+                                    {bulkSelectionMode
+                                        ? t('tasks.disableBulkSelection', 'Disable bulk selection')
+                                        : t('tasks.enableBulkSelection', 'Enable bulk selection')}
+                                </span>
+                            </button>
+                        )}
+                        {bulkSelectionMode && selectedTaskIds.size > 0 && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleSelectAll}
+                                    className="text-xs px-2 py-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                                >
+                                    {t('tasks.selectAll', 'Select All')}
+                                </button>
+                                <button
+                                    onClick={handleDeselectAll}
+                                    className="text-xs px-2 py-1 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                >
+                                    {t('tasks.deselectAll', 'Deselect All')}
+                                </button>
+                            </div>
+                        )}
                         <button
                             onClick={() => setIsInfoExpanded((v) => !v)}
                             className={`flex items-center hover:bg-blue-100/50 dark:hover:bg-blue-800/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset rounded-lg${isInfoExpanded ? ' bg-blue-50/70 dark:bg-blue-900/20' : ''} p-2`}
@@ -671,6 +865,20 @@ const Tasks: React.FC = () => {
                                                         'Completed'
                                                     ),
                                                 },
+                                                {
+                                                    key: 'missing_project',
+                                                    label: t(
+                                                        'tasks.missingProject',
+                                                        'Missing Project'
+                                                    ),
+                                                },
+                                                {
+                                                    key: 'missing_area',
+                                                    label: t(
+                                                        'tasks.missingArea',
+                                                        'Missing Area'
+                                                    ),
+                                                },
                                             ].map((opt) => {
                                                 const isActive =
                                                     (opt.key === 'all' &&
@@ -679,7 +887,17 @@ const Tasks: React.FC = () => {
                                                         status ===
                                                             'completed') ||
                                                     (opt.key === 'active' &&
-                                                        status === 'active');
+                                                        status === 'active') ||
+                                                    (opt.key ===
+                                                        'missing_project' &&
+                                                        query.get(
+                                                            'missing_project'
+                                                        ) === '1') ||
+                                                    (opt.key ===
+                                                        'missing_area' &&
+                                                        query.get(
+                                                            'missing_area'
+                                                        ) === '1');
                                                 return (
                                                     <button
                                                         key={opt.key}
@@ -693,6 +911,12 @@ const Tasks: React.FC = () => {
                                                                     new URLSearchParams(
                                                                         location.search
                                                                     );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
+                                                                );
                                                                 params.set(
                                                                     'status',
                                                                     'completed'
@@ -718,6 +942,68 @@ const Tasks: React.FC = () => {
                                                                 params.delete(
                                                                     'status'
                                                                 );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            } else if (
+                                                                opt.key ===
+                                                                'missing_project'
+                                                            ) {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.delete(
+                                                                    'status'
+                                                                );
+                                                                params.set(
+                                                                    'missing_project',
+                                                                    '1'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
+                                                                );
+                                                                navigate(
+                                                                    {
+                                                                        pathname:
+                                                                            location.pathname,
+                                                                        search: `?${params.toString()}`,
+                                                                    },
+                                                                    {
+                                                                        replace: true,
+                                                                    }
+                                                                );
+                                                            } else if (
+                                                                opt.key ===
+                                                                'missing_area'
+                                                            ) {
+                                                                const params =
+                                                                    new URLSearchParams(
+                                                                        location.search
+                                                                    );
+                                                                params.delete(
+                                                                    'status'
+                                                                );
+                                                                params.set(
+                                                                    'missing_area',
+                                                                    '1'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
                                                                 navigate(
                                                                     {
                                                                         pathname:
@@ -736,6 +1022,12 @@ const Tasks: React.FC = () => {
                                                                 params.set(
                                                                     'status',
                                                                     'active'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_project'
+                                                                );
+                                                                params.delete(
+                                                                    'missing_area'
                                                                 );
                                                                 navigate(
                                                                     {
@@ -911,6 +1203,9 @@ const Tasks: React.FC = () => {
                                         onToggleToday={undefined}
                                         showCompletedTasks={showCompleted}
                                         searchQuery={taskSearchQuery}
+                                        selectedTaskIds={selectedTaskIds}
+                                        onTaskSelect={bulkSelectionMode ? handleTaskSelect : undefined}
+                                        showCheckboxes={bulkSelectionMode}
                                     />
                                 ) : groupBy === 'project' ? (
                                     <GroupedTaskList
@@ -928,6 +1223,9 @@ const Tasks: React.FC = () => {
                                         onToggleToday={undefined}
                                         showCompletedTasks={showCompleted}
                                         searchQuery={taskSearchQuery}
+                                        selectedTaskIds={selectedTaskIds}
+                                        onTaskSelect={bulkSelectionMode ? handleTaskSelect : undefined}
+                                        showCheckboxes={bulkSelectionMode}
                                     />
                                 ) : (
                                     <TaskList
@@ -941,6 +1239,9 @@ const Tasks: React.FC = () => {
                                         projects={projects}
                                         onToggleToday={undefined}
                                         showCompletedTasks={showCompleted}
+                                        selectedTaskIds={selectedTaskIds}
+                                        onTaskSelect={bulkSelectionMode ? handleTaskSelect : undefined}
+                                        showCheckboxes={bulkSelectionMode}
                                     />
                                 )}
                                 {/* Load more button - hide in upcoming view */}
@@ -1034,6 +1335,22 @@ const Tasks: React.FC = () => {
                     </>
                 )}
             </div>
+            {bulkSelectionMode && selectedTasks.length > 0 && (
+                <BulkActionsToolbar
+                    selectedTasks={selectedTasks}
+                    onClose={() => {
+                        setSelectedTaskIds(new Set());
+                        setBulkSelectionMode(false);
+                    }}
+                    onBulkClose={handleBulkClose}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkAssignProject={handleBulkAssignProject}
+                    onBulkAssignTags={handleBulkAssignTags}
+                    projects={projects}
+                    areas={areas}
+                    tags={tags}
+                />
+            )}
         </div>
     );
 };

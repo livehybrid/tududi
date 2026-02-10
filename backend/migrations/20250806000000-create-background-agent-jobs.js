@@ -12,7 +12,10 @@ module.exports = {
             uuid: {
                 type: Sequelize.UUID,
                 allowNull: false,
-                defaultValue: Sequelize.literal('(lower(hex(randomblob(16))))'),
+                defaultValue:
+                    queryInterface.sequelize.getDialect() === 'sqlite'
+                        ? Sequelize.literal('(lower(hex(randomblob(16))))')
+                        : Sequelize.literal('(UUID())'),
             },
             nanoid: {
                 type: Sequelize.STRING(21),
@@ -83,4 +86,4 @@ module.exports = {
     down: async (queryInterface, Sequelize) => {
         await queryInterface.dropTable('background_agent_jobs');
     },
-}; 
+};
