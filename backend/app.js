@@ -116,30 +116,34 @@ const {
 } = require('./middleware/rateLimiter');
 
 // Swagger documentation - enabled by default, protected by authentication
-// Mounted on /api-docs to avoid conflicts with API routes
+// Mounted at /api-docs and (when versioned) at /api/v1/api-docs for consistency
 if (config.swagger.enabled) {
     const swaggerUi = require('swagger-ui-express');
     const swaggerSpec = require('./config/swagger');
 
-    const swaggerUiOptions = {
-        customSiteTitle: 'Tududi API Documentation',
-        customfavIcon: '/favicon.ico',
-        customCss: '.swagger-ui .topbar { display: none }',
-        swaggerOptions: {
-            url: '/api-docs/swagger.json',
-        },
+    const mountSwaggerAt = (base) => {
+        const options = {
+            customSiteTitle: 'Tududi API Documentation',
+            customfavIcon: '/favicon.ico',
+            customCss: '.swagger-ui .topbar { display: none }',
+            swaggerOptions: { url: `${base}/swagger.json` },
+        };
+        app.use(base, requireAuth, swaggerUi.serve);
+        app.get(`${base}/swagger.json`, requireAuth, (req, res) =>
+            res.json(swaggerSpec)
+        );
+        app.get(
+            base,
+            requireAuth,
+            swaggerUi.serveFiles(swaggerSpec, options),
+            swaggerUi.setup(swaggerSpec, options)
+        );
     };
-    // Expose on /api-docs, protected by authentication
-    app.use('/api-docs', requireAuth, swaggerUi.serve);
-    app.get('/api-docs/swagger.json', requireAuth, (req, res) =>
-        res.json(swaggerSpec)
-    );
-    app.get(
-        '/api-docs',
-        requireAuth,
-        swaggerUi.serveFiles(swaggerSpec, swaggerUiOptions),
-        swaggerUi.setup(swaggerSpec, swaggerUiOptions)
-    );
+
+    mountSwaggerAt('/api-docs');
+    if (API_VERSION && API_BASE_PATH !== '/api') {
+        mountSwaggerAt(`${API_BASE_PATH}/api-docs`);
+    }
 }
 
 // Apply rate limiting to API routes

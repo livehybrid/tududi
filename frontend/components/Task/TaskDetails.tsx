@@ -801,6 +801,33 @@ const TaskDetails: React.FC = () => {
         }
     };
 
+    const handleCompletionToggle = async () => {
+        if (!task?.uid) return;
+        try {
+            await toggleTaskCompletion(task.uid, task);
+            if (uid) {
+                const latest = await fetchTaskByUid(uid);
+                const existingIndex = tasksStore.tasks.findIndex(
+                    (t: Task) => t.uid === uid
+                );
+                if (existingIndex >= 0) {
+                    const updatedTasks = [...tasksStore.tasks];
+                    updatedTasks[existingIndex] = latest;
+                    tasksStore.setTasks(updatedTasks);
+                }
+            }
+            setTimelineRefreshKey((prev) => prev + 1);
+            showSuccessToast(
+                t('task.statusUpdated', 'Status updated successfully')
+            );
+        } catch (error) {
+            console.error('Error toggling completion:', error);
+            showErrorToast(
+                t('task.statusUpdateError', 'Failed to update status')
+            );
+        }
+    };
+
     const handleStatusUpdate = async (newStatus: number) => {
         if (!task?.uid) return;
 
@@ -1204,6 +1231,7 @@ const TaskDetails: React.FC = () => {
                     isOverdueAlertVisible={isOverdue && isOverdueBubbleVisible}
                     onDismissOverdueAlert={handleDismissOverdueAlert}
                     onQuickStatusToggle={handleQuickStatusToggle}
+                    onCompletionToggle={handleCompletionToggle}
                     attachmentCount={attachmentCount}
                     subtasksCount={subtasks.length}
                 />

@@ -11,13 +11,14 @@ import {
     XCircleIcon,
     ChartBarIcon,
     CheckIcon,
+    ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { useToast } from '../Shared/ToastContext';
 import ProjectModal from './ProjectModal';
 import ConfirmDialog from '../Shared/ConfirmDialog';
 import NoteModal from '../Note/NoteModal';
 import { useStore } from '../../store/useStore';
-import { Project } from '../../entities/Project';
+import { Project, ProjectStatus } from '../../entities/Project';
 import { Task } from '../../entities/Task';
 import { Note } from '../../entities/Note';
 import {
@@ -50,7 +51,7 @@ const ProjectDetails: React.FC = () => {
     const { uidSlug } = useParams<{ uidSlug: string }>();
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const { showSuccessToast } = useToast();
+    const { showSuccessToast, showErrorToast } = useToast();
     const { areasStore, projectsStore } = useStore();
     const areas = areasStore.areas;
     const [allProjects, setAllProjects] = useState<Project[]>([]);
@@ -78,6 +79,8 @@ const ProjectDetails: React.FC = () => {
     const [orderBy, setOrderBy] = useState<string>('status:inProgressFirst');
     const [taskSearchQuery, setTaskSearchQuery] = useState('');
     const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+    const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+    const statusDropdownRef = useRef<HTMLDivElement>(null);
     const {
         isOpen: isModalOpen,
         openModal,
@@ -468,6 +471,52 @@ const ProjectDetails: React.FC = () => {
         setOrderBy(newOrderBy);
         localStorage.setItem('project_order_by', newOrderBy);
     };
+
+    const handleProjectStatusChange = async (newStatus: ProjectStatus) => {
+        if (!project?.uid) return;
+        try {
+            const updatedProject = await updateProject(project.uid, {
+                ...project,
+                status: newStatus,
+            });
+            setProject((prev) =>
+                prev ? { ...prev, status: updatedProject.status } : null
+            );
+            const currentProjects = projectsStore.projects;
+            const updatedProjects = currentProjects.map((p) =>
+                p.uid === project.uid
+                    ? { ...p, status: updatedProject.status }
+                    : p
+            );
+            projectsStore.setProjects(updatedProjects);
+            setStatusDropdownOpen(false);
+            showSuccessToast(
+                t('project.statusUpdated', 'Project status updated')
+            );
+        } catch (err) {
+            console.error('Error updating project status:', err);
+            showErrorToast(
+                t('project.statusUpdateError', 'Failed to update status')
+            );
+        }
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                statusDropdownOpen &&
+                statusDropdownRef.current &&
+                !statusDropdownRef.current.contains(e.target as Node)
+            ) {
+                setStatusDropdownOpen(false);
+            }
+        };
+        if (statusDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () =>
+                document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [statusDropdownOpen]);
 
     const handleDeleteProject = async () => {
         if (!project?.uid) return;
@@ -886,6 +935,106 @@ const ProjectDetails: React.FC = () => {
 
                             {activeTab === 'tasks' && (
                                 <div className="flex items-center justify-end gap-2 sm:gap-4">
+                                    <div
+                                        className="relative"
+                                        ref={statusDropdownRef}
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setStatusDropdownOpen(
+                                                    (v) => !v
+                                                )
+                                            }
+                                            className="flex items-center gap-1.5 sm:gap-2 transition-all duration-300 focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset rounded-lg px-2 py-1.5 sm:px-2.5 sm:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                            aria-expanded={statusDropdownOpen}
+                                            aria-haspopup="listbox"
+                                            aria-label={t(
+                                                'projects.changeStatus',
+                                                'Change project status'
+                                            )}
+                                            title={t(
+                                                'projects.changeStatus',
+                                                'Change project status'
+                                            )}
+                                        >
+                                            {project?.status
+                                                ? getStatusIcon(
+                                                      project.status
+                                                  )
+                                                : (
+                                                      <EllipsisHorizontalCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400" />
+                                                  )}
+                                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:inline">
+                                                {project?.status
+                                                    ? t(
+                                                          `projectStatus.${project.status}`,
+                                                          project.status
+                                                      )
+                                                    : t(
+                                                          'projects.status',
+                                                          'Status'
+                                                      )}
+                                            </span>
+                                            <ChevronDownIcon
+                                                className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400 transition-transform ${
+                                                    statusDropdownOpen
+                                                        ? 'rotate-180'
+                                                        : ''
+                                                }`}
+                                            />
+                                        </button>
+                                        {statusDropdownOpen && (
+                                            <div
+                                                className="absolute right-0 z-20 mt-2 w-56 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg"
+                                                role="listbox"
+                                            >
+                                                {(
+                                                    [
+                                                        'not_started',
+                                                        'planned',
+                                                        'in_progress',
+                                                        'waiting',
+                                                        'done',
+                                                        'cancelled',
+                                                    ] as ProjectStatus[]
+                                                ).map((status) => (
+                                                    <button
+                                                        key={status}
+                                                        type="button"
+                                                        role="option"
+                                                        aria-selected={
+                                                            project?.status ===
+                                                            status
+                                                        }
+                                                        onClick={() =>
+                                                            handleProjectStatusChange(
+                                                                status
+                                                            )
+                                                        }
+                                                        className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors first:rounded-t-lg last:rounded-b-lg ${
+                                                            project?.status ===
+                                                            status
+                                                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200'
+                                                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                        }`}
+                                                    >
+                                                        {getStatusIcon(status)}
+                                                        <span>
+                                                            {t(
+                                                                `projectStatus.${status}`,
+                                                                status
+                                                            )}
+                                                        </span>
+                                                        {project?.status ===
+                                                            status && (
+                                                            <CheckIcon className="h-4 w-4 ml-auto text-blue-600 dark:text-blue-400" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={toggleMetrics}
                                         className={`flex items-center transition-all duration-300 focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset rounded-lg p-1.5 sm:p-2 ${

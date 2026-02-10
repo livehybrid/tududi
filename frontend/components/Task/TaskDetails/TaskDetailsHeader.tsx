@@ -33,6 +33,8 @@ interface TaskDetailsHeaderProps {
     isOverdueAlertVisible?: boolean;
     onDismissOverdueAlert?: () => void;
     onQuickStatusToggle?: () => void;
+    /** Called when user clicks "Set as done" or the main completion button (toggle done ↔ not done). */
+    onCompletionToggle?: () => void;
     attachmentCount?: number;
     subtasksCount?: number;
 }
@@ -53,6 +55,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
     isOverdueAlertVisible = false,
     onDismissOverdueAlert,
     onQuickStatusToggle,
+    onCompletionToggle,
     attachmentCount = 0,
     subtasksCount = 0,
 }) => {
@@ -268,6 +271,7 @@ const TaskDetailsHeader: React.FC<TaskDetailsHeaderProps> = ({
                                         <TaskStatusControl
                                             task={task}
                                             onToggleCompletion={
+                                                onCompletionToggle ??
                                                 onQuickStatusToggle
                                             }
                                             onTaskUpdate={
